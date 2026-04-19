@@ -2,7 +2,7 @@
 
 ## Document Organization
 - Organize reusable documents under `document/` with topic-specific subdirectories instead of placing many files directly in `document/`.
-- For company analysis outputs, use `document/company_analysis/companies/` for per-company analyses and `document/company_analysis/reviews/` for cross-company reviews or comparisons.
+- For company analysis outputs, use `report/company_analysis/companies/` for per-company analyses and `report/company_analysis/reviews/` for cross-company reviews or comparisons.
 - Prefer concise document filenames. Avoid redundant prefixes when the parent directory already provides the context.
 - Choose the shortest filename that still remains unambiguous within its directory.
 
@@ -17,6 +17,7 @@
 
 ## Company Analysis Workflow
 - For company-analysis tasks, prefer using the `company-analysis-runner` skill as the default entry point.
+- When a company-analysis task is requested, do not perform parent-side pre-analysis first; invoke the `company-analysis-runner` workflow immediately.
 - Treat `company-analysis-runner` as the parent-agent orchestration layer and `company-analysis` as the evaluator used by subagents.
 - Only bypass `company-analysis-runner` when the task is narrowly limited to inspecting or editing existing outputs, tools, or documentation rather than running the analysis workflow itself.
 

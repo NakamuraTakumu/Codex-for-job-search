@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+config_file="${ROTATE_DOCUMENT_CONFIG:-.document-rotation.env}"
+if [[ -f "$config_file" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  . "$config_file"
+  set +a
+fi
+
+rotate_dir="${ROTATE_DOCUMENT_DIR:-document}"
+rotate_dir="${rotate_dir%/}"
+
+if [[ -z "$rotate_dir" ]]; then
+  echo "pre-commit: ROTATE_DOCUMENT_DIR must not be empty" >&2
+  exit 1
+fi
+
+if ! git diff --quiet -- "$rotate_dir" 2>/dev/null; then
+  echo "pre-commit: unstaged changes detected under $rotate_dir; stage or stash them before commit" >&2
+  exit 1
+fi
+
+if [[ -n "$(git ls-files --others --exclude-standard -- "$rotate_dir" 2>/dev/null)" ]]; then
+  echo "pre-commit: untracked files detected under $rotate_dir; stage or remove them before commit" >&2
+  exit 1
+fi
+
+./tool/rotate_document_before_commit.sh
+git add -A -- "$rotate_dir"

@@ -3,7 +3,7 @@
 Usage:
   python3 tool/render_company_analysis_md.py path/to/file.yaml [path/to/file2.yaml ...]
   python3 tool/render_company_analysis_md.py --stdout path/to/file.yaml
-  python3 tool/render_company_analysis_md.py --output-dir document/company_analysis/companies path/to/file.yaml
+  python3 tool/render_company_analysis_md.py --output-dir report/company_analysis/companies path/to/file.yaml
 
 What it does:
   - Validates company-analysis YAML files.
@@ -23,7 +23,7 @@ from pathlib import Path
 from company_analysis_yaml import load_yaml, render_markdown, validate_data
 
 
-DATA_ROOT = Path("document/company_analysis/data")
+DATA_ROOT = Path("report/company_analysis/data")
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -31,7 +31,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("paths", nargs="+", help="YAML files to render")
     parser.add_argument(
         "--output-dir",
-        default="document/company_analysis/companies",
+        default="report/company_analysis/companies",
         help="Directory for rendered Markdown files (default: %(default)s)",
     )
     parser.add_argument(

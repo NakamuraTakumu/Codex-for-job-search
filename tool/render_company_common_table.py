@@ -4,12 +4,12 @@ Render a common-data table from company-analysis YAML files.
 
 Usage:
     python3 tool/render_company_common_table.py \
-        document/company_analysis/data/*.yaml \
-        --output document/company_analysis/reviews/common_data_20260416.md
+        report/company_analysis/data/*.yaml \
+        --output report/company_analysis/reviews/common_data_20260416.md
 
     python3 tool/render_company_common_table.py \
-        document/company_analysis/data/*.yaml \
-        --output document/company_analysis/reviews/common_data_20260416.csv
+        report/company_analysis/data/*.yaml \
+        --output report/company_analysis/reviews/common_data_20260416.csv
 
 Input:
     - One or more company-analysis YAML files.
@@ -30,15 +30,19 @@ from company_analysis_yaml import (
     format_overtime_hours,
     format_remote_policy,
     format_yen,
+    get_comp_structured_official,
     load_yaml,
     validate_data,
 )
 
 
 HEADERS = [
+    "slug",
     "会社名",
+    "分析対象",
+    "採用主体",
     "採用職種",
-    "総合評価",
+    "統合最終評価",
     "初任給",
     "平均年収",
     "月平均残業",
@@ -65,9 +69,12 @@ def build_row(path: Path) -> list[str]:
         joined = "; ".join(result.issues)
         raise ValueError(f"{path}: {joined}")
 
-    structured = data["sections"]["compensation"]["structured"]
+    structured = get_comp_structured_official(data["sections"]["compensation"])
     return [
+        data["slug"],
         data["company_name"],
+        data["scope"]["evaluation_target"],
+        data["scope"]["hiring_entity"],
         data["scope"]["job_type"],
         f"{compute_final_total(data):.1f}",
         format_yen(structured["starting_salary_yen"]),
@@ -98,7 +105,7 @@ def render_markdown(paths: list[Path]) -> str:
             "",
             "注記:",
             "- `未公表` は YAML 上で `null` だった項目。",
-            "- 総合評価は `tool/company_analysis_yaml.py` の重みと補正に基づく。",
+            "- `統合最終評価` は `tool/company_analysis_yaml.py` の重みと補正に基づく。",
         ]
     )
     return "\n".join(lines) + "\n"

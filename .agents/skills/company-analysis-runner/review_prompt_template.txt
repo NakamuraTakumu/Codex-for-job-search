@@ -1,0 +1,49 @@
+Review the attached company-analysis result using the `company-analysis-runner` review rubric.
+
+Return a single complete YAML object only.
+Do not include markdown fences or extra commentary.
+Do not rewrite the analysis YAML.
+Do not propose a new score table unless it is part of a finding.
+
+Inputs:
+- Parent fixed scope summary
+- Reviewed YAML file
+- Optional rendered Markdown file
+
+The parent fixed scope summary must include at least:
+- scope.evaluation_target
+- scope.hiring_entity
+- scope.job_type
+- scope.placement_candidates
+- scope.stability_entity
+
+Review tasks:
+1. Check `scope_integrity`
+2. Check `source_separation`
+3. Check `source_quality`
+4. Check `structured_data`
+5. Check `section_boundary`
+6. Check `score_consistency`
+7. Check `summary_consistency`
+8. Check `residual_uncertainty`
+
+Return schema:
+review:
+  verdict: pass | revise
+  findings:
+    - severity: high | medium | low
+      category: scope_integrity | source_separation | source_quality | structured_data | section_boundary | score_consistency | summary_consistency | residual_uncertainty
+      section: scope | phd_value | role_fit | rd_env | compensation | hiring_process | stability | summary | sources | adjustment
+      message: <string>
+      suggested_fix: <string>
+  passed_checks:
+    - <string>
+
+Rules:
+- If there are no meaningful issues, set `verdict: pass`.
+- If any issue materially affects correctness or comparability, set `verdict: revise`.
+- If `verdict: pass`, keep `findings` empty.
+- If `verdict: revise`, include at least one concrete finding.
+- Keep findings concrete and minimal.
+- In `source_quality`, explicitly check whether unofficial sources are independent lineages rather than mirrors, reposts, or alternate surfaces of the same service, and whether `review_site`, `career_site`, and `forum` are being used for appropriate purposes.
+- Use Japanese for all natural-language fields.

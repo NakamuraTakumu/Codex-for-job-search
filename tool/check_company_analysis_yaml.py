@@ -5,7 +5,8 @@ Usage:
 
 What it does:
   - Checks company-analysis YAML files for required fields and basic schema validity.
-  - Verifies score ranges, 0.1 increments, slug/file consistency, and source URLs.
+  - Verifies score ranges, 0.1 increments, slug/file consistency, source URLs,
+    source tier/kind, and minimum official-source coverage.
 
 What it does not do:
   - It does not modify any file.

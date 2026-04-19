@@ -10,7 +10,7 @@ description: 親エージェント用の orchestration skill。固定した評�
 - このスキルを使うとき、会社分析の実調査と採点は常にサブエージェントで行い、親は orchestration に専念する
 
 # Preconditions
-- サブエージェント起動は、高優先度指示とユーザー要望が許すときだけ行う
+- この skill では、会社分析の実調査・採点・内容レビューにサブエージェントを使う
 - 会社分析をこのスキルで実行する場合、親が自分で本文分析を書かず、実調査と section score 付与は必ず子エージェントに委譲する
 - 調査前に少なくとも以下を決める
   - `company_name`
@@ -44,17 +44,20 @@ description: 親エージェント用の orchestration skill。固定した評�
 7. `evaluation target` が曖昧なままなら、応募単位、採用主体、職種、必要なら配属候補まで親が先に固定する
 8. 固定した各トラックごとに `company-analysis` evaluator を使う子エージェントを 1 本ずつ立てる
 9. 子には、完全な YAML オブジェクトのみ返すよう指示する
-10. 必要なら「既存レポートや他エージェント結果を読まない」と明示する
-11. 1 社 1 子を原則にし、特に `research` と `swe` を同じ子に順番に見せない
-12. 子が勝手に別対象へ切り替えないよう、固定した `evaluation target`, `hiring entity`, `job type` をプロンプトに明示する
-13. 親が分かる実行条件があれば `run_metadata` を YAML に追記する
-14. 返ってきた YAML の保存先は親が決める
-15. 親が `python3 tool/check_company_analysis_yaml.py <yaml-file>` を実行して形式検証する
-16. validator が落ちたら、親が schema 違反を列挙して子に差し戻し、再出力させる
-17. validator を通ったら `python3 tool/render_company_analysis_md.py <yaml-file>` で Markdown を生成する
-18. 生成した Markdown の保存先も親が決める
-19. 必要なら、作成担当とは別のレビュー用子エージェントで内容の妥当性だけを確認する
-20. 回答では、保存した YAML と Markdown の両方を参照する
+10. 子には、まず公式情報だけで `facts_official` と `score_official` を埋め、その後に非公式情報で `facts_unofficial` と `score_final` を埋める順序を守らせる
+11. 子には、公式情報と非公式情報を同じ欄に混ぜないこと、非公式情報で構造化数値を上書きしないことを明示する
+12. 子には、非公式ソースを URL 数ではなく独立系列で扱い、転載・ミラー・同系サービスの別掲載面を独立根拠として水増ししないことを明示する
+13. 必要なら「既存レポートや他エージェント結果を読まない」と明示する
+14. 1 社 1 子を原則にし、特に `research` と `swe` を同じ子に順番に見せない
+15. 子が勝手に別対象へ切り替えないよう、固定した `evaluation target`, `hiring entity`, `job type` をプロンプトに明示する
+16. 親が分かる実行条件があれば `run_metadata` を YAML に追記する
+17. 返ってきた YAML の保存先は親が決める
+18. 親が `python3 tool/check_company_analysis_yaml.py <yaml-file>` を実行して形式検証する
+19. validator が落ちたら、親が schema 違反を列挙して子に差し戻し、再出力させる
+20. validator を通ったら `python3 tool/render_company_analysis_md.py <yaml-file>` で Markdown を生成する
+21. 生成した Markdown の保存先も親が決める
+22. 必要なら、作成担当とは別のレビュー用子エージェントで内容の妥当性だけを確認する
+23. 回答では、保存した YAML と Markdown の両方を参照する
 
 # Prompt template
 子エージェントへ渡すプロンプトは、原則としてこの skill ディレクトリ内の `subagent_prompt_template.txt` を使って固定化する。
@@ -63,9 +66,17 @@ description: 親エージェント用の orchestration skill。固定した評�
 - `research` 用と `swe` 用を同時に走らせるときも、各子には自分の固定スコープだけを埋めたテンプレートを渡す
 - 同じ会社の別トラック情報を比較メモとして混ぜず、必要なら親が後で比較する
 - テンプレート本文をその場で毎回書き換えず、変更したい場合はテンプレートファイル自体を更新する
+- テンプレートには、公式情報を先に処理し、その後に非公式情報を分離して追記する順序を固定で含める
+
+レビュー用の子エージェントへ渡すプロンプトは、原則としてこの skill ディレクトリ内の `review_prompt_template.txt` を使って固定化する。
+
+- 親はレビュー対象 YAML と必要なら生成 Markdown を渡す
+- レビュー子には YAML 再生成を求めず、固定の review schema だけを返させる
+- レビュー子のテンプレート本文も、その場で毎回書き換えず、変更したい場合はテンプレートファイル自体を更新する
 
 # Validation
 - validator は `tool/check_company_analysis_yaml.py`
+- review validator は `tool/check_company_analysis_review.py`
 - renderer は `tool/render_company_analysis_md.py`
 - 総合点計算の正本は Python 実装であり、子エージェントに再計算させない
 - `run_metadata` は親が知っている場合だけ追記する。少なくとも `executor`, `model`, `reasoning_effort`, `fixed_by_parent` を使う
@@ -75,9 +86,54 @@ description: 親エージェント用の orchestration skill。固定した評�
 - 内容レビューは、作成した子とは別の子エージェントに行わせる
 - 親が validator と renderer を済ませた後にレビューへ回す
 - レビュー時は、レビュー対象 YAML、必要なら生成 Markdown、必要最小限の文脈だけを渡す
-- レビュー子には YAML 再生成を求めず、 findings / risks / open questions を返させる
+- レビュー子には YAML 再生成を求めず、固定の review schema を返させる
+- 親は review 返却後に `python3 tool/check_company_analysis_review.py <review-yaml>` を実行して review schema も検証する
 - レビュー子には、既存比較結果や intended answer を渡しすぎない
 - 親は内容レビューを自分だけで完結させず、レビューを行うなら別の子エージェントを使う
+
+## Review rubric
+- `scope_integrity`
+  - `evaluation_target`, `hiring_entity`, `job_type`, `placement_candidates`, `stability_entity` が親の fixed scope と矛盾していないか
+- `source_separation`
+  - `facts_official` に非公式情報が混ざっていないか
+  - `facts_unofficial` に公式情報だけを書いていないか
+  - `sources.tier` が実際の根拠種別と一致しているか
+- `source_quality`
+  - 公式ソースが十分か
+  - 非公式ソースが過剰に評価を支配していないか
+  - 重複根拠ばかりになっていないか
+  - 非公式ソースの転載・ミラー・同系サービスを独立根拠として二重計上していないか
+  - `review_site`, `career_site`, `forum` の用途が崩れていないか
+- `structured_data`
+  - `structured_official` が公式情報だけで埋まっているか
+  - `structured_unofficial` が公式値を上書きしていないか
+  - 月額/年額、年間休日/有給、平均残業/固定残業時間の取り違えがないか
+- `section_boundary`
+  - `phd_value / role_fit / rd_env` の境界が崩れていないか
+- `score_consistency`
+  - `facts_official` と `score_official` が整合しているか
+  - `facts_unofficial` を踏まえた `score_final` の変化が説明可能か
+  - `score_official -> score_final` の変化量が過大でないか
+- `summary_consistency`
+  - `summary` と各 section の評価が矛盾していないか
+- `residual_uncertainty`
+  - 不確実性や scope ambiguity が適切に残されているか
+
+## Review return schema
+- レビュー子の返却物は単一の YAML オブジェクトだけにする
+- 形式は次に固定する
+
+```text
+review.verdict: pass | revise
+review.findings: list[review_finding]
+review.passed_checks: list[str]
+
+review_finding.severity: high | medium | low
+review_finding.category: scope_integrity | source_separation | source_quality | structured_data | section_boundary | score_consistency | summary_consistency | residual_uncertainty
+review_finding.section: scope | phd_value | role_fit | rd_env | compensation | hiring_process | stability | summary | sources | adjustment
+review_finding.message: str
+review_finding.suggested_fix: str
+```
 
 # Uncertainty workflow
 - 不確実性チェックでは、同じ固定スコープで 3 本以上の独立子エージェントを立てる

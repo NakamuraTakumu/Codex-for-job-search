@@ -53,7 +53,7 @@ def first_score_value(text: str, heading: str) -> str | None:
     body = section_body(text, heading)
     if body is None:
         return None
-    match = re.search(r"- スコア:\s*`?([0-9]+(?:\.[0-9])?) / 5(?:\.0)?`?", body)
+    match = re.search(r"- スコア（統合・補正前）:\s*`?([0-9]+(?:\.[0-9])?) / 5(?:\.0)?`?", body)
     return match.group(1) if match else None
 
 
@@ -67,25 +67,18 @@ def calc_total(text: str) -> str | None:
     body = section_body(text, "## 数式評価")
     if body is None:
         return None
-    candidate = None
-    for raw_line in body.splitlines():
-        line = raw_line.strip().strip("`")
-        if not line:
-            continue
-        if "総合評価" in line or line.startswith("=") or re.fullmatch(r"[0-9]+(?:\.[0-9])?", line):
-            nums = re.findall(r"[0-9]+(?:\.[0-9])?", line)
-            if nums:
-                candidate = nums[-1]
-    if candidate is not None:
-        return candidate
-    return None
+    match = re.search(
+        r"(?m)^- `統合総合評価（補正前） = ([0-9]+(?:\.[0-9])?)`$",
+        body,
+    )
+    return match.group(1) if match else None
 
 
 def final_total(text: str) -> str | None:
     body = section_body(text, "## 最終評価")
     if body is None:
         return None
-    match = re.search(r"([0-9]+(?:\.[0-9])?)\s*/\s*100", body)
+    match = re.search(r"統合最終評価:\s*([0-9]+(?:\.[0-9])?)\s*/\s*100", body)
     return match.group(1) if match else None
 
 
@@ -107,7 +100,7 @@ def check_file(path: Path) -> list[str]:
         body = section_body(text, heading)
         if body is None:
             continue
-        for label in ("- 事実:", "- 評価:", "- スコア:"):
+        for label in ("- 公式情報:", "- 評価:", "- スコア（公式）:", "- スコア（統合・補正前）:"):
             if label not in body:
                 issues.append(f"{heading}: missing {label}")
 

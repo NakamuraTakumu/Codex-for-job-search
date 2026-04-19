@@ -7,6 +7,7 @@ description: 旧帝大の博士課程人材向けに企業を評価する親エ�
 - このスキルは、親エージェントが会社分析を子エージェントへ委譲するときに使う
 - 子エージェントの返却物は Markdown ではなく YAML とする
 - Markdown の描画、保存、最終ファイル化は親エージェントまたはスクリプトが担当する
+- レポートは1本にまとめるが、公式情報だけでの暫定評価と、非公式情報を加えた統合評価を同じ YAML 内で分けて保持する
 
 # Reader assumptions
 - 想定読者は、旧帝大の博士課程人材またはそれに準ずる研究志向の候補者である
@@ -17,18 +18,29 @@ description: 旧帝大の博士課程人材向けに企業を評価する親エ�
 - 企業紹介ではなく、就職先としての実態を評価する
 - 事実と評価を分ける
 - 可能な限り公式情報を優先する
+- 速度より正確性と分離の明瞭さを優先する。時間をかけてよいので、急いで雑に埋めない
+- まず公式情報だけで暫定評価し、その後に非公式情報を加えて統合評価する
 - 可能な限り多くの公式ソースを使う。ただし同じ内容の重複ページを機械的に増やすのではなく、募集要項、FAQ、福利厚生、会社概要、IR、研究所・技術組織、事業・技術紹介など、種類の異なる根拠を広く集める
 - 同じ内容を複数項目で二重計上しない
 - 大手感やブランドでは加点しない
 - 研究能力と関係の薄い選考負担は明確に減点対象とする
+- 非公式情報は公式情報の存在を上書きせず、どこをどう動かしたかが追える形で残す
 
 # Research method
 - まず公式情報で骨格を取る。優先順は、採用ページ、募集要項、FAQ、福利厚生・働き方、会社概要、IR / 有価証券報告書、研究所・技術組織・技術紹介とする
+- 情報が薄いときは拙速に埋めず、追加の公式根拠や補助根拠を探してから判断する
+- 公式情報だけで各項目の `facts_official` と `score_official` を作る
+- その後に口コミ、就活体験談、就活サイト、社員口コミなどの非公式情報を補助的に読み、`facts_unofficial` と `score_final` を作る
 - 採用広報と事業実態を分けて見る。採用ページやイベント説明だけでなく、IR、法定開示、研究所ページ、技術発表、事業紹介で裏取りする
 - 比較軸を固定して集める。少なくとも、採用対象、職種、初期配属、博士評価、初任給、平均年収、働き方、選考負担、研究/技術環境、企業基盤を意識して読む
 - 良い情報だけでなく減点材料も探す。配属不確定、博士優遇なし、選考負担、リモート制限、赤字、研究所と採用枠のずれなどを明示的に確認する
 - 口コミや体験談は補助にとどめ、まず一次情報で判断の土台を作る
 - 1ページで全項目を埋めず、可能な限り異なる種類の公式ソースから cross-check する
+- 非公式ソースは URL 数ではなく独立した情報系列で数える。転載、ミラー、同系サービスの別掲載面は独立根拠として二重計上しない
+- 社員口コミ系、学生の選考体験系、掲示板系、待遇数値系の用途を分ける。用途が弱い系列を無理に流用しない
+- 社員口コミ系は同一系列を 1 つまでに制限する。転載元と転載先が疑われる場合は元系列だけを採用する
+- 学生の選考体験系は `hiring_process` と `role_fit` の補助に寄せ、待遇数値の根拠には原則使わない
+- 待遇の数値系は `OpenWork`、`キャリコネ`、`エン カイシャの評判` のような別系列を優先し、学生体験談サイトや掲示板で代用しない
 
 # Evaluation criteria
 
@@ -67,7 +79,7 @@ description: 旧帝大の博士課程人材向けに企業を評価する親エ�
 
 # Scoring
 - 各項目は `1.0` 以上 `5.0` 以下の `0.1` 刻みで採点する
-- 子エージェントは各項目の `score` まで返す
+- まず `score_official` を付け、その後に非公式情報を踏まえた `score_final` を付ける
 - 総合評価と補正後評価の計算は、親エージェントまたは Python スクリプトが行う
 - 重み付き集計の正本は Python 実装に従う
 
@@ -86,7 +98,7 @@ scope: map
 sections: map
 adjustment: map
 summary: map
-sources: list[{label: str, url: http(s) URL}]
+sources: list[{label: str, url: http(s) URL, tier: official|unofficial, kind: source_kind}]
 run_metadata: optional map set by parent
 
 scope.user_label: str
@@ -100,22 +112,25 @@ scope.ambiguity_note: str
 sections.phd_value: section
 sections.role_fit: section
 sections.rd_env: section
-sections.compensation: section_with_structured
+sections.compensation: section_with_structured_layers
 sections.hiring_process: section
 sections.stability: section
 
-section.score: float in [1.0, 5.0], step 0.1
-section.facts: str
+section.score_official: float in [1.0, 5.0], step 0.1
+section.score_final: float in [1.0, 5.0], step 0.1
+section.facts_official: str
+section.facts_unofficial: str
 section.evaluation: str
 
-sections.compensation.structured.starting_salary_yen: int | null
-sections.compensation.structured.starting_salary_bachelor_yen: optional int | null
-sections.compensation.structured.starting_salary_master_yen: optional int | null
-sections.compensation.structured.starting_salary_doctor_yen: optional int | null
-sections.compensation.structured.average_annual_income_yen: int | null
-sections.compensation.structured.average_overtime_hours_per_month: float | int | null
-sections.compensation.structured.annual_holidays_days: int | null
-sections.compensation.structured.remote_work_policy: full | hybrid | limited | none | unknown
+sections.compensation.structured_official.starting_salary_yen: int | null
+sections.compensation.structured_official.starting_salary_bachelor_yen: optional int | null
+sections.compensation.structured_official.starting_salary_master_yen: optional int | null
+sections.compensation.structured_official.starting_salary_doctor_yen: optional int | null
+sections.compensation.structured_official.average_annual_income_yen: int | null
+sections.compensation.structured_official.average_overtime_hours_per_month: float | int | null
+sections.compensation.structured_official.annual_holidays_days: int | null
+sections.compensation.structured_official.remote_work_policy: full | hybrid | limited | none | unknown
+sections.compensation.structured_unofficial: optional sparse map using keys from structured_official
 
 adjustment.value: float in [-5.0, 5.0], step 0.1
 adjustment.reason: str
@@ -134,30 +149,43 @@ run_metadata.fixed_by_parent: bool
 
 ## Notes
 - `scope.placement_candidates` は必須キーとし、候補を固定できない場合は空配列を許す
+- `scope.ambiguity_note` は子エージェントが必ず埋める。大きな不一致がない場合も、`公開情報と固定対象の大きなずれはない。` のように短く明示する
 - `adjustment.value` は原則 `0.0`
-- 数値系の欠損は `null` を使う。`unknown` を使ってよいのは `sections.compensation.structured.remote_work_policy` だけとする
+- 数値系の欠損は `null` を使う。`unknown` を使ってよいのは `sections.compensation.structured_official.remote_work_policy` と `sections.compensation.structured_unofficial.remote_work_policy` だけとする
 - `run_metadata` は親が分かる実行条件を後から付与するための optional field とする。子エージェントは推測で埋めない
-- 自然言語で書く欄は原則として日本語で書く。対象は `scope.ambiguity_note`, 各 section の `facts` / `evaluation`, `summary.*` である
+- 自然言語で書く欄は原則として日本語で書く。対象は `scope.ambiguity_note`, 各 section の `facts_official` / `facts_unofficial` / `evaluation`, `summary.*` である
 - `sources.label` は日本語を基本とするが、公式ページの固有名が英語のみで自然な日本語訳がない場合は原文を残してよい
-- スコープ固定、委譲、レビュー分離の運用ルールは `AGENTS.md` の company-analysis rules に従う
+- 非公式情報がない、または有効な非公式根拠がない場合でも `facts_unofficial` は空文字列で残してよい
+- `sources.tier` は全 source で必須とし、`official` または `unofficial` のどちらかを必ず入れる
+- `sources.kind` は全 source で必須とする。`official` では `recruit`, `faq`, `benefits`, `company`, `ir`, `research`, `business`, `other`、`unofficial` では `review_site`, `forum`, `career_site`, `blog`, `other` を使う
+- 非公式ソースの独立性は URL の数ではなく系列で判断する。転載、ミラー、同系サービスの別掲載面は独立根拠として数えない
+- `review_site` を増やすときは転載関係を確認する。たとえば社員口コミの転載面と元サービスを同時に独立根拠として採用しない
+- `career_site` は主に選考体験と職務理解の補助に使い、待遇数値の根拠としては原則使わない
+- `forum` は進行感や不確実性の補助にとどめ、単発投稿を独立した強い根拠として扱わない
 
 # Field semantics
-- `facts`: 公式情報や確認できた事実のみを書く。評価語を混ぜない
-- `evaluation`: `facts` に基づく判断を書く。新しい事実を足さない
-- `score`: その節の総合判断
+- `facts_official`: 公式情報や確認できた一次情報のみを書く。評価語を混ぜない
+- `facts_unofficial`: 口コミ、就活体験談、社員口コミ、二次情報などの補助根拠を書く。評価語を混ぜない。根拠がなければ空文字列でよい
+- `evaluation`: 公式情報と非公式情報の両方を踏まえた最終判断を書く。新しい事実を足さない
+- `score_official`: 公式情報だけで付けた暫定スコア
+- `score_final`: 非公式情報も踏まえた統合スコア
 - `scope.ambiguity_note`: 固定対象と公開情報のずれ、または曖昧性を書く
 - `summary.conclusion`: 会社全体の短い結論を 2 から 4 文で書く
 - `summary.final_comment`: 最終評価の読みを 1 文で書く
 - `summary.suitable_for`, `summary.not_suitable_for`, `summary.concerns`: 箇条書きで書く
-- `sources`: 実際に判断根拠として使った URL だけを書く。可能な限り多くの公式ソースを使い、少なくとも募集要項、FAQ、福利厚生または働き方、会社概要またはIRの4系統を優先し、研究職なら研究所・技術組織ページも加える
+- `sources`: 実際に判断根拠として使った URL だけを書く。可能な限り多くの公式ソースを使い、少なくとも募集要項、FAQ、福利厚生または働き方、会社概要またはIRの4系統を優先し、研究職なら研究所・技術組織ページも加える。各 source には `tier: official | unofficial` と `kind` を付ける
+- `sources`: 非公式 source を複数書いてよいが、評価時には独立系列が何本あるかを意識する。転載やミラーを並べても一致度を上げたことにはしない
 - `run_metadata`: 親が知っている実行条件だけを書く。子は自分のモデル名や推論労力を推測しない
-- `compensation.structured`: 公開された共通比較項目を数値または列挙で書く。数値項目の未公表は `null`、`remote_work_policy` の未公表だけ `unknown`
-- `compensation.structured.starting_salary_yen`: 固定した評価対象の新卒枠に直接対応する公式の月額初任給を優先する。役職別の初任給がなく、その評価対象が広い新卒エンジニア共通給与に明確に含まれる場合のみ、その共通値を使ってよい。月額初任給を特定できない場合は `null`
-- `compensation.structured.starting_salary_bachelor_yen`, `starting_salary_master_yen`, `starting_salary_doctor_yen`: 学位別初任給が公式に明示されている場合のみ入れる。月額値だけを使い、年額や想定年収は入れない。学位別に公開されていない場合は省略または `null`
-- `compensation.structured.average_annual_income_yen`: 採用主体に対応する最新の公式平均年収を優先する。複数の公式値がある場合は、原則として最新の有価証券報告書や年次報告書などの法定開示を優先する。平均年収が公開されていない場合は `null`
-- `compensation.structured.average_overtime_hours_per_month`: 月平均残業時間の公式値だけを書く。みなし残業時間や固定残業時間を代入しない
-- `compensation.structured.annual_holidays_days`: 年間休日数の明示値だけを書く。土日祝や休暇制度から自力で合算しない
-- `compensation.structured.remote_work_policy`: 公開制度から `full`, `hybrid`, `limited`, `none`, `unknown` を選ぶ。育児・介護・傷病など条件付きのみなら `limited`
+- `compensation.structured_official`: 公開された共通比較項目の正本を書く。数値項目の未公表は `null`、`remote_work_policy` の未公表だけ `unknown`
+- `compensation.structured_unofficial`: 非公式情報から得た参考値を書く。本文評価の補助には使ってよいが、公式値の代わりにはしない
+- `compensation.structured_unofficial`: 独立系列の非公式根拠から得た参考値だけを書く。学生体験談サイトや掲示板の数値は原則入れない
+- `compensation.structured_official.starting_salary_yen`: 固定した評価対象の新卒枠に直接対応する公式の月額初任給を優先する。役職別の初任給がなく、その評価対象が広い新卒エンジニア共通給与に明確に含まれる場合のみ、その共通値を使ってよい。月額初任給を特定できない場合は `null`
+- `compensation.structured_official.starting_salary_bachelor_yen`, `starting_salary_master_yen`, `starting_salary_doctor_yen`: 学位別初任給が公式に明示されている場合のみ入れる。月額値だけを使い、年額や想定年収は入れない。学位別に公開されていない場合は省略または `null`
+- `compensation.structured_official.average_annual_income_yen`: 採用主体に対応する最新の公式平均年収を優先する。複数の公式値がある場合は、原則として最新の有価証券報告書や年次報告書などの法定開示を優先する。平均年収が公開されていない場合は `null`
+- `compensation.structured_official.average_overtime_hours_per_month`: 月平均残業時間の公式値だけを書く。みなし残業時間や固定残業時間を代入しない
+- `compensation.structured_official.annual_holidays_days`: 年間休日数の明示値だけを書く。土日祝や休暇制度から自力で合算しない
+- `compensation.structured_official.remote_work_policy`: 公開制度から `full`, `hybrid`, `limited`, `none`, `unknown` を選ぶ。育児・介護・傷病など条件付きのみなら `limited`
+- `compensation.structured_unofficial.*`: 非公式情報から得た参考値を書く。未確認は `null` または `unknown` とし、比較表の正本には使わない
 
 # Prohibitions
 - 必須キーを省略しない
@@ -168,6 +196,11 @@ run_metadata.fixed_by_parent: bool
 - 総合点を YAML に書かない
 - 親が固定した `evaluation_target` を独断で差し替えない
 - 参照禁止と言われた既存レポートや他エージェント結果を読まない
+- 非公式情報で `starting_salary_yen` や `average_annual_income_yen` などの構造化数値を上書きしない
+- `structured_official` と `structured_unofficial` を混ぜない
+- `facts_official` と `facts_unofficial` を混ぜない
+- 非公式ソースの転載関係を無視して独立根拠の数を水増ししない
+- `review_site` の待遇数値と `career_site` / `forum` の選考体験を同じ強さの根拠として扱わない
 
 # Adjustment rule
 - 補正は原則使わない
@@ -192,17 +225,28 @@ run_metadata.fixed_by_parent: bool
 # Workflow
 1. 親が与えた `company_name`, `survey_date`, `slug`, `scope` を確認する
 2. 固定された `evaluation_target` が公開情報と整合するか確認する
-3. 6項目の `facts`, `evaluation`, `score` を埋める
-4. `compensation.structured` を公開情報に従って埋める
-5. `adjustment`, `summary`, `sources` を埋める
-6. 必須キー、型、`null` の使い方を自己点検して返す
+3. 公式情報だけで 6項目の `facts_official` と `score_official` を埋める
+4. 非公式情報を補助的に確認し、`facts_unofficial` と `score_final` を埋める
+   - 使う前に、各 unofficial source が独立系列か、転載・ミラーかを簡単に判定する
+   - 社員口コミ系、学生の選考体験系、掲示板系を用途別に使い分ける
+   - 同一系列が疑われる source は 1 系列として扱い、複数票のように数えない
+5. `evaluation` を統合判断として書く
+6. `compensation.structured_official` を公開情報に従って埋める
+7. 必要なら `compensation.structured_unofficial` を非公式情報から埋める
+8. `adjustment`, `summary`, `sources` を埋める
+9. 必須キー、型、`null` の使い方を自己点検して返す
 
 # Pre-return checklist
 - 単一の YAML オブジェクトだけを返している
 - `version = 1`
 - `scope` と 6 sections の必須キーがある
-- `compensation.structured` の必須キーがある
+- `compensation.structured_official` の必須キーがある
 - 自然言語欄は日本語で書いている
 - 数値系の不明な構造化値は `null`
 - `remote_work_policy` の不明値だけ `unknown`
+- `facts_official` と `facts_unofficial` を分けている
+- `score_official` と `score_final` を埋めている
+- `sources` に `tier` を付けている
+- 非公式 source の用途と独立性が崩れていない
+- 非公式の構造化数値は `structured_unofficial` に分けている
 - 総合点や補正後総合点を YAML に書いていない

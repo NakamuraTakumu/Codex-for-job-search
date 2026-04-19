@@ -31,6 +31,25 @@ WEIGHTS = {
     "stability": 0.20,
 }
 
+OFFICIAL_SOURCE_KINDS = {
+    "recruit",
+    "faq",
+    "benefits",
+    "company",
+    "ir",
+    "research",
+    "business",
+    "other",
+}
+
+UNOFFICIAL_SOURCE_KINDS = {
+    "review_site",
+    "forum",
+    "career_site",
+    "blog",
+    "other",
+}
+
 
 @dataclass
 class ValidationResult:
@@ -47,14 +66,32 @@ def is_tenth_step(value: float) -> bool:
 
 
 def compute_base_total(data: dict[str, Any]) -> float:
+    return compute_total(data, mode="final")
+
+
+def section_official_score(section: dict[str, Any]) -> float:
+    return float(section["score_official"])
+
+
+def section_final_score(section: dict[str, Any]) -> float:
+    return float(section["score_final"])
+
+
+def compute_total(data: dict[str, Any], mode: str = "final") -> float:
     total = 20 * sum(
-        WEIGHTS[key] * float(data["sections"][key]["score"]) for key, *_ in SECTION_ORDER
+        WEIGHTS[key]
+        * (
+            section_official_score(data["sections"][key])
+            if mode == "official"
+            else section_final_score(data["sections"][key])
+        )
+        for key, *_ in SECTION_ORDER
     )
     return round(total, 1)
 
 
 def compute_final_total(data: dict[str, Any]) -> float:
-    base = compute_base_total(data)
+    base = compute_total(data, mode="final")
     adjustment = float(data["adjustment"]["value"])
     return round(base + adjustment, 1)
 
@@ -98,6 +135,30 @@ def format_bool_ja(value: bool) -> str:
     return "はい" if value else "いいえ"
 
 
+def get_comp_structured_official(section: dict[str, Any]) -> dict[str, Any]:
+    if "structured_official" in section and isinstance(section["structured_official"], dict):
+        return section["structured_official"]
+    return {}
+
+
+def get_comp_structured_unofficial(section: dict[str, Any]) -> dict[str, Any] | None:
+    if "structured_unofficial" in section and isinstance(section["structured_unofficial"], dict):
+        return section["structured_unofficial"]
+    return None
+
+
+def has_meaningful_unofficial_comp(structured: dict[str, Any] | None) -> bool:
+    if not structured:
+        return False
+    for value in structured.values():
+        if value is None:
+            continue
+        if isinstance(value, str) and value == "unknown":
+            continue
+        return True
+    return False
+
+
 def _ensure_dict(value: Any, label: str, issues: list[str]) -> dict[str, Any]:
     if not isinstance(value, dict):
         issues.append(f"{label} must be a mapping")
@@ -110,6 +171,70 @@ def _ensure_list(value: Any, label: str, issues: list[str]) -> list[Any]:
         issues.append(f"{label} must be a list")
         return []
     return value
+
+
+def _validate_comp_structured(
+    structured: dict[str, Any], label: str, issues: list[str], require_all_keys: bool
+) -> None:
+    int_keys = [
+        "starting_salary_yen",
+        "average_annual_income_yen",
+        "annual_holidays_days",
+    ]
+    for subkey in int_keys:
+        if subkey not in structured:
+            if require_all_keys:
+                issues.append(f"{label} missing key: {subkey}")
+            continue
+        value = structured[subkey]
+        if value is None:
+            continue
+        if not isinstance(value, int):
+            issues.append(f"{label}.{subkey} must be an integer or null")
+            continue
+        if value < 0:
+            issues.append(f"{label}.{subkey} must be non-negative")
+
+    optional_int_keys = [
+        "starting_salary_bachelor_yen",
+        "starting_salary_master_yen",
+        "starting_salary_doctor_yen",
+    ]
+    for subkey in optional_int_keys:
+        if subkey not in structured:
+            continue
+        value = structured[subkey]
+        if value is None:
+            continue
+        if not isinstance(value, int):
+            issues.append(f"{label}.{subkey} must be an integer or null")
+            continue
+        if value < 0:
+            issues.append(f"{label}.{subkey} must be non-negative")
+
+    overtime_key = "average_overtime_hours_per_month"
+    if overtime_key not in structured:
+        if require_all_keys:
+            issues.append(f"{label} missing key: {overtime_key}")
+    else:
+        overtime = structured[overtime_key]
+        if overtime is not None:
+            if not isinstance(overtime, (int, float)):
+                issues.append(f"{label}.average_overtime_hours_per_month must be numeric or null")
+            elif overtime < 0:
+                issues.append(f"{label}.average_overtime_hours_per_month must be non-negative")
+
+    policy_key = "remote_work_policy"
+    allowed_policies = {"full", "hybrid", "limited", "none", "unknown"}
+    if policy_key not in structured:
+        if require_all_keys:
+            issues.append(f"{label} missing key: {policy_key}")
+    else:
+        policy = structured[policy_key]
+        if not isinstance(policy, str) or policy not in allowed_policies:
+            issues.append(
+                f"{label}.remote_work_policy must be one of {sorted(allowed_policies)}"
+            )
 
 
 def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
@@ -196,93 +321,61 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
             issues.append(f"sections missing key: {key}")
     for key, *_ in SECTION_ORDER:
         section = _ensure_dict(sections.get(key, {}), f"sections.{key}", issues)
-        for subkey in ["score", "facts", "evaluation"]:
+        for subkey in ["score_official", "score_final"]:
             if subkey not in section:
                 issues.append(f"sections.{key} missing key: {subkey}")
-        if "score" in section:
+                continue
             try:
-                score = float(section["score"])
+                score = float(section[subkey])
             except Exception:
-                issues.append(f"sections.{key}.score must be numeric")
+                issues.append(f"sections.{key}.{subkey} must be numeric")
             else:
                 if not 1.0 <= score <= 5.0:
-                    issues.append(f"sections.{key}.score must be between 1.0 and 5.0")
+                    issues.append(f"sections.{key}.{subkey} must be between 1.0 and 5.0")
                 if not is_tenth_step(score):
-                    issues.append(f"sections.{key}.score must use 0.1 increments")
-        for subkey in ["facts", "evaluation"]:
-            if subkey in section and (not isinstance(section[subkey], str) or not section[subkey].strip()):
-                issues.append(f"sections.{key}.{subkey} must be a non-empty string")
+                    issues.append(f"sections.{key}.{subkey} must use 0.1 increments")
+
+        if "facts_official" not in section:
+            issues.append(f"sections.{key} missing key: facts_official")
+        elif not isinstance(section["facts_official"], str) or not section["facts_official"].strip():
+            issues.append(f"sections.{key}.facts_official must be a non-empty string")
+        if "facts_unofficial" not in section:
+            issues.append(f"sections.{key} missing key: facts_unofficial")
+        elif not isinstance(section["facts_unofficial"], str):
+            issues.append(f"sections.{key}.facts_unofficial must be a string")
+
+        if "evaluation" not in section:
+            issues.append(f"sections.{key} missing key: evaluation")
+        elif not isinstance(section["evaluation"], str) or not section["evaluation"].strip():
+            issues.append(f"sections.{key}.evaluation must be a non-empty string")
         if key == "compensation":
-            structured = _ensure_dict(
-                section.get("structured", {}), "sections.compensation.structured", issues
+            structured_official = _ensure_dict(
+                section.get("structured_official", {}),
+                "sections.compensation.structured_official",
+                issues,
             )
-            int_keys = [
-                "starting_salary_yen",
-                "average_annual_income_yen",
-                "annual_holidays_days",
-            ]
-            for subkey in int_keys:
-                if subkey not in structured:
-                    issues.append(f"sections.compensation.structured missing key: {subkey}")
-                    continue
-                value = structured[subkey]
-                if value is None:
-                    continue
-                if not isinstance(value, int):
+            _validate_comp_structured(
+                structured_official,
+                "sections.compensation.structured_official",
+                issues,
+                require_all_keys=True,
+            )
+
+            if "structured_unofficial" in section:
+                structured_unofficial = _ensure_dict(
+                    section.get("structured_unofficial", {}),
+                    "sections.compensation.structured_unofficial",
+                    issues,
+                )
+                _validate_comp_structured(
+                    structured_unofficial,
+                    "sections.compensation.structured_unofficial",
+                    issues,
+                    require_all_keys=False,
+                )
+                if not has_meaningful_unofficial_comp(structured_unofficial):
                     issues.append(
-                        f"sections.compensation.structured.{subkey} must be an integer or null"
-                    )
-                    continue
-                if value < 0:
-                    issues.append(
-                        f"sections.compensation.structured.{subkey} must be non-negative"
-                    )
-            optional_int_keys = [
-                "starting_salary_bachelor_yen",
-                "starting_salary_master_yen",
-                "starting_salary_doctor_yen",
-            ]
-            for subkey in optional_int_keys:
-                if subkey not in structured:
-                    continue
-                value = structured[subkey]
-                if value is None:
-                    continue
-                if not isinstance(value, int):
-                    issues.append(
-                        f"sections.compensation.structured.{subkey} must be an integer or null"
-                    )
-                    continue
-                if value < 0:
-                    issues.append(
-                        f"sections.compensation.structured.{subkey} must be non-negative"
-                    )
-            overtime_key = "average_overtime_hours_per_month"
-            if overtime_key not in structured:
-                issues.append(f"sections.compensation.structured missing key: {overtime_key}")
-            else:
-                overtime = structured[overtime_key]
-                if overtime is not None:
-                    if not isinstance(overtime, (int, float)):
-                        issues.append(
-                            "sections.compensation.structured.average_overtime_hours_per_month "
-                            "must be numeric or null"
-                        )
-                    elif overtime < 0:
-                        issues.append(
-                            "sections.compensation.structured.average_overtime_hours_per_month "
-                            "must be non-negative"
-                        )
-            policy_key = "remote_work_policy"
-            allowed_policies = {"full", "hybrid", "limited", "none", "unknown"}
-            if policy_key not in structured:
-                issues.append(f"sections.compensation.structured missing key: {policy_key}")
-            else:
-                policy = structured[policy_key]
-                if not isinstance(policy, str) or policy not in allowed_policies:
-                    issues.append(
-                        "sections.compensation.structured.remote_work_policy must be one of "
-                        f"{sorted(allowed_policies)}"
+                        "sections.compensation.structured_unofficial must be omitted when it contains only null/unknown placeholders"
                     )
 
     adjustment = _ensure_dict(data["adjustment"], "adjustment", issues)
@@ -318,10 +411,12 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
     sources = _ensure_list(data["sources"], "sources", issues)
     if not sources:
         issues.append("sources must contain at least one entry")
+    official_kinds_seen: set[str] = set()
+    official_count = 0
     for i, src in enumerate(sources):
         label = f"sources[{i}]"
         src_map = _ensure_dict(src, label, issues)
-        for key in ["label", "url"]:
+        for key in ["label", "url", "tier", "kind"]:
             if key not in src_map:
                 issues.append(f"{label} missing key: {key}")
         if "label" in src_map and (not isinstance(src_map["label"], str) or not src_map["label"].strip()):
@@ -329,6 +424,36 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
         if "url" in src_map:
             if not isinstance(src_map["url"], str) or not re.fullmatch(r"https?://\S+", src_map["url"]):
                 issues.append(f"{label}.url must be a valid http(s) URL")
+        tier = src_map.get("tier")
+        if tier not in {"official", "unofficial"}:
+            issues.append(f"{label}.tier must be one of ['official', 'unofficial']")
+            continue
+        kind = src_map.get("kind")
+        allowed_kinds = OFFICIAL_SOURCE_KINDS if tier == "official" else UNOFFICIAL_SOURCE_KINDS
+        if kind not in allowed_kinds:
+            issues.append(f"{label}.kind must be one of {sorted(allowed_kinds)} for tier={tier}")
+            continue
+        if tier == "official":
+            official_count += 1
+            official_kinds_seen.add(kind)
+
+    if official_count < 4:
+        issues.append("sources must contain at least four official entries")
+    required_official_kind_groups = [
+        {"recruit"},
+        {"faq"},
+        {"benefits"},
+        {"company", "ir"},
+    ]
+    for group in required_official_kind_groups:
+        if not official_kinds_seen.intersection(group):
+            issues.append(
+                f"sources missing required official source kind from {sorted(group)}"
+            )
+    target_text = f"{scope.get('evaluation_target', '')} {scope.get('job_type', '')}".lower()
+    looks_research = any(token in target_text for token in ["research", "研究", "r&d", "scientist"])
+    if looks_research and "research" not in official_kinds_seen:
+        issues.append("research-like targets require at least one official source with kind=research")
 
     return ValidationResult(issues, data)
 
@@ -337,7 +462,8 @@ def render_markdown(data: dict[str, Any]) -> str:
     scope = data["scope"]
     sections = data["sections"]
     summary = data["summary"]
-    base_total = compute_base_total(data)
+    official_total = compute_total(data, mode="official")
+    base_total = compute_total(data, mode="final")
     final_total = compute_final_total(data)
 
     placement = "、".join(scope["placement_candidates"])
@@ -379,9 +505,13 @@ def render_markdown(data: dict[str, Any]) -> str:
 
     for key, heading, label in SECTION_ORDER:
         section = sections[key]
-        lines.extend([heading, f"- 事実: {clean_text(section['facts'])}"])
+        lines.append(heading)
+        lines.append(f"- 公式情報: {clean_text(section['facts_official'])}")
+        unofficial = section.get("facts_unofficial", "")
+        if str(unofficial).strip():
+            lines.append(f"- 非公式情報: {clean_text(unofficial)}")
         if key == "compensation":
-            structured = section["structured"]
+            structured = get_comp_structured_official(section)
             degree_salary_parts = []
             degree_labels = [
                 ("starting_salary_bachelor_yen", "学士"),
@@ -402,27 +532,65 @@ def render_markdown(data: dict[str, Any]) -> str:
                     f"リモート方針 {format_remote_policy(structured['remote_work_policy'])}",
                 ]
             )
-            lines.append("- 構造化項目: " + ", ".join(structured_parts))
+            lines.append("- 構造化項目（公式）: " + ", ".join(structured_parts))
+
+            unofficial = get_comp_structured_unofficial(section)
+            if has_meaningful_unofficial_comp(unofficial):
+                unofficial_degree_parts = []
+                for subkey, label in degree_labels:
+                    if subkey in unofficial:
+                        unofficial_degree_parts.append(f"{label} {format_yen(unofficial[subkey])}")
+                unofficial_parts = []
+                if "starting_salary_yen" in unofficial:
+                    unofficial_parts.append(f"初任給 {format_yen(unofficial['starting_salary_yen'])}")
+                if unofficial_degree_parts:
+                    unofficial_parts.append("学位別初任給 " + " / ".join(unofficial_degree_parts))
+                if "average_annual_income_yen" in unofficial:
+                    unofficial_parts.append(
+                        f"平均年収 {format_yen(unofficial['average_annual_income_yen'])}"
+                    )
+                if "average_overtime_hours_per_month" in unofficial:
+                    unofficial_parts.append(
+                        f"月平均残業 {format_overtime_hours(unofficial['average_overtime_hours_per_month'])}"
+                    )
+                if "annual_holidays_days" in unofficial:
+                    unofficial_parts.append(
+                        f"年間休日 {format_days(unofficial['annual_holidays_days'])}"
+                    )
+                if "remote_work_policy" in unofficial:
+                    unofficial_parts.append(
+                        f"リモート方針 {format_remote_policy(unofficial['remote_work_policy'])}"
+                    )
+                if unofficial_parts:
+                    lines.append("- 構造化項目（非公式参考）: " + ", ".join(unofficial_parts))
         lines.extend(
             [
                 f"- 評価: {clean_text(section['evaluation'])}",
-                f"- スコア: {float(section['score']):.1f} / 5.0",
+                f"- スコア（公式）: {section_official_score(section):.1f} / 5.0\n"
+                f"- スコア（統合・補正前）: {section_final_score(section):.1f} / 5.0",
                 "",
             ]
         )
 
-    formula_terms = " + ".join(
-        f"{WEIGHTS[key]:.2f}×{float(sections[key]['score']):.1f}" for key, *_ in SECTION_ORDER
+    official_formula_terms = " + ".join(
+        f"{WEIGHTS[key]:.2f}×{section_official_score(sections[key]):.1f}"
+        for key, *_ in SECTION_ORDER
+    )
+    final_formula_terms = " + ".join(
+        f"{WEIGHTS[key]:.2f}×{section_final_score(sections[key]):.1f}"
+        for key, *_ in SECTION_ORDER
     )
     lines.extend(
         [
             "## 数式評価",
             *[
-                f"- {label}: `{float(sections[key]['score']):.1f} / 5.0`"
+                f"- {label}: 公式 `{section_official_score(sections[key]):.1f} / 5.0` / 統合・補正前 `{section_final_score(sections[key]):.1f} / 5.0`"
                 for key, _, label in SECTION_ORDER
             ],
-            f"- `総合評価 = 20 × ({formula_terms})`",
-            f"- `総合評価 = {base_total:.1f}`",
+            f"- `公式総合評価 = 20 × ({official_formula_terms})`",
+            f"- `公式総合評価 = {official_total:.1f}`",
+            f"- `統合総合評価（補正前） = 20 × ({final_formula_terms})`",
+            f"- `統合総合評価（補正前） = {base_total:.1f}`",
             "",
             "## 補正",
         ]
@@ -439,7 +607,8 @@ def render_markdown(data: dict[str, Any]) -> str:
         [
             "",
             "## 最終評価",
-            f"- {final_total:.1f} / 100",
+            f"- 公式総合評価: {official_total:.1f} / 100\n"
+            f"- 統合最終評価: {final_total:.1f} / 100",
             f"- {clean_text(summary['final_comment'])}",
             "",
             "## 向いている人",
@@ -452,7 +621,14 @@ def render_markdown(data: dict[str, Any]) -> str:
             *[f"- {item}" for item in summary["concerns"]],
             "",
             "## 参考文献",
-            *[f"- {src['label']}: {src['url']}" for src in data["sources"]],
+            *[
+                (
+                    f"- [{ '公式' if src.get('tier') == 'official' else '非公式' }] {src['label']}: {src['url']}"
+                    if src.get("tier") in {"official", "unofficial"}
+                    else f"- {src['label']}: {src['url']}"
+                )
+                for src in data["sources"]
+            ],
             "",
         ]
     )
