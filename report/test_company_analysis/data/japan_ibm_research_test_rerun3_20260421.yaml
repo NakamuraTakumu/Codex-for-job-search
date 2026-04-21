@@ -1,0 +1,154 @@
+version: 1
+company_name: "日本アイ・ビー・エム株式会社"
+survey_date: "2026-04-21"
+slug: "japan_ibm_research_test_rerun3_20260421"
+scope:
+  user_label: "日本IBMリサーチ"
+  evaluation_target: "日本IBM 研究員（Research）"
+  hiring_entity: "日本アイ・ビー・エム株式会社"
+  job_type: "研究員"
+  placement_candidates:
+    - "IBM Research - Tokyo"
+  stability_entity: "日本アイ・ビー・エム株式会社"
+  ambiguity_note: "公開情報では IBM Research - Tokyo は東京・新川崎・京都の複数拠点で運営されており、fixed scope の placement_candidates が東京単独である点には軽いずれがある。また公開採用ページ上、研究員の2027年度新卒採用は『現在未定』とされている。"
+fact_layer:
+  official:
+    starting_salary_yen: null
+    starting_salary_bachelor_yen: null
+    starting_salary_master_yen: null
+    starting_salary_doctor_yen: null
+    has_degree_based_starting_salary_gap: null
+    has_doctoral_hiring_track: null
+    has_doctoral_grade_advantage: null
+    average_annual_income_yen: null
+    average_overtime_hours_per_month: null
+    annual_holidays_days: null
+    remote_work_policy: hybrid
+  unofficial:
+    average_annual_income_yen: 9340000
+    average_overtime_hours_per_month: 28
+    remote_work_policy: hybrid
+sections:
+  phd_value:
+    score: 3.5
+    facts_official: >-
+      公開上の研究職は「研究員」で、2024年新卒向け説明では東京基礎研究所所属として、世界中の IBM Research 研究員と協働し、論文誌・学会発表、特許取得、標準化、オープンソース、IBM製品・サービスへの貢献を行う職種と説明されている。研究者プロフィールでは、東京拠点の研究員・シニア研究員に博士号保有者が確認できる。一方で、博士向け独立応募枠、学位別初任給、博士号による等級優遇は公式公開情報では確認できなかった。
+    facts_unofficial: >-
+      OpenMoney の研究開発職サンプルと OpenWork の給与系ページも確認したが、博士号保有そのものに連動する初任給差や等級差を示す公開記述は見当たらなかった。
+    evaluation: >-
+      研究員という職種自体は博士の研究訓練と相性が良く、実際に博士号保有研究者も多い。ただし、博士号の制度的評価を示す公開根拠は弱く、博士優遇を制度面で重視する候補者には中位評価にとどまる。
+  role_fit:
+    score: 3.8
+    facts_official: >-
+      公開採用ページでは新卒のリサーチ系に「研究員 | IBM Researchers」を掲げ、2027年度採用は現在未定とされる。2024年新卒向け研究員説明では東京基礎研究所所属で、世界の IBM Research と協働しながら論文、特許、標準化、オープンソース、製品・サービス貢献を行うと説明されている。IBM Research in Japan の公開ページでは、拠点は東京・新川崎・京都、重点領域は foundation models / LLMs、デジタルヘルス、AI支援アクセシビリティ、AI向けハイブリッドクラウド基盤、セキュア計算、量子計算、半導体とされる。
+    facts_unofficial: ""
+    evaluation: >-
+      研究職としての組織と役割は明確で、固定 scope の「研究員」とよく整合する。一方で公開時点では直近新卒採用が未定で、研究テーマの幅も広いため、計算機科学系博士にとっての実際の適合度は個別求人のテーマと時期に左右される。
+  rd_env:
+    score: 4.8
+    facts_official: >-
+      IBM Research in Japan は 1982 年設立で、IBM の第4研究所かつアジア初の研究所とされる。公開ページでは AI、量子、半導体、デジタルヘルス、アクセシビリティ、ハイブリッドクラウド基盤などの研究テーマ、Analog AI や AI Suitcase、量子、半導体、アルツハイマー関連の具体プロジェクトが示されている。研究者プロフィールでは、東京拠点の研究員が 2024-2025 年の学会論文、特許、Qiskit Optimization / Qiskit Primitives などの OSS 開発に関与していることが確認できる。採用ページでは IBMer に毎年最低 40 時間の個人学習を求めるとしている。
+    facts_unofficial: ""
+    evaluation: >-
+      企業研究所としての厚みは非常に強い。論文・特許・OSS・製品実装・産学連携が同時に見えており、理論から実装、研究から社会実装までを往復したい候補者には高水準の環境である。
+  compensation:
+    score: 3.8
+    facts_official: >-
+      研究員の公式初任給は公開確認できなかった。公開されている他新卒職種の直近募集要項では、Reference Salary 年額 4,902,000 円、本給月額 408,500 円、標準労働時間 1 日 7 時間 36 分、土日祝および年末年始休み、勤務地は日本 IBM 事業所・お客様先・サテライトオフィス・自宅などとされている。会社案内では在宅勤務制度、モバイル／サテライトオフィス、育児・介護支援、特別休暇、フレッシュ・アップ休暇を案内している。
+    facts_unofficial: >-
+      OpenMoney では会社全体の平均年収 934 万円、平均残業 28 時間、リモート日数 週 3.3 日、研究開発職 30 代前半の平均年収 996 万円と表示される。研究開発職の個別サンプルでは 33 歳・Band 7・在籍 6 年目で月間残業 0 時間の表示がある。OpenWork の比較ページでは平均年収 915 万円、残業 33.3 時間、有休消化率 55.3% と表示される。
+    evaluation: >-
+      会社全体の待遇水準と柔軟な働き方は強いが、固定 target である研究員の公式初任給が出ていない点は大きな減点要素である。非公式には高めの報酬水準が示唆されるため下限は高いが、研究員新卒としての比較可能性はまだ不十分である。
+  hiring_process:
+    score: 2.7
+    facts_official: >-
+      公式採用ガイダンスでは、エントリー時に部門・職種を選択し、エントリーシート提出、適性検査（Web）、グループ面接、個人面接複数回を経て、内々定まで 1.5 か月から 3 か月程度と案内されている。面接は原則オンラインで実施するとされる。FAQ では勤務場所の変更範囲は本社および全国事業所、職位の変更範囲はバンドの範囲内の業務全般と案内されている。
+    facts_unofficial: >-
+      研究員特化の学生向け選考体験談系列も検索したが、公開スニペットだけでは研究員枠の工程や面接内容を構造化できる情報は取れなかった。
+    evaluation: >-
+      研究職であっても公開新卒フロー上は Web 適性検査と複数面接を伴う共通選考色が強く、専門性に直接関係しない負担が残る。原則オンラインは利点だが、博士候補向けとしては選考負荷が軽いとは言いにくい。
+  stability:
+    score: 4.8
+    facts_official: >-
+      日本アイ・ビー・エム株式会社は 1937 年設立、資本金 1,053 億円、IBM Japan Holdings 合同会社の 100% 子会社である。会社案内では IBM は 170 超の国に約 30 万人の従業員を持ち、6 大陸 12 研究所にまたがる研究施設を有するとされる。会社案内では IBM を「研究開発部門を持つ数少ない IT・コンサル企業」と説明している。
+    facts_unofficial: ""
+    evaluation: >-
+      国内法人としても十分に大きく、親会社・研究所ネットワーク・事業継続性のいずれも強い。安定性は補助項目として高評価で問題ない。
+adjustment:
+  value: 0.0
+  reason: "公式情報の骨格と非公式補助情報の方向性は大きく矛盾していないため。"
+summary:
+  conclusion: >-
+    日本IBMリサーチは、企業研究所としての研究基盤とグローバル連携の強さが際立つ就職先である。AI・量子・半導体・システム・デジタルヘルスにまたがる研究テーマ、論文・特許・OSS・製品化への接続は非常に魅力的で、研究志向の博士人材には強い候補になる。一方で、博士号に対する制度的優遇は公開情報では確認できず、研究員の 2027 年度新卒採用も公開上は未定である。制度面よりも、個別ポジションの有無とテーマ適合の確認を重視して見るべき案件である。
+  final_comment: "研究環境は強いが、博士制度評価と直近採用確度の不透明さが最終判断の留保点である。"
+  suitable_for:
+    - "企業研究所で論文・特許・OSS・製品実装を横断したい人"
+    - "AI・量子・システム・半導体・デジタルヘルス周辺でグローバル共同研究を望む人"
+    - "博士号の制度優遇より、研究テーマと研究基盤を重視する人"
+  not_suitable_for:
+    - "博士号による初任給差や等級優遇を明示制度で求める人"
+    - "2027年度時点で公開新卒枠の確実性を重視する人"
+    - "初期配属テーマと勤務地を厳密に固定したい人"
+  concerns:
+    - "公開上、研究員の 2027 年度新卒採用は『現在未定』。"
+    - "研究員の公式初任給、公式平均年収、公式平均残業時間、年間休日数は確認できなかった。"
+    - "IBM Research - Tokyo は東京・新川崎・京都の複数拠点運営で、fixed scope の東京単独候補とは軽いずれがある。"
+    - "非公式の会社全体指標は OpenMoney 934 万円・28 時間、OpenWork 915 万円・33.3 時間で、おおむね近いが完全一致ではない。"
+sources:
+  - label: "日本IBM 新卒採用情報"
+    url: "https://www.ibm.com/jp-ja/careers/career-opportunities"
+    tier: "official"
+    kind: "recruit"
+  - label: "日本IBM 採用ガイダンス"
+    url: "https://www.ibm.com/jp-ja/careers/career-guidance"
+    tier: "official"
+    kind: "recruit"
+  - label: "応募者のFAQ"
+    url: "https://www.ibm.com/jp-ja/careers/faq"
+    tier: "official"
+    kind: "faq"
+  - label: "IBMおよび日本IBMについて"
+    url: "https://www.ibm.com/jp-ja/about"
+    tier: "official"
+    kind: "company"
+  - label: "IBM Japan Corporate Profile"
+    url: "https://www.ibm.com/downloads/documents/jp-ja/1227cc9d6ecb96c0"
+    tier: "official"
+    kind: "benefits"
+  - label: "リサーチ - IBM採用情報"
+    url: "https://www.ibm.com/jp-ja/careers/research"
+    tier: "official"
+    kind: "research"
+  - label: "IBM Research in Japan"
+    url: "https://research.ibm.com/labs/japan"
+    tier: "official"
+    kind: "research"
+  - label: "Takayuki Katsuki - IBM Research"
+    url: "https://research.ibm.com/people/takayuki-katsuki"
+    tier: "official"
+    kind: "research"
+  - label: "Takashi Imamichi - IBM Research"
+    url: "https://research.ibm.com/people/takashi-imamichi"
+    tier: "official"
+    kind: "research"
+  - label: "ITスペシャリスト（コンサルティング事業本部）募集要項"
+    url: "https://www.ibm.com/downloads/documents/jp-ja/1227c12efab8b263"
+    tier: "official"
+    kind: "recruit"
+  - label: "OpenMoney 日本アイ・ビー・エム 企業ページ"
+    url: "https://openmoney.jp/corporations/93"
+    tier: "unofficial"
+    kind: "review_site"
+  - label: "OpenMoney 日本アイ・ビー・エム 研究開発職給与詳細"
+    url: "https://openmoney.jp/salaries/1dTXkn4"
+    tier: "unofficial"
+    kind: "review_site"
+  - label: "OpenWork 比較ページ（日本アイ・ビー・エム）"
+    url: "https://www.openwork.jp/a0910000005SWJ7/compa/a0910000000G1yx/"
+    tier: "unofficial"
+    kind: "review_site"
+run_metadata:
+  executor: "parent_runner"
+  model: "gpt-5.4"
+  reasoning_effort: "high"
+  fixed_by_parent: true

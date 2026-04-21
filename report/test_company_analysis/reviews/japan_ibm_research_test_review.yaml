@@ -1,0 +1,11 @@
+review:
+  verdict: pass
+  findings: []
+  passed_checks:
+    - "scope_integrity: fixed scope fields match the requested 日本IBM 研究員（Research） scope and IBM Research - Tokyo placement candidate."
+    - "source_separation: official and unofficial facts are kept separate, and source tiers match the cited evidence type."
+    - "structured_data: fact_layer values are internally consistent, with official fields left null where the analysis does not claim official confirmation."
+    - "score_consistency: section scores, weighted formula, and final score are mathematically consistent."
+    - "summary_consistency: summary, suitable_for, not_suitable_for, and concerns align with the section-level evaluations."
+    - "render_consistency: the rendered Markdown reflects the analysis YAML structure and content without missing sections."
+    - "residual_uncertainty: the analysis preserves the key uncertainty that the research role's 2026-04-20 recruitment status is not fully concrete."

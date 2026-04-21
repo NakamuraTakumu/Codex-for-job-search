@@ -2,6 +2,7 @@
 
 ## Document Organization
 - Organize reusable documents under `document/` with topic-specific subdirectories instead of placing many files directly in `document/`.
+- In this repository, company-analysis-related reusable documents may be placed directly under `document/` when the repository itself is already specialized enough that an extra `company_analysis/` label would be redundant.
 - For company analysis outputs, use `report/company_analysis/companies/` for per-company analyses and `report/company_analysis/reviews/` for cross-company reviews or comparisons.
 - Prefer concise document filenames. Avoid redundant prefixes when the parent directory already provides the context.
 - Choose the shortest filename that still remains unambiguous within its directory.
@@ -20,6 +21,7 @@
 - When a company-analysis task is requested, do not perform parent-side pre-analysis first; invoke the `company-analysis-runner` workflow immediately.
 - Treat `company-analysis-runner` as the parent-agent orchestration layer and `company-analysis` as the evaluator used by subagents.
 - Only bypass `company-analysis-runner` when the task is narrowly limited to inspecting or editing existing outputs, tools, or documentation rather than running the analysis workflow itself.
+- When a review subagent is used in the company-analysis workflow, pass the analysis YAML and any rendered Markdown as inline data in the prompt rather than handing off repository file paths or asking the subagent to fetch them from the filesystem.
 
 ## Drafting and Review Separation
 - When a task involves drafting an artifact and then checking, reviewing, or critiquing that artifact, prefer using a separate subagent for review rather than having the drafting subagent review its own output.

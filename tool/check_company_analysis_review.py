@@ -33,10 +33,12 @@ ALLOWED_CATEGORIES = {
     "section_boundary",
     "score_consistency",
     "summary_consistency",
+    "render_consistency",
     "residual_uncertainty",
 }
 ALLOWED_SECTIONS = {
     "scope",
+    "fact_layer",
     "phd_value",
     "role_fit",
     "rd_env",
@@ -45,8 +47,10 @@ ALLOWED_SECTIONS = {
     "stability",
     "summary",
     "sources",
-    "adjustment",
+    "rendered_output",
 }
+ALLOWED_REVIEW_KEYS = {"verdict", "findings", "passed_checks"}
+ALLOWED_FINDING_KEYS = {"severity", "category", "section", "message", "suggested_fix"}
 
 
 def load_yaml(path: Path) -> Any:
@@ -79,6 +83,9 @@ def validate_review_data(data: Any) -> list[str]:
     for key in ["verdict", "findings", "passed_checks"]:
         if key not in review:
             issues.append(f"review missing key: {key}")
+    extra_review_keys = sorted(set(review) - ALLOWED_REVIEW_KEYS)
+    for key in extra_review_keys:
+        issues.append(f"review has unknown key: {key}")
 
     verdict = review.get("verdict")
     if verdict not in ALLOWED_VERDICTS:
@@ -91,6 +98,9 @@ def validate_review_data(data: Any) -> list[str]:
         for key in ["severity", "category", "section", "message", "suggested_fix"]:
             if key not in finding_map:
                 issues.append(f"{label} missing key: {key}")
+        extra_finding_keys = sorted(set(finding_map) - ALLOWED_FINDING_KEYS)
+        for key in extra_finding_keys:
+            issues.append(f"{label} has unknown key: {key}")
         if finding_map.get("severity") not in ALLOWED_SEVERITIES:
             issues.append(f"{label}.severity must be one of {sorted(ALLOWED_SEVERITIES)}")
         if finding_map.get("category") not in ALLOWED_CATEGORIES:
@@ -108,6 +118,8 @@ def validate_review_data(data: Any) -> list[str]:
 
     if verdict == "pass" and findings:
         issues.append("review.verdict=pass requires review.findings to be empty")
+    if verdict == "pass" and not passed_checks:
+        issues.append("review.verdict=pass requires at least one review.passed_checks entry")
     if verdict == "revise" and not findings:
         issues.append("review.verdict=revise requires at least one review.finding")
 

@@ -2,7 +2,6 @@ Use the `company-analysis` skill at `.agents/skills/company-analysis/SKILL.md`.
 
 Return a single complete YAML object only.
 Do not include markdown fences or extra commentary.
-Do not include total score fields.
 
 Fixed scope:
 - company_name: {{company_name}}
@@ -14,23 +13,11 @@ Fixed scope:
 - scope.job_type: {{scope_job_type}}
 - scope.placement_candidates: {{scope_placement_candidates}}
 - scope.stability_entity: {{scope_stability_entity}}
-- scope.ambiguity_note: child must always fill this field; if there is no major mismatch, write a short explicit sentence saying so.
 
-Additional constraints:
-- Do not read existing company reports, review notes, archive outputs, or other subagent results.
-- Use official/public sources as much as possible.
-- Write all natural-language fields in Japanese.
-- Do not switch to a different evaluation target unless the parent explicitly changes the scope.
-- If any fixed scope field appears inconsistent with public information, keep the fixed scope and record the mismatch in `scope.ambiguity_note` instead of changing targets yourself.
-- Follow this order strictly:
-  1. Read official sources first and fill `facts_official` and `score_official` for all sections.
-  2. Only after the official pass, read unofficial sources and fill `facts_unofficial` and `score_final`.
-- Do not mix official and unofficial evidence in the same facts field.
-- Do not overwrite structured numeric fields such as salary, annual income, overtime, holidays, or remote policy with unofficial information.
-- Use `structured_unofficial` only for non-official reference values that materially inform the final judgment. Omit it entirely if no useful unofficial structured values exist, and do not emit all-null placeholder entries.
-- If no useful unofficial evidence exists for a section, leave `facts_unofficial` as an empty string and keep `score_final` equal to `score_official` unless there is a justified reason to change it.
-- Treat unofficial sources by independent information lineage, not by raw URL count. Do not count mirrors, reposts, or different surfaces of the same underlying service as independent corroboration.
-- Use `review_site` mainly for employee-review evidence and compensation reference values, `career_site` mainly for hiring-process and role-fit evidence, and `forum` mainly for timing/noise-level uncertainty. Do not use student experience sites or forums as primary compensation-number evidence.
-- Mark every source with both `tier` and `kind`.
-- For official sources, use `kind` from: `recruit`, `faq`, `benefits`, `company`, `ir`, `research`, `business`, `other`.
-- For unofficial sources, use `kind` from: `review_site`, `forum`, `career_site`, `blog`, `other`.
+Use the fixed scope exactly as given. If public information looks inconsistent with it, keep the scope and record the mismatch in `scope.ambiguity_note`.
+
+First build `fact_layer.official` and `facts_official` from official sources.
+If important fields remain missing after the official pass, do not stop there. Run at least one unofficial search pass.
+If the unofficial pass does not yield a usable structured value, still record which unofficial lineage you checked and why it did not support a value in `facts_unofficial` or `summary.concerns`.
+Do not wait for full official coverage before recording relevant unofficial observations for the same missing field.
+Record relevant weak unofficial observations opportunistically whenever they appear, even if they will only be used as tentative evidence.

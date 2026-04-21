@@ -1,0 +1,11 @@
+review:
+  verdict: pass
+  findings: []
+  passed_checks:
+    - "scope_integrity: fixed scope fields align with the analysis target, hiring entity, job type, placement candidate, and stability entity"
+    - "source_separation: official and unofficial evidence are kept in separate fields, with sources.tier matching the declared lineage"
+    - "source_quality: official sources carry the main claims, while unofficial sources are used only as supplementary reference points"
+    - "structured_data: official nulls are not overwritten by unofficial values, and unit handling is consistent"
+    - "score_consistency: section scores and evaluations are broadly aligned with the cited facts and conclusions"
+    - "summary_consistency: the summary matches the section-level judgments about strong research infrastructure and limited public visibility into hiring details"
+    - "residual_uncertainty: the ambiguity around the public research hiring page is explicitly preserved rather than overclaimed"

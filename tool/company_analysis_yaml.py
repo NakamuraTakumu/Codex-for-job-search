@@ -66,34 +66,19 @@ def is_tenth_step(value: float) -> bool:
 
 
 def compute_base_total(data: dict[str, Any]) -> float:
-    return compute_total(data, mode="final")
+    return compute_total(data)
 
 
-def section_official_score(section: dict[str, Any]) -> float:
-    return float(section["score_official"])
+def section_score(section: dict[str, Any]) -> float:
+    return float(section["score"])
 
 
-def section_final_score(section: dict[str, Any]) -> float:
-    return float(section["score_final"])
-
-
-def compute_total(data: dict[str, Any], mode: str = "final") -> float:
+def compute_total(data: dict[str, Any]) -> float:
     total = 20 * sum(
-        WEIGHTS[key]
-        * (
-            section_official_score(data["sections"][key])
-            if mode == "official"
-            else section_final_score(data["sections"][key])
-        )
+        WEIGHTS[key] * section_score(data["sections"][key])
         for key, *_ in SECTION_ORDER
     )
     return round(total, 1)
-
-
-def compute_final_total(data: dict[str, Any]) -> float:
-    base = compute_total(data, mode="final")
-    adjustment = float(data["adjustment"]["value"])
-    return round(base + adjustment, 1)
 
 
 def clean_text(value: str) -> str:
@@ -135,19 +120,24 @@ def format_bool_ja(value: bool) -> str:
     return "はい" if value else "いいえ"
 
 
-def get_comp_structured_official(section: dict[str, Any]) -> dict[str, Any]:
-    if "structured_official" in section and isinstance(section["structured_official"], dict):
-        return section["structured_official"]
-    return {}
+def format_optional_bool_ja(value: bool | None) -> str:
+    if value is None:
+        return "未公表"
+    return "あり" if value else "なし"
 
 
-def get_comp_structured_unofficial(section: dict[str, Any]) -> dict[str, Any] | None:
-    if "structured_unofficial" in section and isinstance(section["structured_unofficial"], dict):
-        return section["structured_unofficial"]
-    return None
+def get_fact_layer_official(data: dict[str, Any]) -> dict[str, Any]:
+    fact_layer = data.get("fact_layer", {})
+    return fact_layer["official"]
 
 
-def has_meaningful_unofficial_comp(structured: dict[str, Any] | None) -> bool:
+def get_fact_layer_unofficial(data: dict[str, Any]) -> dict[str, Any] | None:
+    fact_layer = data.get("fact_layer", {})
+    unofficial = fact_layer.get("unofficial")
+    return unofficial if isinstance(unofficial, dict) else None
+
+
+def has_meaningful_unofficial_fact_layer(structured: dict[str, Any] | None) -> bool:
     if not structured:
         return False
     for value in structured.values():
@@ -212,6 +202,18 @@ def _validate_comp_structured(
         if value < 0:
             issues.append(f"{label}.{subkey} must be non-negative")
 
+    optional_bool_keys = [
+        "has_degree_based_starting_salary_gap",
+        "has_doctoral_hiring_track",
+        "has_doctoral_grade_advantage",
+    ]
+    for subkey in optional_bool_keys:
+        if subkey not in structured:
+            continue
+        value = structured[subkey]
+        if value is not None and not isinstance(value, bool):
+            issues.append(f"{label}.{subkey} must be a boolean or null")
+
     overtime_key = "average_overtime_hours_per_month"
     if overtime_key not in structured:
         if require_all_keys:
@@ -248,8 +250,8 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
         "survey_date",
         "slug",
         "scope",
+        "fact_layer",
         "sections",
-        "adjustment",
         "summary",
         "sources",
     ]
@@ -315,25 +317,59 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
         if placements and not all(isinstance(x, str) and x.strip() for x in placements):
             issues.append("scope.placement_candidates entries must be non-empty strings")
 
+    fact_layer = _ensure_dict(data["fact_layer"], "fact_layer", issues)
+    if "official" not in fact_layer:
+        issues.append("fact_layer missing key: official")
+    official_fact = _ensure_dict(
+        fact_layer.get("official", {}),
+        "fact_layer.official",
+        issues,
+    )
+    _validate_comp_structured(
+        official_fact,
+        "fact_layer.official",
+        issues,
+        require_all_keys=True,
+    )
+    if "unofficial" in fact_layer:
+        unofficial_fact = _ensure_dict(
+            fact_layer.get("unofficial", {}),
+            "fact_layer.unofficial",
+            issues,
+        )
+        _validate_comp_structured(
+            unofficial_fact,
+            "fact_layer.unofficial",
+            issues,
+            require_all_keys=False,
+        )
+        if not has_meaningful_unofficial_fact_layer(unofficial_fact):
+            issues.append(
+                "fact_layer.unofficial must be omitted when it contains only null/unknown placeholders"
+            )
+
     sections = _ensure_dict(data["sections"], "sections", issues)
     for key, *_ in SECTION_ORDER:
         if key not in sections:
             issues.append(f"sections missing key: {key}")
     for key, *_ in SECTION_ORDER:
         section = _ensure_dict(sections.get(key, {}), f"sections.{key}", issues)
-        for subkey in ["score_official", "score_final"]:
-            if subkey not in section:
-                issues.append(f"sections.{key} missing key: {subkey}")
-                continue
+        if "score" not in section:
+            issues.append(f"sections.{key} missing key: score")
+        elif any(legacy in section for legacy in ["score_final", "score_official"]):
+            issues.append(
+                f"sections.{key} must not include legacy score_final/score_official"
+            )
+        else:
             try:
-                score = float(section[subkey])
+                score = float(section["score"])
             except Exception:
-                issues.append(f"sections.{key}.{subkey} must be numeric")
+                issues.append(f"sections.{key}.score must be numeric")
             else:
                 if not 1.0 <= score <= 5.0:
-                    issues.append(f"sections.{key}.{subkey} must be between 1.0 and 5.0")
+                    issues.append(f"sections.{key}.score must be between 1.0 and 5.0")
                 if not is_tenth_step(score):
-                    issues.append(f"sections.{key}.{subkey} must use 0.1 increments")
+                    issues.append(f"sections.{key}.score must use 0.1 increments")
 
         if "facts_official" not in section:
             issues.append(f"sections.{key} missing key: facts_official")
@@ -348,52 +384,10 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
             issues.append(f"sections.{key} missing key: evaluation")
         elif not isinstance(section["evaluation"], str) or not section["evaluation"].strip():
             issues.append(f"sections.{key}.evaluation must be a non-empty string")
-        if key == "compensation":
-            structured_official = _ensure_dict(
-                section.get("structured_official", {}),
-                "sections.compensation.structured_official",
-                issues,
+        if any(field in section for field in ["structured_official", "structured_unofficial"]):
+            issues.append(
+                f"sections.{key}.structured_* is no longer allowed; use top-level fact_layer"
             )
-            _validate_comp_structured(
-                structured_official,
-                "sections.compensation.structured_official",
-                issues,
-                require_all_keys=True,
-            )
-
-            if "structured_unofficial" in section:
-                structured_unofficial = _ensure_dict(
-                    section.get("structured_unofficial", {}),
-                    "sections.compensation.structured_unofficial",
-                    issues,
-                )
-                _validate_comp_structured(
-                    structured_unofficial,
-                    "sections.compensation.structured_unofficial",
-                    issues,
-                    require_all_keys=False,
-                )
-                if not has_meaningful_unofficial_comp(structured_unofficial):
-                    issues.append(
-                        "sections.compensation.structured_unofficial must be omitted when it contains only null/unknown placeholders"
-                    )
-
-    adjustment = _ensure_dict(data["adjustment"], "adjustment", issues)
-    for key in ["value", "reason"]:
-        if key not in adjustment:
-            issues.append(f"adjustment missing key: {key}")
-    if "value" in adjustment:
-        try:
-            adj = float(adjustment["value"])
-        except Exception:
-            issues.append("adjustment.value must be numeric")
-        else:
-            if not -5.0 <= adj <= 5.0:
-                issues.append("adjustment.value must be between -5.0 and 5.0")
-            if not is_tenth_step(adj):
-                issues.append("adjustment.value must use 0.1 increments")
-    if "reason" in adjustment and not isinstance(adjustment["reason"], str):
-        issues.append("adjustment.reason must be a string")
 
     summary = _ensure_dict(data["summary"], "summary", issues)
     for key in ["conclusion", "final_comment", "suitable_for", "not_suitable_for", "concerns"]:
@@ -462,11 +456,11 @@ def render_markdown(data: dict[str, Any]) -> str:
     scope = data["scope"]
     sections = data["sections"]
     summary = data["summary"]
-    official_total = compute_total(data, mode="official")
-    base_total = compute_total(data, mode="final")
-    final_total = compute_final_total(data)
+    fact_official = get_fact_layer_official(data)
+    fact_unofficial = get_fact_layer_unofficial(data)
+    base_total = compute_total(data)
 
-    placement = "、".join(scope["placement_candidates"])
+    placement = "、".join(scope["placement_candidates"]) if scope["placement_candidates"] else "未確定"
     lines: list[str] = [
         f"# {data['company_name']}",
         f"調査日: {data['survey_date']}",
@@ -488,7 +482,7 @@ def render_markdown(data: dict[str, Any]) -> str:
 
     lines.extend(
         [
-        "## 結論",
+        f"## 結論（{scope['evaluation_target']}）",
         clean_text(summary["conclusion"]),
         "",
         "## 分析対象の確定",
@@ -503,6 +497,73 @@ def render_markdown(data: dict[str, Any]) -> str:
         ]
     )
 
+    degree_labels = [
+        ("starting_salary_bachelor_yen", "学士"),
+        ("starting_salary_master_yen", "修士"),
+        ("starting_salary_doctor_yen", "博士"),
+    ]
+    official_degree_parts = []
+    for subkey, label in degree_labels:
+        if subkey in fact_official:
+            official_degree_parts.append(f"{label} {format_yen(fact_official[subkey])}")
+    official_parts = [
+        f"初任給 {format_yen(fact_official['starting_salary_yen'])}",
+    ]
+    if official_degree_parts:
+        official_parts.append("学位別初任給 " + " / ".join(official_degree_parts))
+    official_parts.extend(
+        [
+            f"学位別初任給差 {format_optional_bool_ja(fact_official.get('has_degree_based_starting_salary_gap'))}",
+            f"博士向け採用導線 {format_optional_bool_ja(fact_official.get('has_doctoral_hiring_track'))}",
+            f"博士向け格付け差 {format_optional_bool_ja(fact_official.get('has_doctoral_grade_advantage'))}",
+            f"平均年収 {format_yen(fact_official['average_annual_income_yen'])}",
+            f"月平均残業 {format_overtime_hours(fact_official['average_overtime_hours_per_month'])}",
+            f"年間休日 {format_days(fact_official['annual_holidays_days'])}",
+            f"リモート方針 {format_remote_policy(fact_official['remote_work_policy'])}",
+        ]
+    )
+    lines.append("## 主要数値・制度事実")
+    lines.append("- 公式: " + ", ".join(official_parts))
+    if has_meaningful_unofficial_fact_layer(fact_unofficial):
+        unofficial_degree_parts = []
+        for subkey, label in degree_labels:
+            if subkey in fact_unofficial:
+                unofficial_degree_parts.append(f"{label} {format_yen(fact_unofficial[subkey])}")
+        unofficial_parts = []
+        if "starting_salary_yen" in fact_unofficial:
+            unofficial_parts.append(f"初任給 {format_yen(fact_unofficial['starting_salary_yen'])}")
+        if unofficial_degree_parts:
+            unofficial_parts.append("学位別初任給 " + " / ".join(unofficial_degree_parts))
+        bool_labels = [
+            ("has_degree_based_starting_salary_gap", "学位別初任給差"),
+            ("has_doctoral_hiring_track", "博士向け採用導線"),
+            ("has_doctoral_grade_advantage", "博士向け格付け差"),
+        ]
+        for subkey, label in bool_labels:
+            if subkey in fact_unofficial:
+                unofficial_parts.append(
+                    f"{label} {format_optional_bool_ja(fact_unofficial.get(subkey))}"
+                )
+        if "average_annual_income_yen" in fact_unofficial:
+            unofficial_parts.append(
+                f"平均年収 {format_yen(fact_unofficial['average_annual_income_yen'])}"
+            )
+        if "average_overtime_hours_per_month" in fact_unofficial:
+            unofficial_parts.append(
+                f"月平均残業 {format_overtime_hours(fact_unofficial['average_overtime_hours_per_month'])}"
+            )
+        if "annual_holidays_days" in fact_unofficial:
+            unofficial_parts.append(
+                f"年間休日 {format_days(fact_unofficial['annual_holidays_days'])}"
+            )
+        if "remote_work_policy" in fact_unofficial:
+            unofficial_parts.append(
+                f"リモート方針 {format_remote_policy(fact_unofficial['remote_work_policy'])}"
+            )
+        if unofficial_parts:
+            lines.append("- 非公式参考: " + ", ".join(unofficial_parts))
+    lines.append("")
+
     for key, heading, label in SECTION_ORDER:
         section = sections[key]
         lines.append(heading)
@@ -510,105 +571,30 @@ def render_markdown(data: dict[str, Any]) -> str:
         unofficial = section.get("facts_unofficial", "")
         if str(unofficial).strip():
             lines.append(f"- 非公式情報: {clean_text(unofficial)}")
-        if key == "compensation":
-            structured = get_comp_structured_official(section)
-            degree_salary_parts = []
-            degree_labels = [
-                ("starting_salary_bachelor_yen", "学士"),
-                ("starting_salary_master_yen", "修士"),
-                ("starting_salary_doctor_yen", "博士"),
-            ]
-            for subkey, label in degree_labels:
-                if subkey in structured:
-                    degree_salary_parts.append(f"{label} {format_yen(structured[subkey])}")
-            structured_parts = [f"初任給 {format_yen(structured['starting_salary_yen'])}"]
-            if degree_salary_parts:
-                structured_parts.append("学位別初任給 " + " / ".join(degree_salary_parts))
-            structured_parts.extend(
-                [
-                    f"平均年収 {format_yen(structured['average_annual_income_yen'])}",
-                    f"月平均残業 {format_overtime_hours(structured['average_overtime_hours_per_month'])}",
-                    f"年間休日 {format_days(structured['annual_holidays_days'])}",
-                    f"リモート方針 {format_remote_policy(structured['remote_work_policy'])}",
-                ]
-            )
-            lines.append("- 構造化項目（公式）: " + ", ".join(structured_parts))
-
-            unofficial = get_comp_structured_unofficial(section)
-            if has_meaningful_unofficial_comp(unofficial):
-                unofficial_degree_parts = []
-                for subkey, label in degree_labels:
-                    if subkey in unofficial:
-                        unofficial_degree_parts.append(f"{label} {format_yen(unofficial[subkey])}")
-                unofficial_parts = []
-                if "starting_salary_yen" in unofficial:
-                    unofficial_parts.append(f"初任給 {format_yen(unofficial['starting_salary_yen'])}")
-                if unofficial_degree_parts:
-                    unofficial_parts.append("学位別初任給 " + " / ".join(unofficial_degree_parts))
-                if "average_annual_income_yen" in unofficial:
-                    unofficial_parts.append(
-                        f"平均年収 {format_yen(unofficial['average_annual_income_yen'])}"
-                    )
-                if "average_overtime_hours_per_month" in unofficial:
-                    unofficial_parts.append(
-                        f"月平均残業 {format_overtime_hours(unofficial['average_overtime_hours_per_month'])}"
-                    )
-                if "annual_holidays_days" in unofficial:
-                    unofficial_parts.append(
-                        f"年間休日 {format_days(unofficial['annual_holidays_days'])}"
-                    )
-                if "remote_work_policy" in unofficial:
-                    unofficial_parts.append(
-                        f"リモート方針 {format_remote_policy(unofficial['remote_work_policy'])}"
-                    )
-                if unofficial_parts:
-                    lines.append("- 構造化項目（非公式参考）: " + ", ".join(unofficial_parts))
         lines.extend(
             [
                 f"- 評価: {clean_text(section['evaluation'])}",
-                f"- スコア（公式）: {section_official_score(section):.1f} / 5.0\n"
-                f"- スコア（統合・補正前）: {section_final_score(section):.1f} / 5.0",
+                f"- スコア: {section_score(section):.1f} / 5.0",
                 "",
             ]
         )
 
-    official_formula_terms = " + ".join(
-        f"{WEIGHTS[key]:.2f}×{section_official_score(sections[key]):.1f}"
-        for key, *_ in SECTION_ORDER
-    )
     final_formula_terms = " + ".join(
-        f"{WEIGHTS[key]:.2f}×{section_final_score(sections[key]):.1f}"
+        f"{WEIGHTS[key]:.2f}×{section_score(sections[key]):.1f}"
         for key, *_ in SECTION_ORDER
     )
     lines.extend(
         [
             "## 数式評価",
             *[
-                f"- {label}: 公式 `{section_official_score(sections[key]):.1f} / 5.0` / 統合・補正前 `{section_final_score(sections[key]):.1f} / 5.0`"
+                f"- {label}: `{section_score(sections[key]):.1f} / 5.0`"
                 for key, _, label in SECTION_ORDER
             ],
-            f"- `公式総合評価 = 20 × ({official_formula_terms})`",
-            f"- `公式総合評価 = {official_total:.1f}`",
-            f"- `統合総合評価（補正前） = 20 × ({final_formula_terms})`",
-            f"- `統合総合評価（補正前） = {base_total:.1f}`",
-            "",
-            "## 補正",
-        ]
-    )
-
-    adjustment = float(data["adjustment"]["value"])
-    reason = data["adjustment"]["reason"].strip()
-    if adjustment == 0:
-        lines.append("- なし")
-    else:
-        lines.append(f"- {adjustment:+.1f}")
-        lines.append(f"- 理由: {reason}")
-    lines.extend(
-        [
+            f"- `総合評価（補正前） = 20 × ({final_formula_terms})`",
+            f"- `総合評価（補正前） = {base_total:.1f}`",
             "",
             "## 最終評価",
-            f"- 公式総合評価: {official_total:.1f} / 100\n"
-            f"- 統合最終評価: {final_total:.1f} / 100",
+            f"- 総合評価: {base_total:.1f} / 100",
             f"- {clean_text(summary['final_comment'])}",
             "",
             "## 向いている人",

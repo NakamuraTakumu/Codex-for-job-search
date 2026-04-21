@@ -1,0 +1,12 @@
+review:
+  verdict: pass
+  findings: []
+  passed_checks:
+    - fixed scope の evaluation_target, hiring_entity, job_type, placement_candidates, stability_entity は分析YAML全体で整合している
+    - facts_official と facts_unofficial は分離されており、公式値の上書きも見られない
+    - 公式ソースの使い方は妥当で、非公式ソースが公式情報を覆す形にはなっていない
+    - 学位別初任給、平均年収、残業、休日、リモート方針の structured data に明確な取り違えはない
+    - 各セクションの facts と evaluation、および最終スコア 81.0 は計算上整合している
+    - summary は各セクションの判断を過不足なく要約しており、重大な矛盾はない
+    - 付与された rendered markdown は analysis YAML と概ね一致しており、見出し・内容の対応も保たれている
+    - scope の曖昧性は ambiguity_note と懸念点で適切に残されている
