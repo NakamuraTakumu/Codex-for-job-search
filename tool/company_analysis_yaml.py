@@ -116,6 +116,18 @@ def format_remote_policy(value: str) -> str:
     return labels.get(value, value)
 
 
+def format_application_route(value: str | None) -> str:
+    labels = {
+        "direct": "この企業へ直接応募",
+        "parent_company": "親会社経由で配属",
+        "group_company": "グループ会社経由で配属",
+        "unknown": "未公表",
+    }
+    if value is None:
+        return "未公表"
+    return labels.get(value, value)
+
+
 def format_bool_ja(value: bool) -> str:
     return "はい" if value else "いいえ"
 
@@ -206,6 +218,7 @@ def _validate_comp_structured(
         "has_degree_based_starting_salary_gap",
         "has_doctoral_hiring_track",
         "has_doctoral_grade_advantage",
+        "has_target_job_hiring_track",
     ]
     for subkey in optional_bool_keys:
         if subkey not in structured:
@@ -236,6 +249,17 @@ def _validate_comp_structured(
         if not isinstance(policy, str) or policy not in allowed_policies:
             issues.append(
                 f"{label}.remote_work_policy must be one of {sorted(allowed_policies)}"
+            )
+
+    route_key = "application_route"
+    allowed_routes = {"direct", "parent_company", "group_company", "unknown"}
+    if route_key in structured:
+        route = structured[route_key]
+        if route is not None and (
+            not isinstance(route, str) or route not in allowed_routes
+        ):
+            issues.append(
+                f"{label}.application_route must be one of {sorted(allowed_routes)} or null"
             )
 
 
@@ -516,6 +540,8 @@ def render_markdown(data: dict[str, Any]) -> str:
             f"学位別初任給差 {format_optional_bool_ja(fact_official.get('has_degree_based_starting_salary_gap'))}",
             f"博士向け採用導線 {format_optional_bool_ja(fact_official.get('has_doctoral_hiring_track'))}",
             f"博士向け格付け差 {format_optional_bool_ja(fact_official.get('has_doctoral_grade_advantage'))}",
+            f"研究職採用導線 {format_optional_bool_ja(fact_official.get('has_target_job_hiring_track'))}",
+            f"応募経路 {format_application_route(fact_official.get('application_route'))}",
             f"平均年収 {format_yen(fact_official['average_annual_income_yen'])}",
             f"月平均残業 {format_overtime_hours(fact_official['average_overtime_hours_per_month'])}",
             f"年間休日 {format_days(fact_official['annual_holidays_days'])}",
@@ -538,12 +564,17 @@ def render_markdown(data: dict[str, Any]) -> str:
             ("has_degree_based_starting_salary_gap", "学位別初任給差"),
             ("has_doctoral_hiring_track", "博士向け採用導線"),
             ("has_doctoral_grade_advantage", "博士向け格付け差"),
+            ("has_target_job_hiring_track", "研究職採用導線"),
         ]
         for subkey, label in bool_labels:
             if subkey in fact_unofficial:
                 unofficial_parts.append(
                     f"{label} {format_optional_bool_ja(fact_unofficial.get(subkey))}"
                 )
+        if "application_route" in fact_unofficial:
+            unofficial_parts.append(
+                f"応募経路 {format_application_route(fact_unofficial.get('application_route'))}"
+            )
         if "average_annual_income_yen" in fact_unofficial:
             unofficial_parts.append(
                 f"平均年収 {format_yen(fact_unofficial['average_annual_income_yen'])}"

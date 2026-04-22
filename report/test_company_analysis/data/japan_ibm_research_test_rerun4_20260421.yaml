@@ -23,6 +23,8 @@ fact_layer:
     has_degree_based_starting_salary_gap: null
     has_doctoral_hiring_track: null
     has_doctoral_grade_advantage: null
+    has_target_job_hiring_track: true
+    application_route: direct
     average_annual_income_yen: null
     average_overtime_hours_per_month: null
     annual_holidays_days: null
