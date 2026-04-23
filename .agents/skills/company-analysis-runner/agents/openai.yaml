@@ -1,0 +1,4 @@
+interface:
+  display_name: "Company Analysis Runner"
+  short_description: "Orchestrate company analysis workflows"
+  default_prompt: "Use $company-analysis-runner to orchestrate a fixed-target company analysis workflow end to end."

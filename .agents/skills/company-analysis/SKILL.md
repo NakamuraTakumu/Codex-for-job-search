@@ -1,298 +1,127 @@
 ---
 name: company-analysis
-description: 旧帝大の博士課程人材向けに企業を評価する子エージェント用スキル。固定した評価対象について、`fact_layer`、6項目の記述、単一スコア、summary、sources を含む検証可能な YAML を返す。
+description: 研究志向の博士人材向けに、親が固定した採用対象を評価し、公式 / 非公式の証拠を明確に分けた検証可能な YAML レポートを返す skill。
 ---
 
-# Purpose
-- このスキルは、親エージェントが会社分析を子エージェントへ委譲するときに使う
-- 子エージェントの返却物は Markdown ではなく YAML とする
-- Markdown の描画、保存、最終ファイル化は親エージェントまたはスクリプトが担当する
-- レポートは1本にまとめ、公式情報で骨格を作った後に非公式情報を補助的に統合する
+# 目的
+- 親エージェントが会社分析を子エージェントへ委譲するときに使う。
+- 子エージェントは Markdown ではなく YAML を返さなければならない。
+- Markdown への描画、ファイル保存、最終成果物の生成は親エージェントまたは script が担当する。
 
-# Reader assumptions
-- 想定読者は、旧帝大の博士課程人材またはそれに準ずる研究志向の候補者である
-- 候補者の居住地の既定値は仙台とする
-- 関心領域の既定値は、機械学習、数理・抽象理論、形式化、プログラミング言語理論、ソフトウェア工学、アルゴリズム実装、GPU / 型システムなどの計算機実装、研究成果のソフトウェア化・社会実装とする
-- 分野適合だけで加点しない。博士の専門性が実際にどう評価されるかを優先して見る
+# 想定読者
+- 既定の読者は、上位国立大学の研究志向な博士課程学生、またはそれに近いプロフィールの人物である。
+- 既定の居住地は仙台とする。
+- 既定の関心は、機械学習、数学や抽象理論、形式化、プログラミング言語理論、ソフトウェア工学、アルゴリズム実装、GPU や型システムのような計算機システム実装、および研究成果をソフトウェアや社会実装へつなぐことにある。
+- 単なるトピックの一致だけを高く評価してはいけない。博士の専門性が採用制度上どのように評価されるかを優先する。
 
-# Core principles
-- 企業紹介ではなく、就職先としての実態を評価する
-- 事実と評価を分ける
-- 速度より、固定 target の判断に必要な情報の網羅と official / unofficial の分離の明瞭さを優先する。時間をかけてよいので、急いで雑に埋めない
-- 固定した target の判断に重要な情報欠損を見つけたときは、単に `未確認` を置いて先に進まず、追加調査の優先対象として扱う
-- 可能な限り多くの関連ソースを使う。ただし同じ内容の重複ページを機械的に増やすのではなく、official / unofficial を分離したまま、募集要項、FAQ、福利厚生、会社概要、IR、研究所・技術組織、事業・技術紹介、口コミ、選考体験談など、種類の異なる根拠を広く集める
+# 中核原則
+- 会社プロフィールとしてではなく、「働く場」として評価する。
+- 事実と評価を分ける。
+- 速さよりも、評価対象に対する網羅性と、公式 / 非公式の明確な分離を優先する。時間を使ってよく、穴を急いで埋めてはいけない。
+- 評価対象について重要な欠損が見つかったとき、単に `unconfirmed` と書いて済ませてはいけない。追加調査の優先対象として扱う。
+- リポジトリ内の `document/`、`report/`、archive output、既存の会社分析、review note、他 agent output を読んではいけない。過去のローカル分析を引き継がず、公開情報を直接調べる。
+- `references/output-contract.md` や `assets/yaml_output_template.yaml` を、出力 schema を先に固定するために早い段階で開いてはいけない。最終出力制約を見る前に、まず調査と証拠の骨格を固める。
+- 関連する情報源はできるだけ多く使う。同じ内容の重複ページで数を稼いではいけない。募集ページ、FAQ、福利厚生ページ、会社情報、IR、研究所や技術組織のページ、事業・技術説明、口コミ、選考体験など、公式・非公式の両 tier にまたがって多様な種類の情報源を集める。
 
 # Workflow
-1. 親が与えた `company_name`, `survey_date`, `slug`, `scope` を確認する
-2. 固定された `evaluation_target` が公開情報と整合するか確認する
-3. 固定 target に関係する official / unofficial の関連ソースを広く集める
-4. 重要な欠損や曖昧性が大きい論点では、official / unofficial の両方で追加探索する
-5. 集めた根拠を `fact_layer.official` / `fact_layer.unofficial` と `facts_official` / `facts_unofficial` に分離して整理する
-6. 重要な欠損が残る場合は、unofficial pass を省略しない
-7. `evaluation` を統合判断として書く
-8. 各 section の `score` を最終判断として付ける
-9. `summary`, `sources` を埋める
-10. 必須キー、型、`null` の使い方を自己点検して返す
+1. 親が与えた `company_name`、`survey_date`、`slug`、`scope` を確認する。
+2. 親が固定した `evaluation_target` が公開情報と整合しているか確認する。
+3. 評価対象に関係する公式・非公式の情報源を幅広く集める。
+4. 重要な曖昧さや欠損がある点については、公式側・非公式側の両方で追加検索する。
+5. 証拠は、まず公式 / 非公式で分け、その中で構造化した事実と叙述的な証拠に整理する。
+6. 重要な欠損が残る場合、非公式情報の調査を省略してはいけない。
+7. 証拠の骨格が固まってから、最終レポートの整形と整合チェックに進む。
+8. 出力準備中に、裏づけのない主張、未解消の矛盾、追加証拠が必要な重要欠損が見つかったら、確定前に調査へ戻る。
+9. 各評価判断は、整理した証拠に基づいて書き、事実と評価を混ぜない。
+10. 採点は、その判断が固まってから付ける。
+11. レポート全体の結論と情報源一覧を完成させる。
+12. 返却前に、構造、型、欠損値の扱いを最終点検する。
 
-# Research method
-## Source guidance
-### Official sources
-- 公式ソースの優先順は、採用ページ、募集要項、FAQ、福利厚生・働き方、会社概要、IR / 有価証券報告書、研究所・技術組織・技術紹介とする
-- 採用広報だけでなく、IR、法定開示、研究所ページ、技術発表、事業紹介も見て、採用情報と事業実態を分けて裏取りする
+# 調査方法
+## 情報源の指針
+### 公式情報
+- 公式情報は次の順で優先する: 採用ページ、募集要項、FAQ、福利厚生・働き方のページ、会社概要ページ、IR / 有価証券報告関連、研究所・技術組織・技術紹介ページ。
+- 公式情報は最終的に最低 4 本以上を確保するつもりで集め、少なくとも採用情報と、会社情報または IR 情報を含める。
+- FAQ、福利厚生、研究職寄りの対象に対する研究所・研究活動の説明ページは、優先して探す。
+- そうした種類のページが公開上見当たらない場合は、それだけで打ち切らず、見つからなかったことや公開の薄さを分析本文のどこかに残す。
+- 採用 PR だけに頼ってはいけない。IR、法定開示、研究所ページ、技術論文、事業説明も読み、採用文言と実態を切り分ける。
 
-### Unofficial sources
-- 口コミサイト、就活体験談サイト、学生向け career site、個人ブログ、個人サイト、CV、研究者プロフィール、研究室ブログ、大学・研究科の募集転載、イベント案内、登壇資料、技術ブログ、OSS 活動、GitHub organization などを探索対象にしてよい。代表例として、`OpenWork`、`キャリコネ`、`エン カイシャの評判`、`OpenMoney`、`ONE CAREER`、`就活会議`、`外資就活`、`note`、`Qiita`、`Zenn`、`はてなブログ`、`GitHub`、個人 Web site / CV、大学や研究室の募集ページがある
-- research-like target では、個人サイト、CV、研究者プロフィール、研究室ブログ、大学側転載、Open House やイベント案内、研究インターン体験記を優先してよい
-- engineer-like target では、技術ブログ、OSS、GitHub organization、登壇資料、開発インターン体験記、エンジニア社員の発信を優先してよい
-- `career_site` は主に選考体験と職務理解の補助に使い、待遇数値の根拠としては原則使わない
-- `forum` は進行感や不確実性の補助にとどめ、単発投稿を独立した強い根拠として扱わない
+### 非公式情報
+- 口コミサイト、選考体験サイト、学生向け就職サイト、個人 blog、個人サイト、CV、研究者 profile、研究室 blog、大学側の再掲募集ページ、イベント告知、発表資料、技術 blog、OSS 活動、GitHub organization などを検索する。典型例として `OpenWork`、`キャリコネ`、`エン カイシャの評判`、`OpenMoney`、`ONE CAREER`、`就活会議`、`外資就活`、`note`、`Qiita`、`Zenn`、`はてなブログ`、`GitHub`、個人サイト / CV、大学・研究室の採用関連ページなどは、必ず一度は明示的に検索する。
+- 研究職寄りの対象では、個人サイト、CV、研究者 profile、研究室 blog、大学側の再掲、open house や event page、研究 internship report を優先してよい。
+- エンジニア職寄りの対象では、技術 blog、OSS、GitHub organization、発表資料、ソフトウェア internship report、engineering staff publication を優先してよい。
+- 非公式情報源を同列に扱わず、それぞれが直接支える主張に応じて重みづける。
+- `career_site` は主に選考理解や職務理解の補助として使い、給与額の主根拠にはしない。
+- `forum` は進み方や不確実性の補助に限る。単発投稿を、それだけで強い証拠として扱ってはいけない。
 
-## Coverage
-- 比較軸を固定して集める。少なくとも、採用対象、職種、初期配属、博士評価、初任給、平均年収、働き方、選考負担、研究/技術環境、企業基盤を意識して読む
-- 1ページで全項目を埋めず、official / unofficial を問わず、可能な限り異なる種類の関連ソースで cross-check する
+## 先に押さえる数値・制度 facts
+- 評価対象に最も直接対応する公式の月額初任給を特定できるか確認する。
+- 学士・修士・博士で公式に月額初任給が分かれているか確認する。
+- 公式情報が、単なる職務期待の違いではなく、学位による実際の初任給差を支えるか確認する。
+- 公式に博士向け採用導線、博士向け職種、またはそれに準ずる直接的な制度上の入口があるか確認する。
+- 単に応募可能というだけでなく、博士の格付け優位、等級優位、制度上の上乗せ評価を支える公式情報があるか確認する。
+- 評価対象に対する公式の採用導線が存在するか確認する。現年度が undecided や delayed でも、職種区分そのものが公式に存在するかは別に見る。
+- 応募者が評価対象にどう到達するか、すなわち直接応募なのか、親会社経由なのか、グループ会社経由なのか、なお不明なのかを確認する。
+- 採用主体または公式に正当化できる最も近い範囲について、最新の公式平均年収を確認する。
+- 採用主体または直接関係する従業員集計範囲について、公式の平均月残業時間が開示されているか確認する。
+- 年間休日について、自分で推定せずに済む明示的な年間日数があるか確認する。
+- 公式のリモート勤務方針を確認し、その制度理解ができてから一貫した分類に落とせる状態にする。
 
-## Missing information
-- 情報が薄いときは拙速に `未確認` や `未公表` を確定せず、重要欠損を埋めるための追加探索を優先する。official coverage は可能な限り満たすが、official が薄い論点では unofficial の関連観測も並行して集めてよい
-- 重要な欠損が残る場合は unofficial pass を省略しない。意味のある構造化値が取れなくても、見た系列と不発理由、得られた関連観測は `facts_unofficial` または `summary.concerns` に残す
-- `fact_layer.unofficial` と `facts_unofficial` を作るかどうかは、取れた値の有無だけでなく、重要欠損が残っているかも踏まえて判断する
-- 良い情報だけでなく制約要因や不利要因も探す。配属不確定、博士優遇なし、選考負担、リモート制限、赤字、研究所と採用枠のずれなどを明示的に確認する
+## 欠損情報
+- 情報が薄いとき、急いで未確認や非公開と結論づけてはいけない。重要な欠損を埋めるための追加検索を優先する。公式側を可能な限り満たすことを目指しつつ、公式が薄い点については並行して関連する非公式情報も集める。
+- 重要な欠損が残る場合は、非公式情報の調査を省略してはいけない。確かな値が得られなくても、どの系統を調べたか、なぜ値を確定できなかったか、関連する非公式情報は記録に残す。
+- ポジティブだけでなく制約やネガティブも探す。配属不確実性、博士 premium 不在、採用負担の重さ、remote 制限、赤字、研究所と採用導線の不一致などを明示的に確認する。
 
-# Evaluation criteria
+# 評価基準
 
 ## 1. phd_value
-- 博士採用枠、学位別給与、学士・修士・博士の初任給差、博士向け役割、博士採用実績、専門性評価の有無を見る
-- 主に `fact_layer` の `has_degree_based_starting_salary_gap`, `has_doctoral_hiring_track`, `has_doctoral_grade_advantage`, `starting_salary_*` を読む。学位差や博士導線が制度上見えるほど上がりやすい
-- 職務内容そのものの面白さや研究テーマ適合ではなく、博士号・研究実績が制度上どう評価されるかを見る
-- 給与水準の高さそのものではなく、学位差や格付け差が博士号の制度的評価として存在するかを見る
-- 見ないもの: 研究所の規模、R&D テーマの豊富さ、初期配属の具体性
-- 高評価: 博士課程を明示的に対象とし、学位差や研究実績評価が制度や要項で確認できる
-- 低評価: 博士応募は可能でも、博士特有の扱いや研究実績評価がほとんど確認できない
+- 博士向け採用導線、学位別給与、学士 / 修士 / 博士の初任給差、博士向け固有職種、博士採用実績、専門性の制度的評価を調べる。
+- 主に、学位別初任給差、博士向け導線、博士向け格付け優位、学位別月額初任給に関する、最も具体的な公式・非公式の証拠を読む。明確な学位差や博士向け導線は通常この項目の評価を上げる。
+- 面白そうな仕事内容や研究テーマとの相性ではなく、博士号や研究実績が制度上どう評価されるかを評価する。
+- 給与水準そのものでは採点しない。学位差や格付け差の制度有無で採点する。
+- 考慮しないもの: 研究室規模、R&D テーマの広さ、具体的な初期配属。
+- 高得点: 博士候補を明示的に対象とし、制度や募集要項で学位差や研究実績評価が確認できる。
+- 低得点: 公開情報が、博士候補が一般応募者とほぼ同様に扱われること、または博士向け制度 / 評価がほぼ存在しないことを積極的に示している。
 
 ## 2. role_fit
-- 初期配属、ジョブ型か総合職か、候補者の専門分野との接続、配属確約、仕事内容の具体性を見る
-- 主に `fact_layer` の `has_target_job_hiring_track` と `application_route` を読む。研究職として直接応募できるか、別採用枠から後で配属されるのかは role fit の重要材料である
-- 組織全体の研究開発基盤ではなく、固定した職務と初期配属に候補者の専門分野がどう接続するかを見る
-- 見ないもの: 組織全体の論文数、研究所全体の対外実績、会社全体の R&D 投資規模
-- 高評価: 初期配属と仕事内容が具体的で、専門分野との接続が強く、配属確度も高い
-- 低評価: 仕事内容や配属候補が広すぎて、専門分野が実際の職務へどう乗るか読みづらい
+- 初期配属、職種が職種別採用か総合職か、専門性と仕事内容の接続、配属確度、募集要項の具体性を調べる。
+- 主に、評価対象に対する公式の採用導線の有無と、応募者がその対象に直接到達できるか、親会社 / グループ会社経由かという到達経路に関する、最も具体的な証拠を読む。この到達可能性は大きな入力である。
+- 当年採用の open / undecided / delayed は、この軸の主要な score 要因として使わず、不確実性メモに回す。
+- 組織全体の R&D 基盤ではなく、評価対象の職務と初期配属が候補者の専門性とどう接続するかを評価する。
+- 考慮しないもの: 会社全体の論文数、研究所全体の外部実績、全社的 R&D 投資規模。
+- 高得点: 初期配属と仕事内容が具体的で、専門性との接続が強く、配属確度も高い。
+- 低得点: 職務や配属候補が広すぎて、専門性が実務でどう生きるか見えにくい。
 
 ## 3. rd_env
-- 研究所や R&D 部門、論文・特許・学会・OSS、理論と実装の往復可能性を見る
-- `fact_layer` の構造化値には強く依存せず、主に研究所ページ、技術発表、論文、OSS、外部連携の厚みを読む。`has_target_job_hiring_track` や `application_route` は補助にとどめる
-- 固定職務の配属確度ではなく、その会社・組織に存在する研究開発基盤の厚みを見る
-- 見ないもの: 自分の初期配属の確度、職種名の研究っぽさ、個別ポジションの魅力
-- 高評価: 研究所・R&D 部門、論文・特許・学会・OSS・外部連携・技術資産化が複数確認できる
-- 低評価: 技術組織はあるが、研究開発基盤や対外実績の公開確認が弱い
+- 研究所や R&D 部門、論文、特許、会議、OSS、理論と実装の往復を支える環境があるかを調べる。
+- ここでは数値・制度の骨格に依存しすぎない。主に研究所ページ、技術発信、論文、OSS、外部連携の証拠を読む。
+- 候補者自身の配属確度ではなく、会社 / 組織の研究開発基盤の厚みを評価する。
+- 考慮しないもの: 自分の初期配属確度、job title が research っぽいか、特定 1 つのポジションの魅力。
+- 公開情報で R&D 基盤が部分的にしか見えなくても、それ自体を強いマイナスとして扱わない。基盤が薄い具体的な証拠がない限り、中立寄りに保つ。
+- 高得点: 研究所や R&D 部門、論文、特許、会議、OSS、外部連携、技術資産化が複数の手がかりで確認できる。
+- 低得点: 研究基盤が薄い、外部実績が乏しい、継続的な研究 / 技術アウトプットの支えが弱いという具体的な証拠がある。
 
 ## 4. compensation
-- 初任給、平均年収、賞与、福利厚生、住宅補助、勤務地、働き方、裁量など、待遇水準そのものを見る
-- 主に `fact_layer` の `starting_salary_*`, `average_annual_income_yen`, `average_overtime_hours_per_month`, `annual_holidays_days`, `remote_work_policy` を読む。高い水準や柔軟な制度は上がりやすいが、学位差の意味づけはここで過剰に読まない
-- 学位差の有無や大きさは `phd_value` 側で制度的評価として読む
+- 初任給、平均年収、賞与、福利厚生、住宅支援、勤務地、働き方、自律性を含む処遇水準そのものを調べる。
+- 主に、初任給、学位別初任給、平均年収、平均残業時間、年間休日、`remote_work_policy` に関する、最も具体的な証拠を読む。高水準や柔軟な制度は評価を上げやすいが、学位差をここで過剰に読まない。
+- 学位差の有無や大きさは、処遇水準そのものというより、制度的な博士評価を示す証拠として読む。
+- 評価対象の公式給与額が非公開だからという理由だけで、この score を強く下げてはいけない。公式の働き方制度、福利厚生、自律性、全社的な処遇の手がかりが良ければ、具体的なマイナス材料がない限り、中位後半〜上位寄りに保ってよい。
+- 評価対象固有の給与が欠けていても、会社全体の公式制度、採用主体の法定平均年収、一貫した unofficial compensation lineage のような近い範囲の証拠を補助として使ってよい。不確実性は明示し、欠損だけで大きく下げてはいけない。
+- 高得点: 処遇水準が明確に強い、または評価対象固有の給与が一部非公開でも、柔軟な働き方・福利厚生・低〜中程度の負担が総合して強い。
+- 低得点: 低い給与、重い残業、低い柔軟性、薄い福利厚生、強い勤務地 / 働き方制約の具体的な証拠がある。
 
 ## 5. hiring_process
-- SPI 等の有無、テスト数、ES 負荷、面接回数、専門性を直接見てくれるかを見る
-- `fact_layer` では `application_route` を補助的に読む。直接応募か別採用枠経由かは選考の見通しに影響するが、勤務制度や給与の fact はここでは主に使わない
-- 面接や面談がオンライン中心か対面中心か、それに伴う移動・宿泊・拘束時間の負担も見る。候補者の居住地は既定で仙台とする
-- 高評価: 選考負担が軽く、研究能力や専門性を直接評価し、準備コストに対して納得感が高い
-- 低評価: SPI などの一般適性検査が重く、就活慣れや generic な足切りを強く要求し、専門性と無関係な負担が大きい
+- SPI 等の有無、試験数、書類負担、面接回数、期間、応募者全体負担を調べる。
+- 評価対象への到達経路に関する最も具体的な証拠は補助的に使う。直接行けるか、より広い採用経路を経由するかは予測可能性に効くが、処遇や働き方の事実を主に読む場所ではない。
+- 当年採用の open / undecided / delayed は、選考負担そのものではなく、当年採用状況に関する不確実性として記録する。
+- 面接が主に online か in person か、および仙台在住想定の交通・宿泊・時間負担も考慮する。
+- 高得点: 採用負担が軽く、面接や試験が少ない / 効率的で、online 対応が良く、準備コストに納得感がある。
+- 低得点: SPI のような aptitude test が重い、generic な就活フィルタが強い、面接や提出物が多い、全体負担が高い。
 
 ## 6. stability
-- 売上、従業員数、資本金、上場、親会社・グループ基盤、事業継続性を見る
-- 主に `scope.stability_entity` と、それに対応する会社概要・IR・法定開示を読む。`application_route` や研究職導線はここでは補助的にしか使わない
-- 主軸ではなく補助項目として扱う
+- 売上、従業員数、資本金、上場有無、親 / グループ支援、事業継続性を調べる。
+- 主に、固定された `stability_entity` と、それに対応する会社情報、IR、法定開示を読む。評価対象への到達経路や研究職への配属経路は補助情報としてのみ使う。
 
-# Scoring
-## Basic rule
-- 各項目は `1.0` 以上 `5.0` 以下の `0.1` 刻みで採点する
-- スコアは単一の `score` にし、official / unofficial を分離して整理したうえでの最終判断として付ける。両者の反映度の差は下の `Unofficial weighting` に従う
-
-## Overcount prevention
-- 同じ根拠や同じ論点を複数 section に強く反映して、score や最終判断を水増ししない
-- 非公式根拠は URL 数ではなく独立した情報系列で数える。転載やミラーを並べても一致度や重みを増やしたことにはしない
-- 社員口コミ系は、同一系列なら 1 系列として重み付けする
-
-## Unofficial weighting
-### Official absent
-- official 情報が存在しない、または公開確認できないこと自体を強い減点要因にしない
-- official が薄い論点では、relevant unofficial を使って暫定的な score を付けてよい。不確実性は、score を過度に下げる代わりに `scope.ambiguity_note` や `summary.concerns` に残す
-
-### Consistent unofficial
-- official と食い違わない unofficial は、補助根拠として score に反映してよい
-- ただし、同じ内容を公式根拠で言える場合よりは少し弱く扱う。single / weak unofficial は軽い補正にとどめ、独立した unofficial 2 系列以上が同じ方向を示す場合はより強く反映してよい
-
-### Conflicting unofficial
-- official と unofficial が食い違う場合だけ、unofficial の反映を強く制限する
-- 単発の unofficial だけで official 判断を覆さない。独立した unofficial 2 系列以上が同じ方向を示す場合に初めて、公式判断の強い見直し根拠として扱ってよい
-
-## Aggregation
-- 総合評価と補正後評価の計算は、親エージェントまたは Python スクリプトが行う
-- 重み付き集計の正本は Python 実装に従う
-
-# YAML output contract
-- 返却物は単一の YAML オブジェクトだけにする
-- Markdown、コードフェンス、前置き説明、後置きコメントを混ぜない
-- 総合点、補正後総合点、Markdown 見出し、数式評価本文は YAML に入れない
-
-## Schema
-```text
-version: 1
-company_name: str
-survey_date: YYYY-MM-DD
-slug: [a-z0-9_]+
-scope: map
-fact_layer: map
-sections: map
-summary: map
-sources: list[{label: str, url: http(s) URL, tier: official|unofficial, kind: source_kind}]
-run_metadata: optional map set by parent
-
-scope.user_label: str
-scope.evaluation_target: str
-scope.hiring_entity: str
-scope.job_type: str
-scope.placement_candidates: list[str]
-scope.stability_entity: str
-scope.ambiguity_note: str
-
-fact_layer.official: fact_struct
-fact_layer.unofficial: optional sparse_fact_struct
-
-fact_struct.starting_salary_yen: int | null
-fact_struct.starting_salary_bachelor_yen: optional int | null
-fact_struct.starting_salary_master_yen: optional int | null
-fact_struct.starting_salary_doctor_yen: optional int | null
-fact_struct.has_degree_based_starting_salary_gap: optional bool | null
-fact_struct.has_doctoral_hiring_track: optional bool | null
-fact_struct.has_doctoral_grade_advantage: optional bool | null
-fact_struct.has_target_job_hiring_track: optional bool | null
-fact_struct.application_route: optional direct | parent_company | group_company | unknown
-fact_struct.average_annual_income_yen: int | null
-fact_struct.average_overtime_hours_per_month: float | int | null
-fact_struct.annual_holidays_days: int | null
-fact_struct.remote_work_policy: full | hybrid | limited | none | unknown
-
-sparse_fact_struct.starting_salary_yen: optional int | null
-sparse_fact_struct.starting_salary_bachelor_yen: optional int | null
-sparse_fact_struct.starting_salary_master_yen: optional int | null
-sparse_fact_struct.starting_salary_doctor_yen: optional int | null
-sparse_fact_struct.has_degree_based_starting_salary_gap: optional bool | null
-sparse_fact_struct.has_doctoral_hiring_track: optional bool | null
-sparse_fact_struct.has_doctoral_grade_advantage: optional bool | null
-sparse_fact_struct.has_target_job_hiring_track: optional bool | null
-sparse_fact_struct.application_route: optional direct | parent_company | group_company | unknown
-sparse_fact_struct.average_annual_income_yen: optional int | null
-sparse_fact_struct.average_overtime_hours_per_month: optional float | int | null
-sparse_fact_struct.annual_holidays_days: optional int | null
-sparse_fact_struct.remote_work_policy: optional full | hybrid | limited | none | unknown
-
-sections.phd_value: section
-sections.role_fit: section
-sections.rd_env: section
-sections.compensation: section
-sections.hiring_process: section
-sections.stability: section
-
-section.score: float in [1.0, 5.0], step 0.1
-section.facts_official: str
-section.facts_unofficial: str
-section.evaluation: str
-
-summary.conclusion: str
-summary.final_comment: str
-summary.suitable_for: list[str]
-summary.not_suitable_for: list[str]
-summary.concerns: list[str]
-
-run_metadata.executor: str
-run_metadata.model: str
-run_metadata.reasoning_effort: str
-run_metadata.fixed_by_parent: bool
-```
-
-## Field guide
-### scope
-- `scope.user_label`, `scope.evaluation_target`, `scope.hiring_entity`, `scope.job_type`, `scope.stability_entity` は、親が固定した評価対象をそのまま表す
-- `scope.placement_candidates` は必須キーとし、候補を固定できない場合は空配列を許す
-- `scope.ambiguity_note` は固定対象と公開情報のずれ、または曖昧性を書く。必ず埋め、大きな不一致がない場合も短く明示する
-
-### fact_layer
-- `fact_layer` は 6 つの評価項目より前に置く構造化事実層とする。数値や制度差の事実はここに集め、6 項目ではその意味づけを書く
-- `fact_layer.official` は公式情報から取れる数値的・制度的事実を書く
-- `fact_layer.unofficial` は非公式情報から取れる参考値を書く。公式値の代わりにせず、独立系列の補助根拠だけを入れる
-- `fact_layer.*` の `null` は単なる空欄ではなく、判断に重要だが確認できなかった事実を表す。重要な `null` が多い場合は、そのまま流さず追加探索を優先する
-- `fact_layer.*.remote_work_policy` の `unknown` は、`fact_layer.official.remote_work_policy` と、`fact_layer.unofficial` を残す場合の `fact_layer.unofficial.remote_work_policy` でだけ使ってよい
-- `fact_layer.official.starting_salary_yen` は、固定した評価対象の新卒枠に直接対応する公式の月額初任給を優先する。役職別の初任給がなく、その評価対象が広い新卒エンジニア共通給与に明確に含まれる場合のみ、その共通値を使ってよい。月額初任給を特定できない場合は `null`
-- `fact_layer.official.starting_salary_bachelor_yen`, `starting_salary_master_yen`, `starting_salary_doctor_yen` は、学位別初任給が公式に明示されている場合のみ入れる。月額値だけを使い、年額や想定年収は入れない。学位別に公開されていない場合は省略または `null`
-- `fact_layer.official.has_degree_based_starting_salary_gap` は、学士・修士・博士で初任給差が制度上明示されているかを書く。未確認は `null`
-- `fact_layer.official.has_doctoral_hiring_track` は、博士向けの独立応募枠や導線が制度上確認できるかを書く。未確認は `null`
-- `fact_layer.official.has_doctoral_grade_advantage` は、博士や研究実績に応じた格付け差・等級差が制度上確認できるかを書く。未確認は `null`
-- `fact_layer.official.has_target_job_hiring_track` は、固定した評価対象の職種カテゴリや応募導線が公式に存在するかを書く。職種カテゴリはあるが当年度募集が未定な場合は `true` としてよいが、その不確実性は `scope.ambiguity_note` や `summary.concerns` に残す。未確認は `null`
-- `fact_layer.official.application_route` は、固定した評価対象に対し、応募者が `scope.hiring_entity` へ直接応募するのか、親会社経由で配属されるのか、グループ会社経由で配属されるのかを書く。`direct`, `parent_company`, `group_company`, `unknown` を使う
-- `fact_layer.official.average_annual_income_yen` は、採用主体に対応する最新の公式平均年収を優先する。複数の公式値がある場合は、原則として最新の有価証券報告書や年次報告書などの法定開示を優先する。平均年収が公開されていない場合は `null`
-- `fact_layer.official.average_overtime_hours_per_month` は、月平均残業時間の公式値だけを書く。みなし残業時間や固定残業時間を代入しない
-- `fact_layer.official.annual_holidays_days` は、年間休日数の明示値だけを書く。土日祝や休暇制度から自力で合算しない
-- `fact_layer.official.remote_work_policy` は、公表制度から `full`, `hybrid`, `limited`, `none`, `unknown` を選ぶ。育児・介護・傷病など条件付きのみなら `limited`
-- `fact_layer.unofficial.*` は、非公式情報から得た参考値を書く。意味のある値がないなら `fact_layer.unofficial` 自体を省略してよいが、重要な欠損が残る場合は unofficial pass 自体を省略せず、その結果は `facts_unofficial` か `summary.concerns` に残す。残す場合、未確認は `null` を使い、`unknown` を使えるのは `remote_work_policy` だけとする
-
-### sections
-- 各 `section` には `score`, `facts_official`, `facts_unofficial`, `evaluation` を必ず入れる
-- `facts_official` は、公式情報や確認できた一次情報のみを書く。評価語を混ぜない
-- `facts_unofficial` は、口コミ、就活体験談、社員口コミ、二次情報などの補助根拠を書く。評価語を混ぜない。重要な欠損が残らないなら空文字列でよい。重要な欠損が残る場合は、値に使えなかったときでも見た unofficial 系列や不発理由を短く残す。low-confidence な unofficial でも fixed target に関係する観測なら残してよく、強くスコアを動かさなくてもよい
-- `facts_official` / `facts_unofficial` は、採点の最小要約に切り詰めすぎない。後から比較や再判断に役立つ情報なら残してよい。score や判断の二重計上にならない限り、official / unofficial 間や、独立した異なる unofficial source 間で同趣旨の記述が残っていてもよい
-- `facts_unofficial` では、社員口コミ系の同一系列内の弱い観測や、independent な異なる source が同じ論点を示す同趣旨の記述が複数残っていてもよい。ただし、それをそのまま複数票のように数えて score や判断を過剰に動かさない
-- `evaluation` は、公式情報と非公式情報の両方を踏まえた最終判断を書く。新しい事実を足さない
-- `score` は、公式情報で作った骨格と、必要に応じて非公式情報も踏まえた最終スコアとする
-- 自然言語で書く欄は原則として日本語で書く。対象は `scope.ambiguity_note`, 各 section の `facts_official` / `facts_unofficial` / `evaluation`, `summary.*` である
-
-### summary
-- `summary.conclusion` は、固定した `scope.evaluation_target` に対する短い結論を 2 から 4 文で書く
-- `summary.final_comment` は、最終評価の読みを 1 文で書く
-- `summary.suitable_for`, `summary.not_suitable_for`, `summary.concerns` は箇条書きで書く
-
-### sources
-- `sources` には、実際に判断根拠として使った URL だけを書く
-- 最終返却する YAML では、公式 source を最低 4 本含め、少なくとも `recruit`, `faq`, `benefits`, `company|ir` の coverage を満たす
-- `scope.evaluation_target` または `scope.job_type` が research-like なら、公式 source に `kind=research` を最低 1 本含める
-- 各 source には `tier: official | unofficial` と `kind` を必ず付ける。`official` では `recruit`, `faq`, `benefits`, `company`, `ir`, `research`, `business`, `other`、`unofficial` では `review_site`, `forum`, `career_site`, `blog`, `other` を使う
-- `sources.label` は日本語を基本とするが、公式ページの固有名が英語のみで自然な日本語訳がない場合は原文を残してよい
-- 非公式 source を複数書いてよいが、評価時には独立系列が何本あるかを意識する。転載やミラーを並べても一致度を上げたことにはしない
-
-### run_metadata
-- `run_metadata` は、親が知っている実行条件を後から付与するための optional field とする。子は自分のモデル名や推論労力を推測しない
-
-# Prohibitions
-- 必須キーを省略しない
-- 構造化項目の欠損を文字列 `不明` で埋めない
-- 未公表の数値を `0` で埋めない
-- 自然言語欄を英語で書かない。ただし、固有名詞、学位名、公開職種名、公式用語の引用は必要な範囲で残してよい
-- `run_metadata` を推測で埋めない
-- 総合点を YAML に書かない
-- 親が固定した `evaluation_target` を独断で差し替えない
-- 既存会社レポート、review note、archive 出力、他 subagent 結果を読まない
-- 参照禁止と言われた既存レポートや他エージェント結果を読まない
-- 非公式情報で `fact_layer.official` の数値・制度事実を上書きしない
-- `fact_layer.official` と `fact_layer.unofficial` を混ぜない
-- `facts_official` と `facts_unofficial` を混ぜない
-- 非公式ソースの転載関係を無視して独立根拠の数を水増ししない
-- 単発の非公式根拠だけで公式情報を覆さない
-- `review_site` の待遇数値と `career_site` / `forum` の選考体験を同じ強さの根拠として扱わない
-- 重要な欠損が残るのに unofficial pass 自体を省略しない
-
-# Pre-return checklist
-- 単一の YAML オブジェクトだけを返している
-- `version = 1`
-- `scope` と `fact_layer` と 6 sections の必須キーがある
-- `fact_layer.official` の必須キーがある
-- 自然言語欄は日本語で書いている
-- 数値系の不明な構造化値は `null`
-- `remote_work_policy` の不明値だけ `unknown`
-- `facts_official` と `facts_unofficial` を分けている
-- 各 section の `score` を埋めている
-- `sources` に `tier` を付けている
-- 非公式 source の用途と独立性が崩れていない
-- 非公式の構造化数値は `fact_layer.unofficial` に分けている
-- 総合点や補正後総合点を YAML に書いていない
-- 重要な欠損を見つけたときに、その論点の追加探索を試みた
-- 重要な欠損が残る場合、unofficial pass を少なくとも 1 回は回した
-- 重要な欠損が残るのに unofficial source が 0 件なら、見た系列と不発理由を `facts_unofficial` または `summary.concerns` に残している
-- `未確認` や `null` が多く残る場合、その深刻さを `scope.ambiguity_note`、section の `evaluation`、または `summary.concerns` のどこかに明示している
+## 後で読む資料
+- [references/scoring.md](references/scoring.md) は、section の採点を実際に付け始めるとき、または欠損情報・非公式情報の重みづけ・集計の詳細規則が必要になったときに読む。
+- [references/output-contract.md](references/output-contract.md) は、調査と証拠整理が十分進んだ後、最終レポート出力を整え、返却前チェックを行う段階でだけ読む。

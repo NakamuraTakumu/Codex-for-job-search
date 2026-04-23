@@ -1,0 +1,9 @@
+review:
+  verdict: pass
+  findings: []
+  passed_checks:
+    - "fixed scope の evaluation_target / hiring_entity / job_type / placement_candidates / stability_entity は親指定と整合している"
+    - "facts_official と facts_unofficial の分離は概ね守られており、unofficial が official を逆転させていない"
+    - "給与・残業・年収などの未確定値は official を null のまま保ち、推測で埋めていない"
+    - "各 section の score と evaluation、summary は互いに大きく矛盾していない"
+    - "survey_date と scope の不確実性は ambiguity_note で明示されている"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Company Analysis Review"
+  short_description: "Review company analysis YAML outputs"
+  default_prompt: "Use $company-analysis-review to review company-analysis YAML against a fixed scope and return review YAML only."

@@ -6,6 +6,8 @@
 - For company analysis outputs, use `report/company_analysis/companies/` for per-company analyses and `report/company_analysis/reviews/` for cross-company reviews or comparisons.
 - Prefer concise document filenames. Avoid redundant prefixes when the parent directory already provides the context.
 - Choose the shortest filename that still remains unambiguous within its directory.
+- For company-analysis outputs, default to concise target-based slugs and filenames without dates, such as `japan_ibm_research`.
+- Add a date to a company-analysis slug or filename only when it is needed to distinguish multiple valid runs, avoid collisions in the same directory, or preserve parallel test artifacts explicitly.
 
 ## Test vs Production Data
 - Keep data, reports, and artifacts produced for testing clearly separate from production or accepted outputs.
@@ -21,6 +23,13 @@
 - When a company-analysis task is requested, do not perform parent-side pre-analysis first; invoke the `company-analysis-runner` workflow immediately.
 - Treat `company-analysis-runner` as the parent-agent orchestration layer and `company-analysis` as the evaluator used by subagents.
 - Only bypass `company-analysis-runner` when the task is narrowly limited to inspecting or editing existing outputs, tools, or documentation rather than running the analysis workflow itself.
+- For company-analysis-specific tooling, prefer placing scripts under the relevant skill directory rather than the repository-wide `tool/` directory, unless the script is genuinely shared across workflows in this repository.
+- For research-oriented doctoral-candidate company analysis, when an official research-track application route exists, prefer fixing the default evaluation target to that research track first.
+- Use a software-engineering or broader technical track as the default target only when no official research-track route exists, or when the user explicitly asks to analyze the engineering track instead.
+- If both research and software-engineering routes officially exist, the parent may still analyze both as separate targets when the user asks for both or when comparison is the point, but the default single-target choice should be the research track.
+- Require `run_metadata` in final company-analysis YAML outputs. Do not treat it as optional when the parent workflow is available; missing `run_metadata` should be considered an invalid final artifact.
+- For company-analysis naming, keep `slug` and saved filenames aligned, and default to the shortest stable target-based name that remains unambiguous without a date.
+- For fairness across companies, when `company-analysis-runner` hands off work to analysis or review subagents, pass the corresponding prompt template exactly as written except for filling its placeholders. Do not paraphrase, reorder, trim, or append ad hoc instructions unless the template file itself is intentionally updated first.
 - When a review subagent is used in the company-analysis workflow, pass the analysis YAML and any rendered Markdown as inline data in the prompt rather than handing off repository file paths or asking the subagent to fetch them from the filesystem.
 
 ## Drafting and Review Separation

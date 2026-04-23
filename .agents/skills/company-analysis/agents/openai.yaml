@@ -1,0 +1,4 @@
+interface:
+  display_name: "会社分析"
+  short_description: "固定された採用対象を YAML で評価"
+  default_prompt: "$company-analysis を使って、固定された会社の採用対象を評価し、検証可能な YAML 分析を返す。"

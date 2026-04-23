@@ -105,7 +105,7 @@ def render_markdown(paths: list[Path]) -> str:
             "",
             "注記:",
             "- `未公表` は YAML 上で `null` だった項目。",
-            "- `統合最終評価` は `tool/company_analysis_yaml.py` の重みと補正に基づく。",
+            "- `統合最終評価` は company-analysis YAML 実装の重みと補正に基づく。",
         ]
     )
     return "\n".join(lines) + "\n"

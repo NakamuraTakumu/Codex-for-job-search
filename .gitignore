@@ -5,3 +5,4 @@ __pycache__/
 tmp_web/
 tmp_pdf/
 .vscode/
+private_knowledge/

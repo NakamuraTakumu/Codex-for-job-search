@@ -1,8 +1,5 @@
 Use the `company-analysis-review` skill at `.agents/skills/company-analysis-review/SKILL.md`.
 
-Return a single complete YAML object only.
-Do not include markdown fences or extra commentary.
-
 Fixed scope:
 - company_name: {{company_name}}
 - survey_date: {{survey_date}}
@@ -25,17 +22,4 @@ Review inputs:
 <<<END_RENDERED_MARKDOWN>>>
 
 Additional constraints:
-- Treat this as a content review only. Do not regenerate or edit the analysis YAML.
-- Use the inline analysis YAML as the default review target.
-- Read the inline rendered Markdown only when it is actually populated and when it helps confirm rendering-level consistency.
-- The inline rendered Markdown is part of the current review target, not a forbidden prior artifact.
-- Do not read other existing company reports, archive outputs, comparison reviews, or other subagent results.
-- Treat the `<<<BEGIN_...>>>` / `<<<END_...>>>` lines as payload delimiters, not as content to review.
-- Do not change the fixed scope even if public information looks inconsistent; flag it under `scope_integrity` instead.
-- Use the fixed review schema exactly.
-- This review is a guardrail for high-risk fields, not a full re-analysis from scratch.
-- If there is any correction request, return `review.verdict: revise` with at least one finding.
-- If there is no correction request, return `review.verdict: pass`, keep `findings: []`, and fill `passed_checks`.
 - Write `message` and `suggested_fix` in Japanese.
-- Judge unofficial evidence by independent lineage, not by raw URL count.
-- Do not let a single unofficial lineage outweigh official evidence on a conflicting point.

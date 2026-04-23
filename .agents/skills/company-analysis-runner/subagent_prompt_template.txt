@@ -1,8 +1,5 @@
 Use the `company-analysis` skill at `.agents/skills/company-analysis/SKILL.md`.
 
-Return a single complete YAML object only.
-Do not include markdown fences or extra commentary.
-
 Fixed scope:
 - company_name: {{company_name}}
 - survey_date: {{survey_date}}
@@ -13,11 +10,3 @@ Fixed scope:
 - scope.job_type: {{scope_job_type}}
 - scope.placement_candidates: {{scope_placement_candidates}}
 - scope.stability_entity: {{scope_stability_entity}}
-
-Use the fixed scope exactly as given. If public information looks inconsistent with it, keep the scope and record the mismatch in `scope.ambiguity_note`.
-
-First build `fact_layer.official` and `facts_official` from official sources.
-If important fields remain missing after the official pass, do not stop there. Run at least one unofficial search pass.
-If the unofficial pass does not yield a usable structured value, still record which unofficial lineage you checked and why it did not support a value in `facts_unofficial` or `summary.concerns`.
-Do not wait for full official coverage before recording relevant unofficial observations for the same missing field.
-Record relevant weak unofficial observations opportunistically whenever they appear, even if they will only be used as tentative evidence.

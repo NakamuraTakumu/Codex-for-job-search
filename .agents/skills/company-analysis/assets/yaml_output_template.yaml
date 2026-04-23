@@ -1,0 +1,120 @@
+version: 1
+company_name: "<str: 会社名>"
+survey_date: "<YYYY-MM-DD: 調査日>"
+slug: "<[a-z0-9_]+: 一意な slug>"
+scope:
+  # 親が固定した `scope`。勝手に対象変更してはいけない。
+  user_label: "<str: 親が固定した表示名>"
+  evaluation_target: "<str: 親が固定した評価対象>"
+  hiring_entity: "<str: 親が固定した採用主体>"
+  job_type: "<str: 親が固定した職種>"
+  # 複数候補を列挙してよい。配属を固定できない場合は [] を使う。
+  placement_candidates:
+    - "<str: 配属候補1>"
+    - "<str: 配属候補2>"
+  stability_entity: "<str: 安定性評価に使う法人単位>"
+  # 公開情報が異なっていても `scope` は維持し、不一致や曖昧さはここに記録する。
+  ambiguity_note: "<str: 公開情報との不一致や曖昧さの短いメモ。大きな不一致がない場合も明示する>"
+fact_layer:
+  official:
+    # 公式情報だけで埋める必須の構造化事実欄。
+    # 生の数値 / 制度上の事実はここに置き、意味づけは後の section で説明する。
+    # 不明な numeric / boolean は `null` を使う。`unknown` を使えるのは `remote_work_policy` と `application_route` だけ。
+    # `starting_salary_yen`: 評価対象に直接対応する公式の月額初任給。評価対象がその共通給与に明確に属する場合のみ、広い共通給与を使ってよい。
+    starting_salary_yen: "<int|null: 評価対象に対応する月額初任給>"
+    # 学位別初任給は、公式に月額で示されている場合のみ入れる。年額換算や推定年収は使わない。
+    starting_salary_bachelor_yen: "<int|null: 学士の初任給>"
+    starting_salary_master_yen: "<int|null: 修士の初任給>"
+    starting_salary_doctor_yen: "<int|null: 博士の初任給>"
+    # 学位別初任給差が制度上明示されているか。
+    has_degree_based_starting_salary_gap: "<bool|null: 学位別初任給差があるか>"
+    # 独立した博士向け採用導線が制度上存在するか。
+    has_doctoral_hiring_track: "<bool|null: 博士向け採用導線があるか>"
+    # 博士号や研究実績による格付け / レベル優位が制度上存在するか。
+    has_doctoral_grade_advantage: "<bool|null: 博士向け格付け優位があるか>"
+    # 評価対象に対する公式の採用導線が存在するか。
+    # 区分自体があり、当年採用が未定でも `true` は可。ただし不確実性は `ambiguity_note` や `concerns` に残す。
+    has_target_job_hiring_track: "<bool|null: 評価対象向けの公式採用導線があるか>"
+    # 応募者が `evaluation_target` にどう到達するか:
+    # `direct` = `evaluation_target` に直接応募
+    # `parent_company` = 親会社経由で採用された後に到達
+    # `group_company` = グループ会社経由で採用された後に到達
+    # 公開情報で確認不能なら `unknown`。
+    application_route: "<direct|parent_company|group_company|unknown: 応募経路>"
+    # 採用主体の最新公式平均年収。複数ある場合は最新の法定開示を優先。
+    average_annual_income_yen: "<int|null: 平均年収>"
+    # みなし残業や固定残業は代入してはいけない。
+    average_overtime_hours_per_month: "<float|int|null: 月平均残業時間>"
+    # 明示された年間休日のみを使う。週休や休暇制度を自分で足して推定してはいけない。
+    annual_holidays_days: "<int|null: 年間休日>"
+    # `full|hybrid|limited|none|unknown`。条件付きのみなら `limited`。
+    remote_work_policy: "<full|hybrid|limited|none|unknown: 公開されているリモート方針>"
+  unofficial:
+    # 非公式情報由来の、疎な補助 fact layer。
+    # 意味のある項目だけを残し、意味のある値がなければ `fact_layer.unofficial` 自体を省略する。
+    # この map を保持する場合、欠損は `null` を使う。`unknown` が許されるのは `remote_work_policy` と `application_route` のみ。
+    starting_salary_yen: "<int|null: 非公式参照値>"
+    starting_salary_bachelor_yen: "<int|null: 非公式参照値>"
+    starting_salary_master_yen: "<int|null: 非公式参照値>"
+    starting_salary_doctor_yen: "<int|null: 非公式参照値>"
+    has_degree_based_starting_salary_gap: "<bool|null: 非公式参照値>"
+    has_doctoral_hiring_track: "<bool|null: 非公式参照値>"
+    has_doctoral_grade_advantage: "<bool|null: 非公式参照値>"
+    has_target_job_hiring_track: "<bool|null: 非公式参照値>"
+    application_route: "<direct|parent_company|group_company|unknown: 非公式参照値>"
+    average_annual_income_yen: "<int|null: 非公式参照値>"
+    average_overtime_hours_per_month: "<float|int|null: 非公式参照値>"
+    annual_holidays_days: "<int|null: 非公式参照値>"
+    remote_work_policy: "<full|hybrid|limited|none|unknown: 非公式参照値>"
+sections:
+  # 各 section は同じ shape を持つ。
+  # `facts_official`: 評価語を含まない公式 / 一次情報のみ。
+  # `facts_unofficial`: 補助的な非公式 facts / observations を残す欄。
+  # structured fact に上げるには弱い observation、値を支えなかった情報の系統、軽い食い違いも、後で再判断できるよう留保付きで残す。
+  # 低信頼という理由だけで落とさず、後で比較や再判断ができる程度の情報量を残す。
+  # `evaluation`: 公式 / 非公式の facts を踏まえた最終判断。ただし新 facts を追加しない。
+  # `score`: `[1.0, 5.0]` の 0.1 刻みの単一最終 score。
+  phd_value: &section_template
+    score: "<1.0-5.0、0.1刻み: 最終 score>"
+    facts_official: "<str: 評価語を含まない公式 evidence の要約>"
+    facts_unofficial: "<str: 評価語を含まない非公式 evidence と関連する低信頼 observation の要約。関連情報が何もない場合のみ空可>"
+    evaluation: "<str: 新 facts を追加しない最終判断。似た点を多重投票のように数えない>"
+  role_fit: *section_template
+  rd_env: *section_template
+  compensation: *section_template
+  hiring_process: *section_template
+  stability: *section_template
+summary:
+  # YAML 内の自然言語項目は日本語で書く。
+  conclusion: "<str: 評価対象に対する短い結論。2-4文>"
+  final_comment: "<str: 最終所見を1文で>"
+  suitable_for:
+    - "<str: 向いている人1。必要に応じて追加>"
+    - "<str: 向いている人2。必要に応じて追加>"
+  not_suitable_for:
+    - "<str: 向いていない人1。必要に応じて追加>"
+    - "<str: 向いていない人2。必要に応じて追加>"
+  concerns:
+    - "<str: 主な懸念1。必要に応じて追加>"
+    - "<str: 主な懸念2。必要に応じて追加>"
+sources:
+  # `tier`: `official | unofficial`
+  # official 側の `kind`: `recruit | faq | benefits | company | ir | research | business | other`
+  # unofficial 側の `kind`: `review_site | forum | career_site | blog | other`
+  # label は通常日本語とし、自然な日本語訳が不自然な場合だけ英語を残す。
+  - label: "<str: 表示ラベル。通常は日本語>"
+    url: "<http(s) URL>"
+    tier: official
+    kind: recruit
+  - label: "<str: 表示ラベル>"
+    url: "<http(s) URL>"
+    tier: official
+    kind: faq
+  - label: "<str: 表示ラベル>"
+    url: "<http(s) URL>"
+    tier: unofficial
+    kind: review_site
+  - label: "<str: 表示ラベル>"
+    url: "<http(s) URL>"
+    tier: unofficial
+    kind: career_site
