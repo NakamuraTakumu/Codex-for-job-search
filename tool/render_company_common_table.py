@@ -25,16 +25,32 @@ import csv
 from pathlib import Path
 
 from company_analysis_yaml import (
-    compute_final_total,
+    SECTION_ORDER,
+    compute_total,
     format_days,
     format_overtime_hours,
     format_remote_policy,
     format_yen,
-    get_comp_structured_official,
+    get_fact_layer_official,
+    get_fact_layer_unofficial,
     load_yaml,
+    section_score,
     validate_data,
 )
 
+
+SCORE_HEADERS = [label for _, _, label in SECTION_ORDER]
+FACT_COLUMNS = [
+    ("初任給", "starting_salary_yen", format_yen),
+    ("学士初任給", "starting_salary_bachelor_yen", format_yen),
+    ("修士初任給", "starting_salary_master_yen", format_yen),
+    ("博士初任給", "starting_salary_doctor_yen", format_yen),
+    ("平均年収", "average_annual_income_yen", format_yen),
+    ("月平均残業", "average_overtime_hours_per_month", format_overtime_hours),
+    ("年間休日", "annual_holidays_days", format_days),
+    ("リモート", "remote_work_policy", format_remote_policy),
+]
+DISPLAY_FACT_KEYS = [key for _, key, _ in FACT_COLUMNS]
 
 HEADERS = [
     "slug",
@@ -43,11 +59,8 @@ HEADERS = [
     "採用主体",
     "採用職種",
     "統合最終評価",
-    "初任給",
-    "平均年収",
-    "月平均残業",
-    "年間休日",
-    "リモート",
+    *SCORE_HEADERS,
+    *[label for label, _, _ in FACT_COLUMNS],
 ]
 
 
@@ -62,27 +75,81 @@ def expand_inputs(raw_inputs: list[str]) -> list[Path]:
     return paths
 
 
-def build_row(path: Path) -> list[str]:
+def is_missing_fact_value(value: object) -> bool:
+    return value is None or value == "unknown"
+
+
+def merge_fact_layers(
+    official: dict[str, object],
+    unofficial: dict[str, object] | None,
+) -> dict[str, object]:
+    merged = dict(official)
+    if not unofficial:
+        return merged
+
+    for key in DISPLAY_FACT_KEYS:
+        if is_missing_fact_value(merged.get(key)) and not is_missing_fact_value(
+            unofficial.get(key)
+        ):
+            merged[key] = unofficial[key]
+    return merged
+
+
+def build_raw_row(path: Path, use_unofficial_fallback: bool = False) -> list[object]:
     data = load_yaml(path)
     result = validate_data(data, str(path))
     if result.issues:
         joined = "; ".join(result.issues)
         raise ValueError(f"{path}: {joined}")
 
-    structured = get_comp_structured_official(data["sections"]["compensation"])
+    structured = get_fact_layer_official(data)
+    if use_unofficial_fallback:
+        structured = merge_fact_layers(structured, get_fact_layer_unofficial(data))
     return [
         data["slug"],
         data["company_name"],
         data["scope"]["evaluation_target"],
         data["scope"]["hiring_entity"],
         data["scope"]["job_type"],
-        f"{compute_final_total(data):.1f}",
-        format_yen(structured["starting_salary_yen"]),
-        format_yen(structured["average_annual_income_yen"]),
-        format_overtime_hours(structured["average_overtime_hours_per_month"]),
-        format_days(structured["annual_holidays_days"]),
-        format_remote_policy(structured["remote_work_policy"]),
+        compute_total(data),
+        *[
+            section_score(data["sections"][key])
+            for key, _, _ in SECTION_ORDER
+        ],
+        *[structured[key] for _, key, _ in FACT_COLUMNS],
     ]
+
+
+def build_raw_row_with_unofficial_fallback(path: Path) -> list[object]:
+    return build_raw_row(path, use_unofficial_fallback=True)
+
+
+def build_row(path: Path, use_unofficial_fallback: bool = False) -> list[str]:
+    raw_row = build_raw_row(path, use_unofficial_fallback=use_unofficial_fallback)
+    fact_start = 6 + len(SCORE_HEADERS)
+    return [
+        raw_row[0],
+        raw_row[1],
+        raw_row[2],
+        raw_row[3],
+        raw_row[4],
+        f"{raw_row[5]:.1f}",
+        *[f"{value:.1f}" for value in raw_row[6 : 6 + len(SCORE_HEADERS)]],
+        *[
+            formatter(raw_row[fact_start + idx])
+            for idx, (_, _, formatter) in enumerate(FACT_COLUMNS)
+        ],
+    ]
+
+
+def collect_raw_rows(paths: list[Path]) -> list[list[object]]:
+    return [build_raw_row(path) for path in sorted(paths)]
+
+
+def collect_raw_rows_with_unofficial_fallback(
+    paths: list[Path],
+) -> list[list[object]]:
+    return [build_raw_row_with_unofficial_fallback(path) for path in sorted(paths)]
 
 
 def collect_rows(paths: list[Path]) -> list[list[str]]:
@@ -105,7 +172,7 @@ def render_markdown(paths: list[Path]) -> str:
             "",
             "注記:",
             "- `未公表` は YAML 上で `null` だった項目。",
-            "- `統合最終評価` は company-analysis YAML 実装の重みと補正に基づく。",
+            "- `統合最終評価` は company-analysis YAML 実装の重みに基づく。",
         ]
     )
     return "\n".join(lines) + "\n"

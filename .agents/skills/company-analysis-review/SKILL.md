@@ -13,6 +13,7 @@ description: Shared reviewer skill for checking company-analysis YAML against a 
 - Parent-fixed scope
 - Analysis YAML embedded directly in the prompt
 - Rendered Markdown embedded directly in the prompt when needed
+- Each prompt is self-contained, even when the same reviewer child is reused across multiple targets.
 
 # Output contract
 - Return a single YAML object only.
@@ -47,6 +48,10 @@ review_finding.suggested_fix: str
   - Whether `fact_layer.official` is filled only from official information.
   - Whether `fact_layer.unofficial` overwrites official values.
   - Whether monthly vs annual pay, annual holidays vs paid leave, and average overtime vs fixed overtime are being confused.
+  - Whether visible starting-salary candidates are being left unnecessarily blank in `starting_salary_yen` or `starting_salary_*_yen`.
+  - Whether `starting_salary_yen` / `starting_salary_*_yen` are treated as monthly starting pay rather than annual pay.
+  - Whether `has_doctoral_hiring_track` is supported by a target-specific doctoral route rather than by weak proxies such as researcher bios or fellowships alone.
+  - Whether `remote_work_policy` is based on broad policy rather than a single-person anecdote.
 - `section_boundary`
   - Whether boundaries such as `phd_value / role_fit / rd_env` are collapsing.
 - `score_consistency`
@@ -63,6 +68,7 @@ review_finding.suggested_fix: str
 # Heuristics
 - Do not let a single unofficial lineage overturn official information.
 - If conflicting unofficial evidence is used strongly, check whether there are at least two independent unofficial lineages.
+- Treat reposts, mirrors, alternate surfaces of the same service, and duplicate pages for the same job posting as one lineage.
 - Do not allow the description to become so thin that information needed for comparison or re-judgment is lost.
 - Check whether `summary` becomes a mere repetition of the sections.
 - The reviewer is not a broad re-analyst. It acts as a guardrail that independently checks high-risk areas which validator checks alone may miss.
@@ -80,15 +86,17 @@ review_finding.suggested_fix: str
 2. Read the analysis YAML embedded directly in the prompt.
 3. Read rendered Markdown only when render-level confirmation is needed and the Markdown is actually provided in the same prompt.
 4. Treat `<<<BEGIN_...>>>` / `<<<END_...>>>` lines as delimiters only; review the payload, not the delimiter lines themselves.
-5. Inspect high-risk areas according to the Required checks and Heuristics.
-6. If no correction is needed, return `pass` and fill `passed_checks`.
-7. If correction is needed, return `revise` and fill each finding with `severity`, `category`, `section`, `message`, and `suggested_fix`.
-8. Return a single review YAML object only.
+5. When the reviewer child is reused, discard prior review state and judge only the current prompt’s inline payload and fixed scope.
+6. Inspect high-risk areas according to the Required checks and Heuristics.
+7. If no correction is needed, return `pass` and fill `passed_checks`.
+8. If correction is needed, return `revise` and fill each finding with `severity`, `category`, `section`, `message`, and `suggested_fix`.
+9. Return a single review YAML object only.
 
 # Prohibitions
 - Do not rewrite the analysis YAML.
 - Do not regenerate the analysis YAML.
 - Do not read existing company reports, comparison reviews, or other reviewer results outside the inline review target embedded in the current prompt.
+- Do not compare the current payload against previous slugs, previous inline payloads, or earlier turns unless those comparisons are explicitly embedded in the current prompt.
 - Do not interpret the embedded delimiter lines as review content.
 - Do not change the fixed scope on your own.
 - Do not mix any explanation outside the review YAML.

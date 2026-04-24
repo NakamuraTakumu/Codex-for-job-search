@@ -11,6 +11,12 @@ Fixed scope:
 - scope.placement_candidates: {{scope_placement_candidates}}
 - scope.stability_entity: {{scope_stability_entity}}
 
+Current review target:
+- Treat this prompt as self-contained.
+- Ignore all previous review payloads, previous slugs, previous findings, and previous rendered outputs from earlier turns.
+- The current intended slug is exactly `{{slug}}`, and that is not a scope error.
+- Judge only the inline payload embedded in this prompt.
+
 Review inputs:
 - analysis_yaml_inline:
 <<<BEGIN_ANALYSIS_YAML>>>

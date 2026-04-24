@@ -56,15 +56,42 @@ finalize_previous() {
   archive_dir="$doc_dir/${shortsha}-${slug}"
 
   if [[ -e "$archive_dir" ]]; then
-    echo "rotate_document_before_commit: archive directory already exists: $archive_dir" >&2
-    exit 1
+    return 0
   fi
 
   mv "$previous_dir" "$archive_dir"
 }
 
+merge_dir_into_dir() {
+  local src dst child
+  src="$1"
+  dst="$2"
+
+  mkdir -p "$dst"
+
+  shopt -s nullglob dotglob
+  for child in "$src"/*; do
+    local base target
+    base=$(basename "$child")
+    target="$dst/$base"
+
+    if [[ -e "$target" ]]; then
+      if [[ -d "$child" && -d "$target" ]]; then
+        merge_dir_into_dir "$child" "$target"
+        rmdir "$child"
+      else
+        echo "rotate_document_before_commit: destination already exists: $target" >&2
+        exit 1
+      fi
+    else
+      mv "$child" "$target"
+    fi
+  done
+  shopt -u nullglob dotglob
+}
+
 move_root_entries_to_previous() {
-  local moved=0
+  local moved=0 path
   mkdir -p "$previous_dir"
 
   shopt -s nullglob dotglob
@@ -80,7 +107,12 @@ move_root_entries_to_previous() {
       continue
     fi
 
-    mv "$path" "$previous_dir"/
+    if [[ -d "$path" && -d "$previous_dir/$base" ]]; then
+      merge_dir_into_dir "$path" "$previous_dir/$base"
+      rmdir "$path"
+    else
+      mv "$path" "$previous_dir"/
+    fi
     moved=1
   done
   shopt -u nullglob dotglob

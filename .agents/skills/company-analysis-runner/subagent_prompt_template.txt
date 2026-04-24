@@ -1,5 +1,16 @@
 Use the `company-analysis` skill at `.agents/skills/company-analysis/SKILL.md`.
 
+Return exactly one YAML object in the message.
+Do not create, modify, or save any files.
+Do not write under `report/`, `document/`, or any production/test artifact path.
+Do not render Markdown.
+
+Current analysis target:
+- Treat this prompt as self-contained.
+- Ignore all previous analysis payloads, previous slugs, previous findings, and previous company facts from earlier turns.
+- The current intended slug is exactly `{{slug}}`.
+- Judge and fill the YAML only from the current fixed scope and the sources you find for that target.
+
 Fixed scope:
 - company_name: {{company_name}}
 - survey_date: {{survey_date}}

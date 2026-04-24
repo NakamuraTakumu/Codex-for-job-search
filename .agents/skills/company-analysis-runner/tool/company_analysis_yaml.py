@@ -360,22 +360,19 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
         issues,
         require_all_keys=True,
     )
-    if "unofficial" in fact_layer:
-        unofficial_fact = _ensure_dict(
-            fact_layer.get("unofficial", {}),
-            "fact_layer.unofficial",
-            issues,
-        )
-        _validate_comp_structured(
-            unofficial_fact,
-            "fact_layer.unofficial",
-            issues,
-            require_all_keys=False,
-        )
-        if not has_meaningful_unofficial_fact_layer(unofficial_fact):
-            issues.append(
-                "fact_layer.unofficial must be omitted when it contains only null/unknown placeholders"
-            )
+    if "unofficial" not in fact_layer:
+        issues.append("fact_layer missing key: unofficial")
+    unofficial_fact = _ensure_dict(
+        fact_layer.get("unofficial", {}),
+        "fact_layer.unofficial",
+        issues,
+    )
+    _validate_comp_structured(
+        unofficial_fact,
+        "fact_layer.unofficial",
+        issues,
+        require_all_keys=True,
+    )
 
     sections = _ensure_dict(data["sections"], "sections", issues)
     for key, *_ in SECTION_ORDER:
@@ -530,10 +527,10 @@ def render_markdown(data: dict[str, Any]) -> str:
         if subkey in fact_official:
             official_degree_parts.append(f"{label} {format_yen(fact_official[subkey])}")
     official_parts = [
-        f"初任給 {format_yen(fact_official['starting_salary_yen'])}",
+        f"月額初任給 {format_yen(fact_official['starting_salary_yen'])}",
     ]
     if official_degree_parts:
-        official_parts.append("学位別初任給 " + " / ".join(official_degree_parts))
+        official_parts.append("学位別月額初任給 " + " / ".join(official_degree_parts))
     official_parts.extend(
         [
             f"学位別初任給差 {format_optional_bool_ja(fact_official.get('has_degree_based_starting_salary_gap'))}",
@@ -556,9 +553,9 @@ def render_markdown(data: dict[str, Any]) -> str:
                 unofficial_degree_parts.append(f"{label} {format_yen(fact_unofficial[subkey])}")
         unofficial_parts = []
         if "starting_salary_yen" in fact_unofficial:
-            unofficial_parts.append(f"初任給 {format_yen(fact_unofficial['starting_salary_yen'])}")
+            unofficial_parts.append(f"月額初任給 {format_yen(fact_unofficial['starting_salary_yen'])}")
         if unofficial_degree_parts:
-            unofficial_parts.append("学位別初任給 " + " / ".join(unofficial_degree_parts))
+            unofficial_parts.append("学位別月額初任給 " + " / ".join(unofficial_degree_parts))
         bool_labels = [
             ("has_degree_based_starting_salary_gap", "学位別初任給差"),
             ("has_doctoral_hiring_track", "博士向け採用導線"),

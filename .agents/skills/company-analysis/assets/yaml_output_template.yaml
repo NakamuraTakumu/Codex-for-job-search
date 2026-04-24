@@ -48,29 +48,35 @@ fact_layer:
     # 明示された年間休日のみを使う。週休や休暇制度を自分で足して推定してはいけない。
     annual_holidays_days: "<int|null: 年間休日>"
     # `full|hybrid|limited|none|unknown`。条件付きのみなら `limited`。
+    # 個人の体験談ではなく、評価対象または採用主体に対する広い運用方針で判断する。
     remote_work_policy: "<full|hybrid|limited|none|unknown: 公開されているリモート方針>"
   unofficial:
-    # 非公式情報由来の、疎な補助 fact layer。
-    # 意味のある項目だけを残し、意味のある値がなければ `fact_layer.unofficial` 自体を省略する。
+    # 非公式情報由来の補助 fact layer。
+    # 重要な欠損を補うため、対応する非公式データがあれば入れる。
+    # 信頼性が低くても入れる。
     # この map を保持する場合、欠損は `null` を使う。`unknown` が許されるのは `remote_work_policy` と `application_route` のみ。
-    starting_salary_yen: "<int|null: 非公式参照値>"
-    starting_salary_bachelor_yen: "<int|null: 非公式参照値>"
-    starting_salary_master_yen: "<int|null: 非公式参照値>"
-    starting_salary_doctor_yen: "<int|null: 非公式参照値>"
-    has_degree_based_starting_salary_gap: "<bool|null: 非公式参照値>"
-    has_doctoral_hiring_track: "<bool|null: 非公式参照値>"
+    # 初任給候補の値が見つかったら、まず対応する初任給 field を埋める。学位別が分からなければ `starting_salary_yen` を優先。
+    # 元の表現や留保は `facts_unofficial` に残す。
+    starting_salary_yen: "<int|null: 非公式の初任給候補>"
+    starting_salary_bachelor_yen: "<int|null: 非公式の学士月額初任給>"
+    starting_salary_master_yen: "<int|null: 非公式の修士月額初任給>"
+    starting_salary_doctor_yen: "<int|null: 非公式の博士月額初任給>"
+    has_degree_based_starting_salary_gap: "<bool|null: 月額初任給の学位差があるか>"
+    # `has_doctoral_hiring_track` は、博士を対象に含むことや博士向け入口が target-specific に読める場合だけ `true`。
+    has_doctoral_hiring_track: "<bool|null: 博士向け採用導線があるか>"
     has_doctoral_grade_advantage: "<bool|null: 非公式参照値>"
     has_target_job_hiring_track: "<bool|null: 非公式参照値>"
     application_route: "<direct|parent_company|group_company|unknown: 非公式参照値>"
     average_annual_income_yen: "<int|null: 非公式参照値>"
     average_overtime_hours_per_month: "<float|int|null: 非公式参照値>"
     annual_holidays_days: "<int|null: 非公式参照値>"
+    # `full|hybrid|limited|none|unknown`。個人の例ではなく、評価対象または採用主体に対する広い運用方針として読める場合に入れる。
     remote_work_policy: "<full|hybrid|limited|none|unknown: 非公式参照値>"
 sections:
   # 各 section は同じ shape を持つ。
   # `facts_official`: 評価語を含まない公式 / 一次情報のみ。
   # `facts_unofficial`: 補助的な非公式 facts / observations を残す欄。
-  # structured fact に上げるには弱い observation、値を支えなかった情報の系統、軽い食い違いも、後で再判断できるよう留保付きで残す。
+  # 対応する key にそのまま入れるには弱い observation、値を支えなかった情報の系統、軽い食い違いも、後で再判断できるよう留保付きで残す。
   # 低信頼という理由だけで落とさず、後で比較や再判断ができる程度の情報量を残す。
   # `evaluation`: 公式 / 非公式の facts を踏まえた最終判断。ただし新 facts を追加しない。
   # `score`: `[1.0, 5.0]` の 0.1 刻みの単一最終 score。
