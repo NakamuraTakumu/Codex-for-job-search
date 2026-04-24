@@ -39,7 +39,7 @@
 - `fact_layer.unofficial` が必須 key を含む。
 - 自然言語の項目が日本語で書かれている。
 - 不明な数値の構造化値は `null` を使っている。
-- `remote_work_policy` の unknown のみ `unknown` を使っている。
+- `remote_work_policy` と `application_route` の unknown のみ `unknown` を使っている。
 - `facts_official` と `facts_unofficial` が分離されている。
 - すべての section に `score` がある。
 - すべての source に `tier` がある。

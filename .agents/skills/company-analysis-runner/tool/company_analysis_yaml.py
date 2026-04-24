@@ -328,23 +328,34 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
     scope = _ensure_dict(data["scope"], "scope", issues)
     for key in [
         "user_label",
-        "evaluation_target",
-        "hiring_entity",
-        "job_type",
-        "placement_candidates",
-        "stability_entity",
+        "target_application_unit",
+        "hiring_entity_name",
+        "role_family",
+        "alternative_application_units",
+        "stability_entity_name",
         "ambiguity_note",
     ]:
         if key not in scope:
             issues.append(f"scope missing key: {key}")
 
     if scope:
-        for key in ["user_label", "evaluation_target", "hiring_entity", "job_type", "stability_entity", "ambiguity_note"]:
+        for key in [
+            "user_label",
+            "target_application_unit",
+            "hiring_entity_name",
+            "role_family",
+            "stability_entity_name",
+            "ambiguity_note",
+        ]:
             if key in scope and (not isinstance(scope[key], str) or not scope[key].strip()):
                 issues.append(f"scope.{key} must be a non-empty string")
-        placements = _ensure_list(scope.get("placement_candidates", []), "scope.placement_candidates", issues)
-        if placements and not all(isinstance(x, str) and x.strip() for x in placements):
-            issues.append("scope.placement_candidates entries must be non-empty strings")
+        alternatives = _ensure_list(
+            scope.get("alternative_application_units", []),
+            "scope.alternative_application_units",
+            issues,
+        )
+        if alternatives and not all(isinstance(x, str) and x.strip() for x in alternatives):
+            issues.append("scope.alternative_application_units entries must be non-empty strings")
 
     fact_layer = _ensure_dict(data["fact_layer"], "fact_layer", issues)
     if "official" not in fact_layer:
@@ -480,7 +491,11 @@ def render_markdown(data: dict[str, Any]) -> str:
     fact_unofficial = get_fact_layer_unofficial(data)
     base_total = compute_total(data)
 
-    placement = "、".join(scope["placement_candidates"]) if scope["placement_candidates"] else "未確定"
+    alternative_units = (
+        "、".join(scope["alternative_application_units"])
+        if scope["alternative_application_units"]
+        else "なし"
+    )
     lines: list[str] = [
         f"# {data['company_name']}",
         f"調査日: {data['survey_date']}",
@@ -502,16 +517,16 @@ def render_markdown(data: dict[str, Any]) -> str:
 
     lines.extend(
         [
-        f"## 結論（{scope['evaluation_target']}）",
+        f"## 結論（{scope['target_application_unit']}）",
         clean_text(summary["conclusion"]),
         "",
         "## 分析対象の確定",
         f"- ユーザー指定名: {scope['user_label']}",
-        f"- 分析対象単位: {scope['evaluation_target']}",
-        f"- 採用主体: {scope['hiring_entity']}",
-        f"- 採用職種: {scope['job_type']}",
-        f"- 主な配属候補: {placement}",
-        f"- 企業基盤に使う法人単位: {scope['stability_entity']}",
+        f"- 応募対象単位: {scope['target_application_unit']}",
+        f"- 採用 entity: {scope['hiring_entity_name']}",
+        f"- 職種ファミリー: {scope['role_family']}",
+        f"- 他の応募単位候補: {alternative_units}",
+        f"- 企業基盤に使う entity: {scope['stability_entity_name']}",
         f"- 曖昧性の処理: {clean_text(scope['ambiguity_note'])}",
         "",
         ]
@@ -536,7 +551,7 @@ def render_markdown(data: dict[str, Any]) -> str:
             f"学位別初任給差 {format_optional_bool_ja(fact_official.get('has_degree_based_starting_salary_gap'))}",
             f"博士向け採用導線 {format_optional_bool_ja(fact_official.get('has_doctoral_hiring_track'))}",
             f"博士向け格付け差 {format_optional_bool_ja(fact_official.get('has_doctoral_grade_advantage'))}",
-            f"研究職採用導線 {format_optional_bool_ja(fact_official.get('has_target_job_hiring_track'))}",
+            f"対象応募単位の採用導線 {format_optional_bool_ja(fact_official.get('has_target_job_hiring_track'))}",
             f"応募経路 {format_application_route(fact_official.get('application_route'))}",
             f"平均年収 {format_yen(fact_official['average_annual_income_yen'])}",
             f"月平均残業 {format_overtime_hours(fact_official['average_overtime_hours_per_month'])}",
@@ -560,7 +575,7 @@ def render_markdown(data: dict[str, Any]) -> str:
             ("has_degree_based_starting_salary_gap", "学位別初任給差"),
             ("has_doctoral_hiring_track", "博士向け採用導線"),
             ("has_doctoral_grade_advantage", "博士向け格付け差"),
-            ("has_target_job_hiring_track", "研究職採用導線"),
+            ("has_target_job_hiring_track", "対象応募単位の採用導線"),
         ]
         for subkey, label in bool_labels:
             if subkey in fact_unofficial:

@@ -32,4 +32,5 @@ if [[ -n "$(git ls-files --others --exclude-standard -- "$rotate_dir" 2>/dev/nul
 fi
 
 ./tool/rotate_document_before_commit.sh
-git add -A -- "$rotate_dir"
+git add -u -- "$rotate_dir"
+git ls-files --others --exclude-standard -z -- "$rotate_dir" | xargs -0 -r git add --

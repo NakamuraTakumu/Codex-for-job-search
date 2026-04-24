@@ -55,9 +55,9 @@ DISPLAY_FACT_KEYS = [key for _, key, _ in FACT_COLUMNS]
 HEADERS = [
     "slug",
     "会社名",
-    "分析対象",
-    "採用主体",
-    "採用職種",
+    "応募対象単位",
+    "採用 entity",
+    "職種ファミリー",
     "統合最終評価",
     *SCORE_HEADERS,
     *[label for label, _, _ in FACT_COLUMNS],
@@ -108,9 +108,9 @@ def build_raw_row(path: Path, use_unofficial_fallback: bool = False) -> list[obj
     return [
         data["slug"],
         data["company_name"],
-        data["scope"]["evaluation_target"],
-        data["scope"]["hiring_entity"],
-        data["scope"]["job_type"],
+        data["scope"]["target_application_unit"],
+        data["scope"]["hiring_entity_name"],
+        data["scope"]["role_family"],
         compute_total(data),
         *[
             section_score(data["sections"][key])

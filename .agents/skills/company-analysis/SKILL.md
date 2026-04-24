@@ -24,9 +24,19 @@ description: 研究志向の博士人材向けに、親が固定した採用対�
 - **template の早期参照禁止**: `references/output-contract.md` や `assets/yaml_output_template.yaml` を、出力 schema を先に固定するために早い段階で開いてはいけない。最終出力制約を見る前に、まず調査と証拠の骨格を固める。
 - **情報源の広さ**: 関連する情報源はできるだけ多く使う。同じ内容の重複ページで数を稼いではいけない。募集ページ、FAQ、福利厚生ページ、会社情報、IR、研究所や技術組織のページ、事業・技術説明、口コミ、選考体験など、公式・非公式の両 tier にまたがって多様な種類の情報源を集める。
 
+# 親が渡すデータの読み方
+- **固定 scope**: 親が渡す `scope` は、この分析で維持する評価対象である。公開情報とずれて見えても、子が勝手に対象を変更せず、不一致や曖昧さを `scope.ambiguity_note` や section に記録する。
+- **metadata**: `company_name`、`survey_date`、`slug` は出力の識別情報であり、評価対象を広げる根拠ではない。
+- **scope.user_label**: ユーザーや親が指定した表示名。
+- **scope.target_application_unit**: 応募者が到達したい採用ルート、職種トラック、または application unit。企業名ではない。
+- **scope.hiring_entity_name**: 採用を行う entity の名前。給与、採用制度、応募経路の確認ではこの entity を優先する。
+- **scope.role_family**: 職種名の大まかな区別。例: `swe`、`researcher`。採用年度、卒年 cohort、新卒 / 中途区分ではない。
+- **scope.alternative_application_units**: `hiring_entity_name` の entity にある他の採用ルート、職種トラック、または application unit。
+- **scope.stability_entity_name**: 安定性評価に使う entity の名前。`hiring_entity_name` と違う場合は、その差を保ったまま評価する。
+
 # Workflow
-1. 親が与えた `company_name`、`survey_date`、`slug`、`scope` を確認する。
-2. 親が固定した `evaluation_target` が公開情報と整合しているか確認する。
+1. 親が与えた `company_name`、`survey_date`、`slug`、`scope` を、上の読み方に従って確認する。
+2. 親が固定した `target_application_unit` が公開情報と整合しているか確認する。
 3. 評価対象に関係する公式・非公式の情報源を幅広く集める。
 4. 重要な曖昧さや欠損がある点については、公式側・非公式側の両方で追加検索する。
 5. 証拠は、まず公式 / 非公式で分け、その中で構造化した事実と叙述的な証拠に整理する。
@@ -114,7 +124,7 @@ description: 研究志向の博士人材向けに、親が固定した採用対�
 - **低評価例**: SPI のような aptitude test が重い、generic な就活フィルタが強い、面接や提出物が多い、全体負担が高い。
 
 ## 6. stability
-- **見る点**: 売上、従業員数、資本金、上場有無、親 / グループ支援、事業継続性を調べる。特に、固定された `stability_entity` に対応する会社情報、IR、法定開示を重く見る。
+- **見る点**: 売上、従業員数、資本金、上場有無、親 / グループ支援、事業継続性を調べる。特に、固定された `stability_entity_name` に対応する会社情報、IR、法定開示を重く見る。
 - **除外**: 評価対象への到達経路や研究職への配属経路は補助情報としてのみ使う。
 - **高評価例**: 売上規模や従業員規模が大きく、上場企業または大手親会社 / グループの支援があり、継続的な事業運営を支える会社情報や IR が複数確認できる。
 - **低評価例**: 継続赤字、大きな事業縮小、人員削減、親 / グループ支援の弱さなど、雇用や組織継続への不安を示す具体的な証拠がある。

@@ -22,21 +22,21 @@ description: Parent orchestration skill for fixed-target company analysis that l
   - `survey_date`
   - `slug`
   - `scope.user_label`
-  - `scope.evaluation_target`
-  - `scope.hiring_entity`
-  - `scope.job_type`
-  - `scope.placement_candidates`
-  - `scope.stability_entity`
-- Even if the user gives only a company name, do not widen the task into a whole-company evaluation. Fix an `evaluation_target` that is close to the actual application unit first.
+  - `scope.target_application_unit`
+  - `scope.hiring_entity_name`
+  - `scope.role_family` as the broad role category, such as `swe` or `researcher`, not a hiring year, graduate cohort, or employment category
+  - `scope.alternative_application_units` as other hiring routes, role tracks, or application units under the same `hiring_entity_name`
+  - `scope.stability_entity_name`
+- Even if the user gives only a company name, do not widen the task into a whole-company evaluation. Fix a `target_application_unit` that is close to the actual application unit first.
 - When the assumed candidate is a current doctoral student or a recent doctoral graduate without clear full-time work experience, prefer new-graduate tracks. Use experienced-hire tracks only when no new-graduate route exists, the new-graduate route is clearly inapplicable, or it is explicitly unsuitable.
 - Determine the existence of research and software-engineering tracks from whether an official new-graduate-equivalent application route exists, not from whether the role merely seems realistic.
-- If an official research-track route exists, prefer that research track as the default single `evaluation_target` for this workflow.
+- If an official research-track route exists, prefer that research track as the default single `target_application_unit` for this workflow.
 - Use a software-engineering track as the default target only when no official research-track route exists, or when the user explicitly asks for the engineering track instead.
-- If both research and software-engineering application routes are officially confirmed, treat them as separate `evaluation_target`s when the user asks for both or when comparison is the goal; otherwise, default to the research track.
+- If both research and software-engineering application routes are officially confirmed, treat them as separate `target_application_unit`s when the user asks for both or when comparison is the goal; otherwise, default to the research track.
 - When both tracks are analyzed, do not show them sequentially to the same child. Launch separate children for `research` and `swe`.
 - Do not infer a research or software-engineering track from the existence of a lab page or technical PR page alone. Prioritize official recruiting routes such as job postings, recruiting pages, FAQ, or explanatory material.
-- When parent-company or group-company numbers are used to support stability, preserve the mismatch between `scope.hiring_entity` and `scope.stability_entity`.
-- If the official company identity is ambiguous and nearby corporate entities must also be checked, the parent should narrow the candidates to roughly three to five entities and treat them as separate `evaluation_target`s.
+- When parent-company or group-company numbers are used to support stability, preserve the mismatch between `scope.hiring_entity_name` and `scope.stability_entity_name`.
+- If the official company identity is ambiguous and nearby corporate entities must also be checked, the parent should narrow the candidates to roughly three to five entities and treat them as separate `target_application_unit`s.
 - If the user gives only a company name, the parent should also inspect major subsidiaries and nearby entities first and check whether each has its own independent new-graduate hiring route.
 - Even when independent subsidiary hiring is found, the parent must not automatically analyze all of them. Summarize the candidates and their hiring status, then let the user choose the main analysis target.
 - If multiple companies are given together, do not stop partway through each one. First scan all companies for subsidiaries, nearby entities, and independent hiring routes, then move to target confirmation.
@@ -49,8 +49,8 @@ description: Parent orchestration skill for fixed-target company analysis that l
 3. Summarize the candidates by company. If multiple independently hiring entities exist, let the user choose which one should become the main analysis target.
 4. If only one company is given, follow the same process for that company.
 5. Once the target entity is fixed, inspect its official recruiting route and check whether research and software-engineering tracks exist.
-6. If both `research` and `swe` are found, the parent decides how to handle them. By default it should fix `research` only; fix both as separate `evaluation_target`s when the user asks for both or when comparison is the point.
-7. If the `evaluation_target` is still ambiguous, the parent must fix the application unit, hiring entity, job type, and, when needed, placement candidates before analysis starts.
+6. If both `research` and `swe` are found, the parent decides how to handle them. By default it should fix `research` only; fix both as separate `target_application_unit`s when the user asks for both or when comparison is the point.
+7. If the `target_application_unit` is still ambiguous, the parent must fix the application unit, hiring entity name, broad role category (`role_family`), and, when needed, other candidate routes (`alternative_application_units`) before analysis starts.
 8. As soon as the runner starts, launch one shared review-only child and keep it ready for inline review payloads.
 9. For each fixed track, launch one child agent using the `company-analysis` evaluator. Do not block on file naming or review payload details before starting the child.
    - As a rule, specify `gpt-5.4-mini` as the model.
@@ -65,7 +65,7 @@ description: Parent orchestration skill for fixed-target company analysis that l
 15. Explicitly tell the child to count unofficial evidence by independent lineage rather than raw URL count, and not to treat reposts, mirrors, or alternate surfaces of the same service as independent support.
 16. If needed, explicitly tell the child not to read existing reports or other agent outputs.
 17. Use one child per target as the default, and never feed `research` and `swe` sequentially to the same child.
-18. Make the fixed `evaluation_target`, `hiring_entity`, and `job_type` explicit in the prompt so the child does not silently switch targets.
+18. Make the fixed `target_application_unit`, `hiring_entity_name`, and broad role category (`role_family`) explicit in the prompt so the child does not silently switch targets or put a cohort such as `2028新卒` in `role_family`.
 19. The parent chooses the `slug` for each target. Default to the shortest stable target-based slug that remains unambiguous, for example `japan_ibm_research` or `ntt_data_swe`.
    - Do not add dates by default.
    - Add a date suffix only when it is needed to distinguish multiple valid runs, avoid collisions in the same directory, or preserve parallel test artifacts explicitly.
@@ -161,7 +161,7 @@ Use `review_prompt_template.txt` in this skill directory as the default prompt t
 ## Review rubric
 ### Required checks
 - `scope_integrity`
-  - Whether `evaluation_target`, `hiring_entity`, `job_type`, `placement_candidates`, and `stability_entity` match the parent-fixed scope.
+  - Whether `target_application_unit`, `hiring_entity_name`, broad role category (`role_family`), other candidate routes (`alternative_application_units`), and `stability_entity_name` match the parent-fixed scope.
 - `source_separation`
   - Whether unofficial information leaks into `facts_official`.
   - Whether official information leaks into `facts_unofficial`.

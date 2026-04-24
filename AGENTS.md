@@ -17,6 +17,7 @@
 ## Evaluation Tasks
 - In evaluation or scoring tasks, fix the exact evaluation target before scoring. Do not score a broad entity first and narrow the target afterward.
 - When multiple evaluation results are compared for uncertainty analysis, separate `evaluation-target mismatch` from `scoring variance`. If the fixed targets differ, treat that as a scope problem first rather than as pure scoring disagreement.
+- When naming structured-data keys for evaluation scope, make the key reveal both the value type and the semantic unit. Avoid vague names such as `evaluation_target` or `job_type` when the value could be confused between a company, application route, role family, or hiring category; prefer names like `target_application_unit`, `hiring_entity_name`, `role_family`, and `stability_entity_name` when those are the intended meanings.
 
 ## Company Analysis Workflow
 - For company-analysis tasks, prefer using the `company-analysis-runner` skill as the default entry point.

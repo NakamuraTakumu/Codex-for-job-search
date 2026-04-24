@@ -5,11 +5,11 @@ Fixed scope:
 - survey_date: {{survey_date}}
 - slug: {{slug}}
 - scope.user_label: {{scope_user_label}}
-- scope.evaluation_target: {{scope_evaluation_target}}
-- scope.hiring_entity: {{scope_hiring_entity}}
-- scope.job_type: {{scope_job_type}}
-- scope.placement_candidates: {{scope_placement_candidates}}
-- scope.stability_entity: {{scope_stability_entity}}
+- scope.target_application_unit: {{scope_target_application_unit}}
+- scope.hiring_entity_name: {{scope_hiring_entity_name}}
+- scope.role_family (broad role category such as swe/researcher, not hiring year/cohort/category): {{scope_role_family}}
+- scope.alternative_application_units (other hiring routes, role tracks, or application units under the same hiring_entity_name): {{scope_alternative_application_units}}
+- scope.stability_entity_name: {{scope_stability_entity_name}}
 
 Current review target:
 - Treat this prompt as self-contained.

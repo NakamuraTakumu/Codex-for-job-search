@@ -34,7 +34,7 @@ review_finding.suggested_fix: str
 
 # Review scope
 - `scope_integrity`
-  - Whether `evaluation_target`, `hiring_entity`, `job_type`, `placement_candidates`, and `stability_entity` match the parent-fixed scope.
+  - Whether `target_application_unit`, `hiring_entity_name`, broad role category (`role_family`), other candidate routes (`alternative_application_units`), and `stability_entity_name` match the parent-fixed scope.
 - `source_separation`
   - Whether unofficial information leaks into `facts_official`.
   - Whether official information leaks into `facts_unofficial`.
