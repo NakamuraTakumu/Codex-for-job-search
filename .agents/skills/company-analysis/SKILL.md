@@ -26,13 +26,22 @@ description: 研究志向の博士人材向けに、親が固定した採用対�
 
 # 親が渡すデータの読み方
 - **固定 scope**: 親が渡す `scope` は、この分析で維持する評価対象である。公開情報とずれて見えても、子が勝手に対象を変更せず、不一致や曖昧さを `scope.ambiguity_note` や section に記録する。
+- **近接職種への変更禁止**: 固定 scope が研究職・研究開発職で、当年採用が未定、停止中、終了済み、または情報不足でも、子はデータサイエンス職、SWE、コンサル職などへ置き換えてはいけない。固定 scope のまま、採用導線の弱さや不確実性を記録する。
 - **metadata**: `company_name`、`survey_date`、`slug` は出力の識別情報であり、評価対象を広げる根拠ではない。
 - **scope.user_label**: ユーザーや親が指定した表示名。
 - **scope.target_application_unit**: 応募者が到達したい採用ルート、職種トラック、または application unit。企業名ではない。
 - **scope.hiring_entity_name**: 採用を行う entity の名前。給与、採用制度、応募経路の確認ではこの entity を優先する。
-- **scope.role_family**: 職種名の大まかな区別。例: `swe`、`researcher`。採用年度、卒年 cohort、新卒 / 中途区分ではない。
+- **scope.role_family**: 職種ファミリー。`researcher`、`research_engineer`、`engineer`、`consultant`、`generalist`、`other` のいずれか。採用年度、卒年 cohort、新卒 / 中途区分ではない。
 - **scope.alternative_application_units**: `hiring_entity_name` の entity にある他の採用ルート、職種トラック、または application unit。
 - **scope.stability_entity_name**: 安定性評価に使う entity の名前。`hiring_entity_name` と違う場合は、その差を保ったまま評価する。
+
+## role_family enum
+- `researcher`: 研究職、研究員、Research Scientist。研究所や研究職としての入口が主。
+- `research_engineer`: R&D職、AI/Data Research Scientist、研究と実装の中間。事業実装に近い研究開発。
+- `engineer`: SWE、SE、開発エンジニア、アプリケーションエンジニア、セキュリティエンジニアなど。
+- `consultant`: コンサルタント、サイバーコンサル、技術コンサルなど。実装主体ではなく課題解決・支援・変革が主。
+- `generalist`: 技術系総合職など、入社時点で研究開発、設計、生産技術、品質、技術営業などに分かれ得るもの。
+- `other`: 上記に安全に分類できない応募単位。使う場合は `scope.ambiguity_note` に分類不能な理由を残す。
 
 # Workflow
 1. 親が与えた `company_name`、`survey_date`、`slug`、`scope` を、上の読み方に従って確認する。

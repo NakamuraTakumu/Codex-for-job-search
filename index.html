@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>企業分析一覧</title>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --text: #1f2933;
+      --muted: #667085;
+      --line: #d7dde5;
+      --line-strong: #aab4c0;
+      --accent: #1f6f5b;
+      --accent-soft: #e4f3ee;
+      --warn: #9a3412;
+      --warn-bg: #fff3e8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    a {
+      color: #155eef;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .app {
+      width: min(1840px, calc(100vw - 32px));
+      margin: 24px auto 40px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .tabs {
+      display: inline-flex;
+      padding: 3px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+    }
+
+    .tab {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 7px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font: inherit;
+      white-space: nowrap;
+    }
+
+    .tab[aria-selected="true"] {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .search {
+      width: 260px;
+      max-width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 9px 10px;
+      font: inherit;
+    }
+
+    .status {
+      margin: 12px 0;
+      color: var(--muted);
+      min-height: 22px;
+    }
+
+    .notice {
+      display: none;
+      margin: 12px 0;
+      padding: 10px 12px;
+      border: 1px solid #fed7aa;
+      background: var(--warn-bg);
+      color: var(--warn);
+      border-radius: 8px;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 520px);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .table-shell,
+    .detail {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    }
+
+    .table-shell {
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 1320px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: right;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #eef2f6;
+      color: #344054;
+      border-bottom-color: var(--line-strong);
+      font-weight: 650;
+      user-select: none;
+    }
+
+    th button {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+      justify-content: flex-end;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+      font-weight: inherit;
+      padding: 0;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    tbody tr:hover {
+      background: #f8fbfd;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .left {
+      text-align: left;
+    }
+
+    .company {
+      min-width: 220px;
+      max-width: 300px;
+      white-space: normal;
+      line-height: 1.35;
+    }
+
+    .job {
+      min-width: 160px;
+      max-width: 220px;
+      white-space: normal;
+      line-height: 1.35;
+    }
+
+    .remote {
+      min-width: 120px;
+    }
+
+    .sort-mark {
+      color: var(--accent);
+      min-width: 10px;
+    }
+
+    .company-button {
+      border: 0;
+      background: transparent;
+      color: #155eef;
+      cursor: pointer;
+      font: inherit;
+      padding: 0;
+      text-align: left;
+    }
+
+    .company-button:hover {
+      text-decoration: underline;
+    }
+
+    .company-button[aria-current="true"] {
+      color: var(--accent);
+      font-weight: 650;
+    }
+
+    .detail {
+      max-height: calc(100vh - 132px);
+      overflow: auto;
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .detail-empty {
+      color: var(--muted);
+    }
+
+    .detail h2,
+    .detail h3 {
+      margin: 0;
+      letter-spacing: 0;
+    }
+
+    .detail h2 {
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .detail h3 {
+      font-size: 15px;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .detail-meta {
+      color: var(--muted);
+      margin-top: 4px;
+      font-size: 13px;
+    }
+
+    .total-score {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-top: 12px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .total-score strong {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .summary {
+      margin: 12px 0 0;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .score-cell {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      min-width: 0;
+    }
+
+    .score-label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .score-value {
+      font-weight: 700;
+      font-size: 17px;
+    }
+
+    .facts,
+    .source-list,
+    .plain-list {
+      margin: 8px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .facts li,
+    .plain-list li {
+      display: grid;
+      grid-template-columns: 140px minmax(0, 1fr);
+      gap: 8px;
+      padding: 4px 0;
+      border-bottom: 1px solid #eef2f6;
+    }
+
+    .facts li:last-child,
+    .plain-list li:last-child {
+      border-bottom: 0;
+    }
+
+    .facts span:first-child,
+    .plain-list span:first-child {
+      color: var(--muted);
+    }
+
+    .axis {
+      margin-top: 12px;
+    }
+
+    .axis-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      font-weight: 700;
+    }
+
+    .axis-score {
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .axis p {
+      margin: 7px 0 0;
+    }
+
+    .text-label {
+      color: var(--muted);
+      font-weight: 650;
+    }
+
+    .source-list li {
+      margin-top: 6px;
+      overflow-wrap: anywhere;
+    }
+
+    .source-tier {
+      color: var(--muted);
+    }
+
+    @media (max-width: 1180px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .detail {
+        max-height: none;
+        position: static;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .app {
+        width: calc(100vw - 20px);
+        margin-top: 14px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        justify-content: stretch;
+      }
+
+      .tabs,
+      .search {
+        width: 100%;
+      }
+
+      .tab {
+        flex: 1;
+      }
+
+      .score-grid,
+      .facts li,
+      .plain-list li {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div>
+        <h1>企業分析一覧</h1>
+        <div class="meta">正本データは <code>report/company_analysis/data/*.yaml</code></div>
+      </div>
+      <div class="controls">
+        <div class="tabs" role="tablist" aria-label="データ種別">
+          <button class="tab" type="button" data-mode="official" aria-selected="true">公式データ</button>
+          <button class="tab" type="button" data-mode="fallback" aria-selected="false">非公式補完</button>
+        </div>
+        <input class="search" type="search" placeholder="検索" aria-label="検索">
+      </div>
+    </div>
+
+    <div class="status" id="status">読み込み中...</div>
+    <div class="notice" id="notice"></div>
+
+    <div class="content-grid">
+      <div class="table-shell">
+        <table>
+          <thead id="table-head"></thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+      <aside class="detail" id="detail" aria-live="polite">
+        <div class="detail-empty">会社名を選択すると調査結果を表示します。</div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const DATA_ROOT = "report/company_analysis";
+    const DATA_FILES = [
+      "brainpad_swe.yaml",
+      "ctp_consulting.yaml",
+      "deloitte_cyber_rd_specialist.yaml",
+      "fixstars_swe.yaml",
+      "furukawa_research.yaml",
+      "geniee_engineer.yaml",
+      "hitachi_research.yaml",
+      "japan_ibm_datascientist.yaml",
+      "kanden_systems_se.yaml",
+      "kddi_agile.yaml",
+      "konica_minolta_research.yaml",
+      "lycorp_swe.yaml",
+      "nissan_research.yaml",
+      "note_engineer.yaml",
+      "nri_ae.yaml",
+      "ntt_data_research.yaml",
+      "ntt_rd.yaml",
+      "optage_engineer_category.yaml",
+      "postas_engineer.yaml",
+      "preferred_networks_engineer_researcher.yaml",
+      "rakuten_research.yaml",
+      "sakura_engineer.yaml",
+      "shinmaywa.yaml",
+      "simplex_biztech_professional.yaml",
+      "sony_rd.yaml",
+      "toshiba_research.yaml",
+      "tungaloy.yaml",
+      "whi_swe.yaml"
+    ];
+
+    const SECTIONS = [
+      ["phd_value", "博士人材の評価", "PhD"],
+      ["role_fit", "仕事内容・配属確度", "職務"],
+      ["rd_env", "研究開発・技術環境", "R&D"],
+      ["compensation", "処遇・働き方", "処遇"],
+      ["hiring_process", "選考コストと評価の納得感", "選考"],
+      ["stability", "企業基盤・安定性", "安定"]
+    ];
+
+    const WEIGHTS = {
+      phd_value: 0.30,
+      role_fit: 0.10,
+      rd_env: 0.05,
+      compensation: 0.25,
+      hiring_process: 0.10,
+      stability: 0.20
+    };
+
+    const FACT_KEYS = [
+      "starting_salary_yen",
+      "starting_salary_bachelor_yen",
+      "starting_salary_master_yen",
+      "starting_salary_doctor_yen",
+      "average_annual_income_yen",
+      "average_overtime_hours_per_month",
+      "annual_holidays_days",
+      "remote_work_policy"
+    ];
+
+    const FACT_LABELS = {
+      starting_salary_yen: "月額初任給",
+      starting_salary_bachelor_yen: "学士初任給",
+      starting_salary_master_yen: "修士初任給",
+      starting_salary_doctor_yen: "博士初任給",
+      has_degree_based_starting_salary_gap: "学位別初任給差",
+      has_doctoral_hiring_track: "博士向け採用導線",
+      has_doctoral_grade_advantage: "博士向け格付け差",
+      has_target_job_hiring_track: "対象応募単位の採用導線",
+      application_route: "応募経路",
+      average_annual_income_yen: "平均年収",
+      average_overtime_hours_per_month: "月平均残業",
+      annual_holidays_days: "年間休日",
+      remote_work_policy: "リモート方針"
+    };
+
+    const DETAIL_FACT_KEYS = [
+      "starting_salary_yen",
+      "starting_salary_bachelor_yen",
+      "starting_salary_master_yen",
+      "starting_salary_doctor_yen",
+      "has_degree_based_starting_salary_gap",
+      "has_doctoral_hiring_track",
+      "has_doctoral_grade_advantage",
+      "has_target_job_hiring_track",
+      "application_route",
+      "average_annual_income_yen",
+      "average_overtime_hours_per_month",
+      "annual_holidays_days",
+      "remote_work_policy"
+    ];
+
+    const SCOPE_LABELS = [
+      ["user_label", "ユーザー指定名"],
+      ["target_application_unit", "応募対象単位"],
+      ["hiring_entity_name", "採用 entity"],
+      ["role_family", "職種ファミリー"],
+      ["stability_entity_name", "企業基盤 entity"],
+      ["ambiguity_note", "曖昧性の処理"]
+    ];
+
+    const COLUMNS = [
+      { key: "company", label: "会社", className: "left company", type: "string" },
+      { key: "job", label: "応募対象", className: "left job", type: "string" },
+      { key: "total", label: "総合", type: "number" },
+      { key: "phd_value", label: "PhD", type: "number" },
+      { key: "role_fit", label: "職務", type: "number" },
+      { key: "rd_env", label: "R&D", type: "number" },
+      { key: "compensation", label: "処遇", type: "number" },
+      { key: "hiring_process", label: "選考", type: "number" },
+      { key: "stability", label: "安定", type: "number" },
+      { key: "starting_salary_yen", label: "初任", type: "number" },
+      { key: "starting_salary_bachelor_yen", label: "学士初", type: "number" },
+      { key: "starting_salary_master_yen", label: "修士初", type: "number" },
+      { key: "starting_salary_doctor_yen", label: "博士初", type: "number" },
+      { key: "average_annual_income_yen", label: "年収", type: "number" },
+      { key: "average_overtime_hours_per_month", label: "残業", type: "number" },
+      { key: "annual_holidays_days", label: "休日", type: "number" },
+      { key: "remote_work_policy", label: "リモート", className: "remote", type: "string" }
+    ];
+
+    const state = {
+      items: [],
+      rowsByMode: { official: [], fallback: [] },
+      mode: "official",
+      query: "",
+      sortKey: "total",
+      sortDir: "desc",
+      selectedSlug: null
+    };
+
+    const statusEl = document.querySelector("#status");
+    const noticeEl = document.querySelector("#notice");
+    const headEl = document.querySelector("#table-head");
+    const bodyEl = document.querySelector("#table-body");
+    const detailEl = document.querySelector("#detail");
+    const searchEl = document.querySelector(".search");
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function isMissing(value) {
+      return value === null || value === undefined || value === "unknown" || value === "";
+    }
+
+    function scopeValue(scope, key) {
+      const fallbackKeys = {
+        target_application_unit: ["evaluation_target", "job_type"],
+        hiring_entity_name: ["hiring_entity"],
+        role_family: ["job_type"],
+        stability_entity_name: ["hiring_entity"]
+      }[key] ?? [];
+      if (!isMissing(scope?.[key])) return scope[key];
+      for (const fallbackKey of fallbackKeys) {
+        if (!isMissing(scope?.[fallbackKey])) return scope[fallbackKey];
+      }
+      return null;
+    }
+
+    function mergeFacts(official, unofficial) {
+      const merged = { ...(official ?? {}) };
+      if (!unofficial) return merged;
+      for (const key of DETAIL_FACT_KEYS) {
+        if (isMissing(merged[key]) && !isMissing(unofficial[key])) {
+          merged[key] = unofficial[key];
+        }
+      }
+      return merged;
+    }
+
+    function sectionScore(data, key) {
+      return Number(data.sections?.[key]?.score);
+    }
+
+    function computeTotal(data) {
+      const total = SECTIONS.reduce((sum, [key]) => {
+        const score = sectionScore(data, key);
+        return Number.isFinite(score) ? sum + WEIGHTS[key] * score : sum;
+      }, 0);
+      return Math.round(total * 200) / 10;
+    }
+
+    function toManYen(value) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return null;
+      return Math.round(Number(value) / 1000) / 10;
+    }
+
+    function formatYen(value) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return "未公表";
+      return `${Number(value).toLocaleString("ja-JP")}円`;
+    }
+
+    function remoteLabel(value) {
+      return {
+        full: "フルリモート可",
+        hybrid: "ハイブリッド",
+        limited: "一部利用可",
+        none: "原則出社",
+        unknown: "未公表"
+      }[value] ?? value ?? "未公表";
+    }
+
+    function routeLabel(value) {
+      return {
+        direct: "この評価対象へ直接応募",
+        broad: "広い職種単位で応募",
+        unknown: "未公表"
+      }[value] ?? value ?? "未公表";
+    }
+
+    function roleFamilyLabel(value) {
+      return {
+        researcher: "研究職",
+        research_engineer: "研究開発エンジニア",
+        engineer: "エンジニア",
+        consultant: "コンサルタント",
+        generalist: "技術系総合職"
+      }[value] ?? value ?? "未記載";
+    }
+
+    function booleanLabel(value) {
+      if (value === true) return "あり";
+      if (value === false) return "なし";
+      return "未公表";
+    }
+
+    function factDisplayValue(key, value, compact = false) {
+      if (key.endsWith("_yen")) return compact ? (toManYen(value) ?? null) : formatYen(value);
+      if (key === "average_overtime_hours_per_month") {
+        if (value === null || value === undefined || Number.isNaN(Number(value))) return compact ? null : "未公表";
+        return compact ? Number(value) : `${Number(value).toFixed(1)}時間`;
+      }
+      if (key === "annual_holidays_days") {
+        if (value === null || value === undefined || Number.isNaN(Number(value))) return compact ? null : "未公表";
+        return compact ? Number(value) : `${Number(value)}日`;
+      }
+      if (key === "remote_work_policy") return remoteLabel(value);
+      if (key === "application_route") return routeLabel(value);
+      if (typeof value === "boolean" || key.startsWith("has_")) return booleanLabel(value);
+      return isMissing(value) ? "未公表" : value;
+    }
+
+    function displayValue(row, column) {
+      const value = row[column.key];
+      if (column.key === "company") {
+        const current = row.slug === state.selectedSlug ? "true" : "false";
+        return `<button class="company-button" type="button" data-slug="${escapeHtml(row.slug)}" aria-current="${current}">${escapeHtml(value)}</button>`;
+      }
+      if (column.key === "remote_work_policy") return escapeHtml(remoteLabel(value));
+      if (value === null || value === undefined || Number.isNaN(value)) return "NaN";
+      if (column.type === "number") return Number(value).toFixed(1);
+      return escapeHtml(value);
+    }
+
+    function buildItem(data, fileName) {
+      return {
+        data,
+        fileName,
+        slug: data.slug ?? fileName.replace(/\.ya?ml$/, ""),
+        reportPath: `${DATA_ROOT}/companies/${fileName.replace(/\.ya?ml$/, ".md")}`
+      };
+    }
+
+    function buildRow(item, mode) {
+      const data = item.data;
+      const factLayer = data.fact_layer ?? {};
+      const fact = mode === "fallback"
+        ? mergeFacts(factLayer.official, factLayer.unofficial)
+        : (factLayer.official ?? {});
+      const scope = data.scope ?? {};
+      const target = scopeValue(scope, "target_application_unit") ?? data.company_name ?? item.slug;
+      const hiringEntity = scopeValue(scope, "hiring_entity_name");
+      const roleFamily = scopeValue(scope, "role_family");
+      const row = {
+        slug: item.slug,
+        company: data.company_name ?? item.slug,
+        job: roleFamilyLabel(roleFamily),
+        total: computeTotal(data),
+        searchText: [
+          data.company_name,
+          item.slug,
+          target,
+          hiringEntity,
+          roleFamily,
+          data.summary?.conclusion,
+          data.summary?.final_comment
+        ].filter(Boolean).join(" ").toLowerCase()
+      };
+
+      for (const [key] of SECTIONS) row[key] = sectionScore(data, key);
+      for (const key of FACT_KEYS) {
+        row[key] = key.endsWith("_yen") ? toManYen(fact[key]) : fact[key];
+      }
+      return row;
+    }
+
+    function renderHead() {
+      const cells = COLUMNS.map((column) => {
+        const active = state.sortKey === column.key;
+        const mark = active ? (state.sortDir === "asc" ? "▲" : "▼") : "";
+        return `<th class="${column.className ?? ""}">
+          <button type="button" data-sort="${column.key}">
+            <span>${escapeHtml(column.label)}</span>
+            <span class="sort-mark">${mark}</span>
+          </button>
+        </th>`;
+      });
+      headEl.innerHTML = `<tr>${cells.join("")}</tr>`;
+      headEl.querySelectorAll("button[data-sort]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const key = button.dataset.sort;
+          if (state.sortKey === key) {
+            state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+          } else {
+            state.sortKey = key;
+            state.sortDir = COLUMNS.find((column) => column.key === key).type === "number" ? "desc" : "asc";
+          }
+          render();
+        });
+      });
+    }
+
+    function compareRows(a, b) {
+      const column = COLUMNS.find((item) => item.key === state.sortKey);
+      const av = a[state.sortKey];
+      const bv = b[state.sortKey];
+      const dir = state.sortDir === "asc" ? 1 : -1;
+      if (column?.type === "number") {
+        const an = Number.isFinite(Number(av)) ? Number(av) : -Infinity;
+        const bn = Number.isFinite(Number(bv)) ? Number(bv) : -Infinity;
+        return (an - bn) * dir;
+      }
+      return String(av ?? "").localeCompare(String(bv ?? ""), "ja") * dir;
+    }
+
+    function listItems(values) {
+      if (!Array.isArray(values) || values.length === 0) return `<p class="summary">未記載</p>`;
+      return `<ul class="plain-list">${values.map((value) => `<li><span></span><span>${escapeHtml(value)}</span></li>`).join("")}</ul>`;
+    }
+
+    function renderFacts(title, facts) {
+      const rows = DETAIL_FACT_KEYS.map((key) => {
+        return `<li><span>${escapeHtml(FACT_LABELS[key] ?? key)}</span><span>${escapeHtml(factDisplayValue(key, facts?.[key]))}</span></li>`;
+      }).join("");
+      return `<h3>${escapeHtml(title)}</h3><ul class="facts">${rows}</ul>`;
+    }
+
+    function renderDetail(item) {
+      if (!item) {
+        detailEl.innerHTML = `<div class="detail-empty">表示できる調査結果がありません。</div>`;
+        return;
+      }
+
+      const data = item.data;
+      const scope = data.scope ?? {};
+      const factLayer = data.fact_layer ?? {};
+      const officialFacts = factLayer.official ?? {};
+      const fallbackFacts = mergeFacts(factLayer.official, factLayer.unofficial);
+      const total = computeTotal(data);
+      const target = scopeValue(scope, "target_application_unit");
+      const scopeRows = SCOPE_LABELS.map(([key, label]) => {
+        const value = scopeValue(scope, key);
+        if (isMissing(value)) return "";
+        return `<li><span>${escapeHtml(label)}</span><span>${escapeHtml(value)}</span></li>`;
+      }).join("");
+      const alternatives = Array.isArray(scope.alternative_application_units)
+        ? `<li><span>他の応募単位候補</span><span>${escapeHtml(scope.alternative_application_units.join("、"))}</span></li>`
+        : "";
+      const scores = SECTIONS.map(([key, , shortLabel]) => {
+        const score = sectionScore(data, key);
+        return `<div class="score-cell">
+          <div class="score-label">${escapeHtml(shortLabel)}</div>
+          <div class="score-value">${Number.isFinite(score) ? score.toFixed(1) : "NaN"} / 5.0</div>
+        </div>`;
+      }).join("");
+      const axes = SECTIONS.map(([key, title]) => {
+        const section = data.sections?.[key] ?? {};
+        const score = Number(section.score);
+        return `<div class="axis">
+          <div class="axis-title">
+            <span>${escapeHtml(title)}</span>
+            <span class="axis-score">${Number.isFinite(score) ? score.toFixed(1) : "NaN"} / 5.0</span>
+          </div>
+          <p><span class="text-label">公式情報:</span> ${escapeHtml(section.facts_official ?? "未記載")}</p>
+          <p><span class="text-label">非公式情報:</span> ${escapeHtml(section.facts_unofficial ?? "未記載")}</p>
+          <p><span class="text-label">評価:</span> ${escapeHtml(section.evaluation ?? "未記載")}</p>
+        </div>`;
+      }).join("");
+      const sources = Array.isArray(data.sources)
+        ? data.sources.map((source) => {
+          const tier = source.tier === "official" ? "公式" : source.tier === "unofficial" ? "非公式" : source.tier ?? "source";
+          return `<li><span class="source-tier">[${escapeHtml(tier)}]</span> <a href="${escapeHtml(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(source.label ?? source.url)}</a></li>`;
+        }).join("")
+        : "";
+
+      detailEl.innerHTML = `
+        <h2>${escapeHtml(data.company_name ?? item.slug)}</h2>
+        <div class="detail-meta">${escapeHtml(target ?? "応募対象未記載")} / 調査日: ${escapeHtml(data.survey_date ?? "未記載")}</div>
+        <div class="total-score"><strong>${total.toFixed(1)}</strong><span>/ 100</span></div>
+        <p class="summary">${escapeHtml(data.summary?.conclusion ?? "結論未記載")}</p>
+        ${data.summary?.final_comment ? `<p class="summary"><strong>${escapeHtml(data.summary.final_comment)}</strong></p>` : ""}
+        <div class="score-grid">${scores}</div>
+
+        <h3>分析対象の確定</h3>
+        <ul class="facts">${scopeRows}${alternatives}</ul>
+
+        ${renderFacts("主要数値・制度事実（公式）", officialFacts)}
+        ${renderFacts("主要数値・制度事実（非公式補完）", fallbackFacts)}
+
+        <h3>評価詳細</h3>
+        ${axes}
+
+        <h3>向いている人</h3>
+        ${listItems(data.summary?.suitable_for)}
+
+        <h3>向いていない人</h3>
+        ${listItems(data.summary?.not_suitable_for)}
+
+        <h3>懸念点</h3>
+        ${listItems(data.summary?.concerns)}
+
+        <h3>参考文献</h3>
+        <ul class="source-list">${sources}</ul>
+
+        <h3>生成済み Markdown</h3>
+        <p><a href="${escapeHtml(item.reportPath)}">Markdown レポートを開く</a></p>
+      `;
+    }
+
+    function currentRows() {
+      const query = state.query.trim().toLowerCase();
+      return state.rowsByMode[state.mode]
+        .filter((row) => !query || row.searchText.includes(query))
+        .slice()
+        .sort(compareRows);
+    }
+
+    function render({ scrollToDetail = false } = {}) {
+      const rows = currentRows();
+      if (rows.length === 0) {
+        state.selectedSlug = null;
+        renderHead();
+        bodyEl.innerHTML = "";
+        renderDetail(null);
+        statusEl.textContent = `0 / ${state.rowsByMode[state.mode].length} 件`;
+        return;
+      }
+      if ((!state.selectedSlug || !rows.some((row) => row.slug === state.selectedSlug)) && rows.length > 0) {
+        state.selectedSlug = rows[0].slug;
+      }
+      renderHead();
+      bodyEl.innerHTML = rows.map((row) => {
+        const cells = COLUMNS.map((column) => {
+          return `<td class="${column.className ?? ""}">${displayValue(row, column)}</td>`;
+        });
+        return `<tr>${cells.join("")}</tr>`;
+      }).join("");
+      bodyEl.querySelectorAll(".company-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.selectedSlug = button.dataset.slug;
+          render({ scrollToDetail: true });
+        });
+      });
+      const selected = state.items.find((item) => item.slug === state.selectedSlug);
+      renderDetail(selected);
+      if (scrollToDetail) {
+        detailEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      statusEl.textContent = `${rows.length} / ${state.rowsByMode[state.mode].length} 件`;
+    }
+
+    async function loadData() {
+      if (!window.jsyaml) {
+        throw new Error("YAML parser could not be loaded.");
+      }
+      const loaded = await Promise.all(DATA_FILES.map(async (fileName) => {
+        const response = await fetch(`${DATA_ROOT}/data/${fileName}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`${fileName}: ${response.status}`);
+        return buildItem(jsyaml.load(await response.text()), fileName);
+      }));
+
+      state.items = loaded;
+      state.rowsByMode.official = loaded.map((item) => buildRow(item, "official"));
+      state.rowsByMode.fallback = loaded.map((item) => buildRow(item, "fallback"));
+    }
+
+    document.querySelectorAll(".tab").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.mode = button.dataset.mode;
+        document.querySelectorAll(".tab").forEach((item) => {
+          item.setAttribute("aria-selected", String(item === button));
+        });
+        render();
+      });
+    });
+
+    searchEl.addEventListener("input", () => {
+      state.query = searchEl.value;
+      render();
+    });
+
+    loadData()
+      .then(render)
+      .catch((error) => {
+        statusEl.textContent = "読み込みに失敗しました";
+        noticeEl.style.display = "block";
+        noticeEl.textContent = `GitLab Pages またはHTTPサーバー上で開いてください。詳細: ${error.message}`;
+      });
+  </script>
+</body>
+</html>

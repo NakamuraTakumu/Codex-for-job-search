@@ -1,23 +1,23 @@
-Use the `company-analysis` skill at `.agents/skills/company-analysis/SKILL.md`.
+`.agents/skills/company-analysis/SKILL.md` の `company-analysis` skill を使ってください。
 
-Return exactly one YAML object in the message.
-Do not create, modify, or save any files.
-Do not write under `report/`, `document/`, or any production/test artifact path.
-Do not render Markdown.
+メッセージには、単一の YAML オブジェクトだけを返してください。
+ファイルを作成、変更、保存しないでください。
+`report/`、`document/`、その他 production/test artifact path 配下に書き込まないでください。
+Markdown をレンダリングしないでください。
 
-Current analysis target:
-- Treat this prompt as self-contained.
-- Ignore all previous analysis payloads, previous slugs, previous findings, and previous company facts from earlier turns.
-- The current intended slug is exactly `{{slug}}`.
-- Judge and fill the YAML only from the current fixed scope and the sources you find for that target.
+現在の分析対象:
+- このプロンプトは自己完結した指示として扱ってください。
+- 以前の分析 payload、以前の slug、以前の finding、以前の turn の会社情報はすべて無視してください。
+- 現在意図している slug は正確に `{{slug}}` です。
+- 現在の固定 scope と、この対象についてあなたが見つけた source だけから YAML を判断・記入してください。
 
-Fixed scope:
+固定 scope:
 - company_name: {{company_name}}
 - survey_date: {{survey_date}}
 - slug: {{slug}}
 - scope.user_label: {{scope_user_label}}
 - scope.target_application_unit: {{scope_target_application_unit}}
 - scope.hiring_entity_name: {{scope_hiring_entity_name}}
-- scope.role_family (broad role category such as swe/researcher, not hiring year/cohort/category): {{scope_role_family}}
-- scope.alternative_application_units (other hiring routes, role tracks, or application units under the same hiring_entity_name): {{scope_alternative_application_units}}
+- scope.role_family (`researcher` / `research_engineer` / `engineer` / `consultant` / `generalist` / `other` のいずれか。採用年度、cohort、採用区分ではありません): {{scope_role_family}}
+- scope.alternative_application_units (同じ hiring_entity_name 配下の他の採用ルート、職種トラック、応募単位): {{scope_alternative_application_units}}
 - scope.stability_entity_name: {{scope_stability_entity_name}}

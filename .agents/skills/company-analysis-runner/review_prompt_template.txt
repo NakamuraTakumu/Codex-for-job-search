@@ -1,23 +1,29 @@
-Use the `company-analysis-review` skill at `.agents/skills/company-analysis-review/SKILL.md`.
+`.agents/skills/company-analysis-review/SKILL.md` の `company-analysis-review` skill を使ってください。
 
-Fixed scope:
+固定 scope:
 - company_name: {{company_name}}
 - survey_date: {{survey_date}}
 - slug: {{slug}}
 - scope.user_label: {{scope_user_label}}
 - scope.target_application_unit: {{scope_target_application_unit}}
 - scope.hiring_entity_name: {{scope_hiring_entity_name}}
-- scope.role_family (broad role category such as swe/researcher, not hiring year/cohort/category): {{scope_role_family}}
-- scope.alternative_application_units (other hiring routes, role tracks, or application units under the same hiring_entity_name): {{scope_alternative_application_units}}
+- scope.role_family (`researcher` / `research_engineer` / `engineer` / `consultant` / `generalist` / `other` のいずれか。採用年度、cohort、採用区分ではありません): {{scope_role_family}}
+- scope.alternative_application_units (同じ hiring_entity_name 配下の他の採用ルート、職種トラック、応募単位): {{scope_alternative_application_units}}
 - scope.stability_entity_name: {{scope_stability_entity_name}}
 
-Current review target:
-- Treat this prompt as self-contained.
-- Ignore all previous review payloads, previous slugs, previous findings, and previous rendered outputs from earlier turns.
-- The current intended slug is exactly `{{slug}}`, and that is not a scope error.
-- Judge only the inline payload embedded in this prompt.
+ユーザー意図と親の対象固定:
+- user_requested_target (ユーザーが明示または強く示唆した会社・職種・応募単位。未提供なら `unknown`): {{user_requested_target}}
+- parent_scope_rationale (親がこの固定 scope を選んだ理由。未提供なら `unknown`): {{parent_scope_rationale}}
+- rejected_or_nearby_application_units (調査対象にしなかった近接職種・代替応募単位。未提供なら `unknown`): {{rejected_or_nearby_application_units}}
 
-Review inputs:
+現在のレビュー対象:
+- このプロンプトは自己完結した指示として扱ってください。
+- 以前の review payload、以前の slug、以前の finding、以前の rendered output はすべて無視してください。
+- 現在意図している slug は正確に `{{slug}}` です。slug 文字列だけを理由に scope error としないでください。
+- ただし、固定 scope が `user_requested_target` や `parent_scope_rationale` と意味的に矛盾する場合は、scope error として扱ってください。
+- このプロンプトに埋め込まれた inline payload だけを判断してください。
+
+レビュー入力:
 - analysis_yaml_inline:
 <<<BEGIN_ANALYSIS_YAML>>>
 {{analysis_yaml_text}}
@@ -27,5 +33,5 @@ Review inputs:
 {{rendered_markdown_text}}
 <<<END_RENDERED_MARKDOWN>>>
 
-Additional constraints:
-- Write `message` and `suggested_fix` in Japanese.
+追加制約:
+- `message` と `suggested_fix` は日本語で書いてください。

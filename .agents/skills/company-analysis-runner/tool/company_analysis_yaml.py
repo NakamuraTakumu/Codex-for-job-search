@@ -50,6 +50,15 @@ UNOFFICIAL_SOURCE_KINDS = {
     "other",
 }
 
+ROLE_FAMILIES = {
+    "researcher",
+    "research_engineer",
+    "engineer",
+    "consultant",
+    "generalist",
+    "other",
+}
+
 
 @dataclass
 class ValidationResult:
@@ -343,12 +352,14 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
             "user_label",
             "target_application_unit",
             "hiring_entity_name",
-            "role_family",
             "stability_entity_name",
             "ambiguity_note",
         ]:
             if key in scope and (not isinstance(scope[key], str) or not scope[key].strip()):
                 issues.append(f"scope.{key} must be a non-empty string")
+        role_family = scope.get("role_family")
+        if role_family not in ROLE_FAMILIES:
+            issues.append(f"scope.role_family must be one of {sorted(ROLE_FAMILIES)}")
         alternatives = _ensure_list(
             scope.get("alternative_application_units", []),
             "scope.alternative_application_units",

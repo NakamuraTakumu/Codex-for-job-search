@@ -7,7 +7,7 @@ scope:
   user_label: "<str: 親が固定した表示名>"
   target_application_unit: "<str: 応募者が到達したい採用ルート、職種トラック、または application unit。企業名ではない>"
   hiring_entity_name: "<str: 採用を行う entity の名前>"
-  role_family: "<str: 職種名の大まかな区別。例: swe / researcher。年度・新卒/中途区分ではない>"
+  role_family: "<researcher|research_engineer|engineer|consultant|generalist|other: 職種ファミリー。年度・新卒/中途区分ではない>"
   # `hiring_entity_name` の entity にある他の採用ルート、職種トラック、または application unit。候補がない場合は [] を使う。
   alternative_application_units:
     - "<str: 候補1>"
