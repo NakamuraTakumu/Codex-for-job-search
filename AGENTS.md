@@ -14,6 +14,14 @@
 - Do not overwrite or mix production files with test-generated files unless the user explicitly approves promotion of the test result.
 - Make the distinction explicit in filenames, paths, or metadata so test outputs remain recognizable later.
 
+## Proactive Document Capture
+- Do not wait for an explicit user instruction before saving reusable findings.
+- At the end of any non-trivial investigation, comparison, evaluation, workflow change, debugging session, or artifact-generation task, decide whether the result should be preserved and then create or update the relevant Markdown note under `document/` or `knowledge/`.
+- Save a short note when the task produced reusable criteria, a non-obvious decision, a verified procedure, a resolved ambiguity, important caveats, or findings that would be costly to rediscover.
+- Prefer updating an existing related note over creating a new file when the new work continues or corrects the same thread.
+- Keep proactive notes concise: record the situation, decision or finding, evidence basis, and future use; do not copy the full chat log.
+- Skip a new saved note only for lightweight one-off answers, purely mechanical edits, or results already captured in an accepted report or review artifact.
+
 ## Evaluation Tasks
 - In evaluation or scoring tasks, fix the exact evaluation target before scoring. Do not score a broad entity first and narrow the target afterward.
 - When multiple evaluation results are compared for uncertainty analysis, separate `evaluation-target mismatch` from `scoring variance`. If the fixed targets differ, treat that as a scope problem first rather than as pure scoring disagreement.
