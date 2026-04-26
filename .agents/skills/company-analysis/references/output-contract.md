@@ -9,6 +9,7 @@
 - 正本の output template は、`assets/yaml_output_template.yaml` である。
 - その template の項目をきれいに支えられないと分かった場合は、YAML を確定する前に調査と証拠整理へ戻る。
 - `sources` には、実際に証拠として使った URL だけを列挙する。
+- 非公式 source を検索したが証拠として使わない場合は、確認した source family と不発理由を `facts_unofficial` または `summary.concerns` に残す。
 
 ## グローバルルール
 - `scope` は親が固定した厳密な評価対象として扱う。公開情報が異なっていても自分で対象をすり替えず、不一致は `scope.ambiguity_note` に記録する。
@@ -17,9 +18,11 @@
 - `fact_layer.unofficial` には、対応する非公式データがあれば入れる。信頼性が低くても入れる。重要な欠損が残るときに非公式情報の調査自体を省略してはいけない。
 - `starting_salary_yen` と `starting_salary_*_yen` は、初任給候補の値が見つかったらまず入れる。学位別の内訳がなければ、まず `starting_salary_yen` を埋める。元の表現や留保は `facts_unofficial` に残す。
 - `average_annual_income_yen` は年額欄であり、初任給や reference salary を入れてはいけない。
-- `has_doctoral_hiring_track` は、博士を対象に含むことや博士向け入口が評価対象に対して target-specific に読める場合だけ `true` にする。研究者プロフィールや fellowship の存在だけで `true` にしてはいけない。
+- 博士応募資格、博士向け導線、博士優位、学位差の解釈は boolean 化せず、`phd_value.facts_official`、`phd_value.facts_unofficial`、`phd_value.evaluation` に文章で残す。
+- `fact_layer` には、月額初任給などの数値と、評価対象への採用導線・応募経路のように機械的に扱いやすい制度 facts だけを入れる。
 - `remote_work_policy` は、個人の体験談や単一チームの例ではなく、評価対象または採用主体に対する広い運用方針として読める evidence で埋める。
 - `facts_unofficial` は、後で見返すための非公式情報メモである。`fact_layer.unofficial` に入れた値の元の表現、留保、軽い食い違い、関連する観測や不発理由を残す。`fact_layer.unofficial` に入れられる情報を、迷ったからという理由だけでこちらへ逃がしてはいけない。
+- 公式・非公式とも直接情報がない論点を補完的に推定する場合も、推定値を `fact_layer` に入れてはいけない。推定は section の `evaluation` や `summary.concerns` に、根拠の弱さとともに自然言語で残す。
 - 出力 YAML 内の自然言語の項目は通常日本語で書く。`scope.ambiguity_note`、section の文章項目、`summary.*` に適用する。
 - この skill が返す YAML には `run_metadata` を含めない。`run_metadata` は親が最終 accepted YAML に追加する。子は推測してはいけない。
 
@@ -27,6 +30,7 @@
 - 必須 key を省略してはいけない。
 - 構造化された値の欠損を文字列 `unknown` や日本語 placeholder `不明` で埋めてはいけない。
 - 非公開 numeric value を `0` で埋めてはいけない。
+- 推定した数値や制度を、確認済みの構造化 facts として書いてはいけない。
 - 自然言語の出力欄を英語で書いてはいけない。固有名詞、学位名、公開されている職種名、必要な公式用語の引用だけを必要最小限で残す。
 - YAML に総合点を書いてはいけない。
 - 非公式情報で `fact_layer.official` の数値や制度上の事実を上書きしてはいけない。
@@ -38,18 +42,20 @@
 - `fact_layer.official` が必須 key を含む。
 - `fact_layer.unofficial` が必須 key を含む。
 - 自然言語の項目が日本語で書かれている。
-- 不明な数値の構造化値は `null` を使っている。
-- `remote_work_policy` と `application_route` の unknown のみ `unknown` を使っている。
+- 不明な構造化値は型にかかわらず `null` を使っている。
 - `facts_official` と `facts_unofficial` が分離されている。
 - すべての section に `score` がある。
 - すべての source に `tier` がある。
 - 非公式の構造化値が `fact_layer.unofficial` に分離されている。
 - 対応する非公式データがあるのに、低信頼という理由だけで `fact_layer.unofficial` から落としていない。
 - 初任給候補の値が見つかっているのに、`starting_salary_yen` や `starting_salary_*_yen` を不必要に空欄のままにしていない。
-- `has_doctoral_hiring_track` を、博士向け target-specific route の証拠なしに `true` にしていない。
+- 博士応募資格、博士向け導線、博士優位、学位差の解釈を `fact_layer` に boolean として追加していない。
+- `phd_value` の文章内で、博士が応募対象に含まれるだけの状態と、博士向け導線や制度上の優位がある状態を区別している。
 - 総合点や補正後総合点を YAML に書いていない。
 - 重要な欠損が見つかった場合、それらについて追加調査を試みた。
 - 重要な欠損が残る場合、少なくとも 1 回は非公式情報の調査を実施した。
+- 典型例として挙げた非公式 source family を検索し、証拠として使わない場合は不発理由を記録している。
 - 重要な欠損が残り、なお非公式情報源の数が 0 の場合、確認した情報の系統と不発理由を `facts_unofficial` または `summary.concerns` に記録している。
+- 公式・非公式とも直接情報がない論点を推定した場合、推定であることを `evaluation` または `summary.concerns` に明示し、`fact_layer` は `null` のままにしている。
 - 関連する非公式情報を、低信頼という理由だけで `facts_unofficial` から落としていない。
 - 多くの `unconfirmed` 項目や `null` 値が残る場合、それらの深刻さを `scope.ambiguity_note`、section の `evaluation`、または `summary.concerns` で明示している。

@@ -3,7 +3,9 @@
 ## Document Organization
 - Organize reusable documents under `document/` with topic-specific subdirectories instead of placing many files directly in `document/`.
 - In this repository, company-analysis-related reusable documents may be placed directly under `document/` when the repository itself is already specialized enough that an extra `company_analysis/` label would be redundant.
-- For company analysis outputs, use `report/company_analysis/companies/` for per-company analyses and `report/company_analysis/reviews/` for cross-company reviews or comparisons.
+- For company analysis outputs, use `report/company_analysis/companies/` for accepted per-company analyses, `report/company_analysis/data/` for accepted YAML data, and `report/company_analysis/reviews/` for accepted review artifacts.
+- Keep `report/company_analysis/` for accepted company-analysis artifacts only. Do not put workflow notes, scope manifests, test-run considerations, or trial investigation commentary there.
+- Put test-run notes, trial investigation considerations, workflow retrospectives, scoring experiments, and process findings under `document/`, not under `report/company_analysis/`.
 - Prefer concise document filenames. Avoid redundant prefixes when the parent directory already provides the context.
 - Choose the shortest filename that still remains unambiguous within its directory.
 - For company-analysis outputs, default to concise target-based slugs and filenames without dates, such as `japan_ibm_research`.
@@ -11,6 +13,7 @@
 
 ## Test vs Production Data
 - Keep data, reports, and artifacts produced for testing clearly separate from production or accepted outputs.
+- For company-analysis test investigations, keep reusable notes and considerations under `document/`; keep raw temporary handoffs under `tmp/`.
 - Do not overwrite or mix production files with test-generated files unless the user explicitly approves promotion of the test result.
 - Make the distinction explicit in filenames, paths, or metadata so test outputs remain recognizable later.
 
@@ -38,8 +41,9 @@
 - If both research and software-engineering routes officially exist, the parent may still analyze both as separate targets when the user asks for both or when comparison is the point, but the default single-target choice should be the research track.
 - Require `run_metadata` in final company-analysis YAML outputs. Do not treat it as optional when the parent workflow is available; missing `run_metadata` should be considered an invalid final artifact.
 - For company-analysis naming, keep `slug` and saved filenames aligned, and default to the shortest stable target-based name that remains unambiguous without a date.
+- For company-analysis intermediate files under `tmp/company_analysis/`, use UUID filenames. Keep human-readable slugs inside YAML and final accepted artifacts, not as intermediate filenames.
 - For fairness across companies, when `company-analysis-runner` hands off work to analysis or review subagents, pass the corresponding prompt template exactly as written except for filling its placeholders. Do not paraphrase, reorder, trim, or append ad hoc instructions unless the template file itself is intentionally updated first.
-- When a review subagent is used in the company-analysis workflow, pass the analysis YAML and any rendered Markdown as inline data in the prompt rather than handing off repository file paths or asking the subagent to fetch them from the filesystem.
+- When a review subagent is used in the company-analysis workflow, use filesystem handoff as the default: prepare a self-contained review input bundle under `tmp/company_analysis/review_inputs/`, point it to the analysis YAML and optional rendered Markdown, and have the review subagent write review YAML under `tmp/company_analysis/reviews/`. Use inline payloads only as a fallback when filesystem handoff is unavailable.
 
 ## Drafting and Review Separation
 - When a task involves drafting an artifact and then checking, reviewing, or critiquing that artifact, prefer using a separate subagent for review rather than having the drafting subagent review its own output.

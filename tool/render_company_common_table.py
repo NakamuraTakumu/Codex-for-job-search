@@ -76,7 +76,7 @@ def expand_inputs(raw_inputs: list[str]) -> list[Path]:
 
 
 def is_missing_fact_value(value: object) -> bool:
-    return value is None or value == "unknown"
+    return value is None
 
 
 def merge_fact_layers(

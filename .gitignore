@@ -4,5 +4,6 @@ __pycache__/
 .ipynb_checkpoints/
 tmp_web/
 tmp_pdf/
+tmp/
 .vscode/
 private_knowledge/

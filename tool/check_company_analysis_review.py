@@ -26,6 +26,7 @@ import yaml
 ALLOWED_VERDICTS = {"pass", "revise"}
 ALLOWED_SEVERITIES = {"high", "medium", "low"}
 ALLOWED_CATEGORIES = {
+    "instruction_compliance",
     "scope_integrity",
     "source_separation",
     "source_quality",
@@ -78,6 +79,9 @@ def validate_review_data(data: Any) -> list[str]:
 
     if "review" not in data:
         return ["missing top-level key: review"]
+    extra_top_keys = sorted(set(data) - {"review"})
+    for key in extra_top_keys:
+        issues.append(f"top-level has unknown key: {key}")
 
     review = _ensure_dict(data["review"], "review", issues)
     for key in ["verdict", "findings", "passed_checks"]:

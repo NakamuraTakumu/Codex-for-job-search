@@ -19,19 +19,13 @@ fact_layer:
   official:
     # 公式情報だけで埋める必須の構造化事実欄。
     # 生の数値 / 制度上の事実はここに置き、意味づけは後の section で説明する。
-    # 不明な numeric / boolean は `null` を使う。`unknown` を使えるのは `remote_work_policy` と `application_route` だけ。
+    # 欠損値は型にかかわらず `null` を使う。
     # `starting_salary_yen`: 評価対象に直接対応する公式の月額初任給。評価対象がその共通給与に明確に属する場合のみ、広い共通給与を使ってよい。
     starting_salary_yen: "<int|null: 評価対象に対応する月額初任給>"
     # 学位別初任給は、公式に月額で示されている場合のみ入れる。年額換算や推定年収は使わない。
     starting_salary_bachelor_yen: "<int|null: 学士の初任給>"
     starting_salary_master_yen: "<int|null: 修士の初任給>"
     starting_salary_doctor_yen: "<int|null: 博士の初任給>"
-    # 学位別初任給差が制度上明示されているか。
-    has_degree_based_starting_salary_gap: "<bool|null: 学位別初任給差があるか>"
-    # 独立した博士向け採用導線が制度上存在するか。
-    has_doctoral_hiring_track: "<bool|null: 博士向け採用導線があるか>"
-    # 博士号や研究実績による格付け / レベル優位が制度上存在するか。
-    has_doctoral_grade_advantage: "<bool|null: 博士向け格付け優位があるか>"
     # 評価対象に対する公式の採用導線が存在するか。
     # 区分自体があり、当年採用が未定でも `true` は可。ただし不確実性は `ambiguity_note` や `concerns` に残す。
     has_target_job_hiring_track: "<bool|null: 評価対象向けの公式採用導線があるか>"
@@ -39,39 +33,35 @@ fact_layer:
     # `direct` = `target_application_unit` に直接応募
     # `parent_company` = 親会社経由で採用された後に到達
     # `group_company` = グループ会社経由で採用された後に到達
-    # 公開情報で確認不能なら `unknown`。
-    application_route: "<direct|parent_company|group_company|unknown: 応募経路>"
+    # 公開情報で確認不能なら `null`。
+    application_route: "<direct|parent_company|group_company|null: 応募経路>"
     # 採用主体の最新公式平均年収。複数ある場合は最新の法定開示を優先。
     average_annual_income_yen: "<int|null: 平均年収>"
     # みなし残業や固定残業は代入してはいけない。
     average_overtime_hours_per_month: "<float|int|null: 月平均残業時間>"
     # 明示された年間休日のみを使う。週休や休暇制度を自分で足して推定してはいけない。
     annual_holidays_days: "<int|null: 年間休日>"
-    # `full|hybrid|limited|none|unknown`。条件付きのみなら `limited`。
+    # `full|hybrid|limited|none|null`。条件付きのみなら `limited`。
     # 個人の体験談ではなく、評価対象または採用主体に対する広い運用方針で判断する。
-    remote_work_policy: "<full|hybrid|limited|none|unknown: 公開されているリモート方針>"
+    remote_work_policy: "<full|hybrid|limited|none|null: 公開されているリモート方針>"
   unofficial:
     # 非公式情報由来の補助 fact layer。
+    # この map と配下 key は必須。対応する非公式データがない key は `null` を使う。
     # 重要な欠損を補うため、対応する非公式データがあれば入れる。
     # 信頼性が低くても入れる。
-    # この map を保持する場合、欠損は `null` を使う。`unknown` が許されるのは `remote_work_policy` と `application_route` のみ。
     # 初任給候補の値が見つかったら、まず対応する初任給 field を埋める。学位別が分からなければ `starting_salary_yen` を優先。
     # 元の表現や留保は `facts_unofficial` に残す。
     starting_salary_yen: "<int|null: 非公式の初任給候補>"
     starting_salary_bachelor_yen: "<int|null: 非公式の学士月額初任給>"
     starting_salary_master_yen: "<int|null: 非公式の修士月額初任給>"
     starting_salary_doctor_yen: "<int|null: 非公式の博士月額初任給>"
-    has_degree_based_starting_salary_gap: "<bool|null: 月額初任給の学位差があるか>"
-    # `has_doctoral_hiring_track` は、博士を対象に含むことや博士向け入口が target-specific に読める場合だけ `true`。
-    has_doctoral_hiring_track: "<bool|null: 博士向け採用導線があるか>"
-    has_doctoral_grade_advantage: "<bool|null: 非公式参照値>"
     has_target_job_hiring_track: "<bool|null: 非公式参照値>"
-    application_route: "<direct|parent_company|group_company|unknown: 非公式参照値>"
+    application_route: "<direct|parent_company|group_company|null: 非公式参照値>"
     average_annual_income_yen: "<int|null: 非公式参照値>"
     average_overtime_hours_per_month: "<float|int|null: 非公式参照値>"
     annual_holidays_days: "<int|null: 非公式参照値>"
-    # `full|hybrid|limited|none|unknown`。個人の例ではなく、評価対象または採用主体に対する広い運用方針として読める場合に入れる。
-    remote_work_policy: "<full|hybrid|limited|none|unknown: 非公式参照値>"
+    # `full|hybrid|limited|none|null`。個人の例ではなく、評価対象または採用主体に対する広い運用方針として読める場合に入れる。
+    remote_work_policy: "<full|hybrid|limited|none|null: 非公式参照値>"
 sections:
   # 各 section は同じ shape を持つ。
   # `facts_official`: 評価語を含まない公式 / 一次情報のみ。
@@ -106,7 +96,7 @@ summary:
 sources:
   # `tier`: `official | unofficial`
   # official 側の `kind`: `recruit | faq | benefits | company | ir | research | business | other`
-  # unofficial 側の `kind`: `review_site | forum | career_site | blog | other`
+  # unofficial 側の `kind`: `review_site | forum | career_site | blog | tech_blog | profile | university | event | presentation | oss | github | personal_site | other`
   # label は通常日本語とし、自然な日本語訳が不自然な場合だけ英語を残す。
   - label: "<str: 表示ラベル。通常は日本語>"
     url: "<http(s) URL>"

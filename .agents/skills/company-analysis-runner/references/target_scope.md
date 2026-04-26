@@ -18,6 +18,26 @@
 - `scope.stability_entity_name`
 - 必要時のみ `scope.ambiguity_note`
 
+## 複数対象の Scope Manifest
+
+- 複数の target を分析する場合、分析子起動前に全 target の固定 scope を Markdown に出力する。
+- default path は `document/<run_slug>_target_scope.md`。
+- manifest は、分析対象としない候補も含めて `status` で分ける。
+  - `ready_for_analysis`
+  - `needs_scope_check`
+  - `not_application_unit`
+- 少なくとも次の列を持つ table にする。
+  - `status`
+  - `slug`
+  - `company_name`
+  - `target_application_unit`
+  - `hiring_entity_name`
+  - `role_family`
+  - `stability_entity_name`
+  - `ambiguity_note`
+- `target_application_unit` と `hiring_entity_name` が未固定の候補は `ready_for_analysis` にしない。
+- manifest を保存するまでは、分析子を起動しない。
+
 ## Role Family
 
 - `scope.role_family` は次のいずれかにする。
@@ -75,7 +95,7 @@
 
 - 複数の `scope.role_family` を分析するのは、ユーザーが明示的に求めた場合、比較が目的の場合、または親が別 target として明示的に追加する場合だけにする。
 - 複数の `scope.role_family` を分析する場合、`scope.role_family` ごとではなく、実際の `scope.target_application_unit` ごとに別 slug、別分析子、別 YAML / Markdown pair として扱う。
-- 同じ子エージェントに複数の `scope.target_application_unit` を順番に渡さない。
+- 同じ分析子に複数の `scope.target_application_unit` を順番に渡さない。
 
 ## 安定性 Entity
 

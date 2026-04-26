@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 from typing import Any
+import uuid
 
 import yaml
 
@@ -47,6 +48,14 @@ UNOFFICIAL_SOURCE_KINDS = {
     "forum",
     "career_site",
     "blog",
+    "tech_blog",
+    "profile",
+    "university",
+    "event",
+    "presentation",
+    "oss",
+    "github",
+    "personal_site",
     "other",
 }
 
@@ -57,6 +66,19 @@ ROLE_FAMILIES = {
     "consultant",
     "generalist",
     "other",
+}
+
+STRUCTURED_FACT_KEYS = {
+    "starting_salary_yen",
+    "starting_salary_bachelor_yen",
+    "starting_salary_master_yen",
+    "starting_salary_doctor_yen",
+    "has_target_job_hiring_track",
+    "application_route",
+    "average_annual_income_yen",
+    "average_overtime_hours_per_month",
+    "annual_holidays_days",
+    "remote_work_policy",
 }
 
 
@@ -114,13 +136,14 @@ def format_days(value: int | None) -> str:
     return f"{value}日"
 
 
-def format_remote_policy(value: str) -> str:
+def format_remote_policy(value: str | None) -> str:
+    if value is None:
+        return "未公表"
     labels = {
         "full": "フルリモート可",
         "hybrid": "ハイブリッド",
         "limited": "一部利用可",
         "none": "原則出社",
-        "unknown": "未公表",
     }
     return labels.get(value, value)
 
@@ -130,7 +153,6 @@ def format_application_route(value: str | None) -> str:
         "direct": "この評価対象へ直接応募",
         "parent_company": "親会社ルート経由でこの評価対象へ到達",
         "group_company": "グループ会社ルート経由でこの評価対象へ到達",
-        "unknown": "未公表",
     }
     if value is None:
         return "未公表"
@@ -164,8 +186,6 @@ def has_meaningful_unofficial_fact_layer(structured: dict[str, Any] | None) -> b
     for value in structured.values():
         if value is None:
             continue
-        if isinstance(value, str) and value == "unknown":
-            continue
         return True
     return False
 
@@ -184,9 +204,21 @@ def _ensure_list(value: Any, label: str, issues: list[str]) -> list[Any]:
     return value
 
 
+def _is_uuid_text(value: str) -> bool:
+    try:
+        uuid.UUID(value)
+    except ValueError:
+        return False
+    return True
+
+
 def _validate_comp_structured(
     structured: dict[str, Any], label: str, issues: list[str], require_all_keys: bool
 ) -> None:
+    extra_keys = sorted(set(structured) - STRUCTURED_FACT_KEYS)
+    for subkey in extra_keys:
+        issues.append(f"{label}.{subkey} is not allowed in fact_layer")
+
     int_keys = [
         "starting_salary_yen",
         "average_annual_income_yen",
@@ -224,9 +256,6 @@ def _validate_comp_structured(
             issues.append(f"{label}.{subkey} must be non-negative")
 
     optional_bool_keys = [
-        "has_degree_based_starting_salary_gap",
-        "has_doctoral_hiring_track",
-        "has_doctoral_grade_advantage",
         "has_target_job_hiring_track",
     ]
     for subkey in optional_bool_keys:
@@ -251,19 +280,21 @@ def _validate_comp_structured(
                 issues.append(f"{label}.average_overtime_hours_per_month must be non-negative")
 
     policy_key = "remote_work_policy"
-    allowed_policies = {"full", "hybrid", "limited", "none", "unknown"}
+    allowed_policies = {"full", "hybrid", "limited", "none"}
     if policy_key not in structured:
         if require_all_keys:
             issues.append(f"{label} missing key: {policy_key}")
     else:
         policy = structured[policy_key]
-        if not isinstance(policy, str) or policy not in allowed_policies:
+        if policy is not None and (
+            not isinstance(policy, str) or policy not in allowed_policies
+        ):
             issues.append(
-                f"{label}.remote_work_policy must be one of {sorted(allowed_policies)}"
+                f"{label}.remote_work_policy must be one of {sorted(allowed_policies)} or null"
             )
 
     route_key = "application_route"
-    allowed_routes = {"direct", "parent_company", "group_company", "unknown"}
+    allowed_routes = {"direct", "parent_company", "group_company"}
     if route_key not in structured:
         if require_all_keys:
             issues.append(f"{label} missing key: {route_key}")
@@ -314,7 +345,11 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
         issues.append("slug must match [a-z0-9_]+")
 
     source_path = Path(source_name)
-    if source_path.stem and source_path.suffix in {".yaml", ".yml"}:
+    if (
+        source_path.stem
+        and source_path.suffix in {".yaml", ".yml"}
+        and not _is_uuid_text(source_path.stem)
+    ):
         base_parts = source_path.with_suffix("").parts
         candidates = {source_path.stem}
         for i in range(len(base_parts)):
@@ -559,9 +594,6 @@ def render_markdown(data: dict[str, Any]) -> str:
         official_parts.append("学位別月額初任給 " + " / ".join(official_degree_parts))
     official_parts.extend(
         [
-            f"学位別初任給差 {format_optional_bool_ja(fact_official.get('has_degree_based_starting_salary_gap'))}",
-            f"博士向け採用導線 {format_optional_bool_ja(fact_official.get('has_doctoral_hiring_track'))}",
-            f"博士向け格付け差 {format_optional_bool_ja(fact_official.get('has_doctoral_grade_advantage'))}",
             f"対象応募単位の採用導線 {format_optional_bool_ja(fact_official.get('has_target_job_hiring_track'))}",
             f"応募経路 {format_application_route(fact_official.get('application_route'))}",
             f"平均年収 {format_yen(fact_official['average_annual_income_yen'])}",
@@ -583,9 +615,6 @@ def render_markdown(data: dict[str, Any]) -> str:
         if unofficial_degree_parts:
             unofficial_parts.append("学位別月額初任給 " + " / ".join(unofficial_degree_parts))
         bool_labels = [
-            ("has_degree_based_starting_salary_gap", "学位別初任給差"),
-            ("has_doctoral_hiring_track", "博士向け採用導線"),
-            ("has_doctoral_grade_advantage", "博士向け格付け差"),
             ("has_target_job_hiring_track", "対象応募単位の採用導線"),
         ]
         for subkey, label in bool_labels:

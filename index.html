@@ -75,6 +75,72 @@
       flex-wrap: wrap;
     }
 
+    .weight-panel {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    }
+
+    .weight-title {
+      color: #344054;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .weight-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .weight-control {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .weight-control input {
+      width: 58px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 6px;
+      color: var(--text);
+      font: inherit;
+      text-align: right;
+    }
+
+    .weight-sum {
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .reset-button {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: #344054;
+      cursor: pointer;
+      font: inherit;
+      padding: 6px 8px;
+      white-space: nowrap;
+    }
+
+    .reset-button:hover {
+      border-color: var(--line-strong);
+      background: #f8fbfd;
+    }
+
     .tabs {
       display: inline-flex;
       padding: 3px;
@@ -414,6 +480,17 @@
         width: 100%;
       }
 
+      .weight-panel {
+        align-items: stretch;
+      }
+
+      .weight-title,
+      .weight-controls,
+      .weight-sum,
+      .reset-button {
+        width: 100%;
+      }
+
       .tab {
         flex: 1;
       }
@@ -444,6 +521,12 @@
 
     <div class="status" id="status">読み込み中...</div>
     <div class="notice" id="notice"></div>
+    <section class="weight-panel" aria-label="総合評価の重み調整">
+      <div class="weight-title">総合評価の重み</div>
+      <div class="weight-controls" id="weight-controls"></div>
+      <div class="weight-sum" id="weight-sum"></div>
+      <button class="reset-button" type="button" id="reset-weights">初期値に戻す</button>
+    </section>
 
     <div class="content-grid">
       <div class="table-shell">
@@ -505,7 +588,7 @@
       ["stability", "企業基盤・安定性", "安定"]
     ];
 
-    const WEIGHTS = {
+    const DEFAULT_WEIGHTS = {
       phd_value: 0.30,
       role_fit: 0.10,
       rd_env: 0.05,
@@ -593,7 +676,8 @@
       query: "",
       sortKey: "total",
       sortDir: "desc",
-      selectedSlug: null
+      selectedSlug: null,
+      weights: { ...DEFAULT_WEIGHTS }
     };
 
     const statusEl = document.querySelector("#status");
@@ -602,6 +686,9 @@
     const bodyEl = document.querySelector("#table-body");
     const detailEl = document.querySelector("#detail");
     const searchEl = document.querySelector(".search");
+    const weightControlsEl = document.querySelector("#weight-controls");
+    const weightSumEl = document.querySelector("#weight-sum");
+    const resetWeightsEl = document.querySelector("#reset-weights");
 
     function escapeHtml(value) {
       return String(value ?? "")
@@ -644,12 +731,51 @@
       return Number(data.sections?.[key]?.score);
     }
 
-    function computeTotal(data) {
-      const total = SECTIONS.reduce((sum, [key]) => {
-        const score = sectionScore(data, key);
-        return Number.isFinite(score) ? sum + WEIGHTS[key] * score : sum;
+    function weightSum() {
+      return SECTIONS.reduce((sum, [key]) => {
+        const weight = Number(state.weights[key]);
+        return Number.isFinite(weight) && weight > 0 ? sum + weight : sum;
       }, 0);
-      return Math.round(total * 200) / 10;
+    }
+
+    function computeTotal(data) {
+      const totalWeight = weightSum();
+      if (totalWeight <= 0) return NaN;
+      const weightedScore = SECTIONS.reduce((sum, [key]) => {
+        const score = sectionScore(data, key);
+        const weight = Number(state.weights[key]);
+        return Number.isFinite(score) && Number.isFinite(weight) && weight > 0 ? sum + weight * score : sum;
+      }, 0);
+      return Math.round((weightedScore / totalWeight) * 200) / 10;
+    }
+
+    function rebuildRows() {
+      state.rowsByMode.official = state.items.map((item) => buildRow(item, "official"));
+      state.rowsByMode.fallback = state.items.map((item) => buildRow(item, "fallback"));
+    }
+
+    function renderWeightControls() {
+      weightControlsEl.innerHTML = SECTIONS.map(([key, , shortLabel]) => {
+        const value = Math.round(Number(state.weights[key]) * 1000) / 10;
+        return `<label class="weight-control">
+          <span>${escapeHtml(shortLabel)}</span>
+          <input type="number" min="0" max="100" step="1" value="${value}" data-weight="${key}" aria-label="${escapeHtml(shortLabel)} の重み">
+        </label>`;
+      }).join("");
+      weightControlsEl.querySelectorAll("input[data-weight]").forEach((input) => {
+        input.addEventListener("input", () => {
+          const value = Math.max(0, Number(input.value) || 0);
+          state.weights[input.dataset.weight] = value / 100;
+          rebuildRows();
+          renderWeightSummary();
+          render();
+        });
+      });
+      renderWeightSummary();
+    }
+
+    function renderWeightSummary() {
+      weightSumEl.textContent = `合計: ${Math.round(weightSum() * 1000) / 10}`;
     }
 
     function toManYen(value) {
@@ -970,6 +1096,15 @@
       state.query = searchEl.value;
       render();
     });
+
+    resetWeightsEl.addEventListener("click", () => {
+      state.weights = { ...DEFAULT_WEIGHTS };
+      rebuildRows();
+      renderWeightControls();
+      render();
+    });
+
+    renderWeightControls();
 
     loadData()
       .then(render)
