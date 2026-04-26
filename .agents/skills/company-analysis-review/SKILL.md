@@ -17,6 +17,7 @@ description: 固定スコープに対して company-analysis YAML を確認し�
 - prompt に直接埋め込まれた analysis YAML
 - 必要時のみ、prompt に直接埋め込まれた rendered Markdown
 - 同じ reviewer 子を複数対象で再利用する場合でも、各 prompt は自己完結しているものとして扱う。
+- `role_family` は職種ファミリーであり、応募単位、採用 route、採用年度、卒業年度、雇用区分、cohort ではないものとして読む。
 
 # 出力契約
 - 単一の YAML オブジェクトだけを返す。
@@ -38,6 +39,9 @@ review_finding.suggested_fix: str
 # レビュー範囲
 - `scope_integrity`
   - `target_application_unit`、`hiring_entity_name`、`role_family`、`alternative_application_units`、`stability_entity_name` が親固定スコープと一致しているか。
+  - `role_family` が `researcher`、`research_engineer`、`engineer`、`consultant`、`generalist`、`other` のいずれかで、応募単位や cohort と混同されていないか。
+  - `role_family` が `target_application_unit` と意味的に整合しているか。
+  - 複数の `target_application_unit` の情報が 1 つの analysis YAML に混ざっていないか。
   - 固定 scope が、prompt に明示されたユーザー意図や親の対象固定理由と意味的に整合しているか。
   - ユーザーが研究職・Research・研究所を求めているのに、明示的な承認なしにデータサイエンス職、SWE、コンサル職、広い技術職へ置き換わっていないか。
   - 近接職種が別対象ではなく研究系 target の代替として扱われていないか。
@@ -49,6 +53,7 @@ review_finding.suggested_fix: str
   - 公式 source が十分か。
   - 非公式 source が判断を過度に支配していないか。
   - 非公式根拠に重複や転載による水増しがないか。
+  - 親会社、グループ会社、採用実体の source が区別されているか。
   - `review_site`、`career_site`、`forum` が意図した使い方になっているか。
 - `structured_data`
   - `fact_layer.official` が公式情報だけで埋められているか。
