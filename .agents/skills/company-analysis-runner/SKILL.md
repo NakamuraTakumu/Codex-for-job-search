@@ -34,9 +34,10 @@ description: 固定した採用対象について `company-analysis` 評価子�
 - 公開情報が極端に曖昧、review で再実行が必要、または推論の弱さが明確な場合だけ、大きい model または高い `reasoning_effort` に上げる。
 - 多数の会社または対象がある場合、一括起動ではなく上限付き並列と補充キューを使う。
 - 固定済み対象が複数ある場合、review 子は原則として 1 run につき 1 つだけ起動し、対象ごとに review input bundle を渡して再利用する。
+- 固定済み対象が複数あり、分析子を並列起動する場合、共有 review 子は分析子起動直後に prewarm する。最初の review input bundle ができるまで待たない。
 - review 子を増やしてよいのは、既存 review 子が壊れた、対象外の状態を保持して reset できない、重大な遅延で親 run が止まる、または render-focused review と内容 review を分離する必要がある場合に限る。
 - 分析子の出力が 1 件完了したら、その都度 YAML intake、validation、必須 review まで進める。バッチ全体の完了を待たない。
-- review 子が未起動で空き枠もない場合、新しい分析子を起動せず、先に完了済み YAML の検証と必須 review を処理する。
+- review 子が未起動のまま分析子の出力を待つ状態を作らない。prewarm できていないことに気づいた時点で、新しい分析子を起動せず、共有 review 子の起動と完了済み YAML の検証・必須 review を先に処理する。
 - review が `revise` の場合、同一成果物の修正・再 review は原則 1 回までとする。test run では用途に応じて medium 以下の `source_quality` finding を known issue として扱える。
 
 ## 固定入力
@@ -92,6 +93,14 @@ description: 固定した採用対象について `company-analysis` 評価子�
 - 分析子には、handoff path 以外のファイル作成、更新、保存、Markdown rendering をさせない。
 - 必要に応じて、既存レポート、比較レビュー、他エージェント出力を読まないよう明示する。
 
+### 共有 Review 子 Prewarm
+
+- 複数の分析子を並列起動したら、すぐに共有 review 子を 1 つ起動する。最初の分析子完了や review input bundle 作成を待たない。
+- prewarm prompt では、`.agents/skills/company-analysis-review/SKILL.md` を使うこと、後続の `send_input` で review input bundle path を受け取ること、過去 state を保持せず各 bundle を独立対象として扱うことだけを伝える。
+- prewarm で review YAML を作らせない。review YAML は bundle path を渡した後だけ作らせる。
+- prewarm 済みの review 子が `READY` などを返して完了状態になっても、同じ agent id を後続 review 用に再利用する。
+- 共有 review 子を prewarm した後、`wait_agent` は分析子のうち最初に完了した 1 件を受け取るために使う。全分析子の完了を待つ目的で使わない。
+
 ### 受理 Pipeline
 
 - 分析子が YAML を返したら、他の子の完了を待たずに handoff file または message YAML を `references/acceptance_pipeline.md` に沿って処理する。
@@ -118,6 +127,7 @@ description: 固定した採用対象について `company-analysis` 評価子�
 - rendering-level の不整合を疑う場合は、内容 review とは別に render-focused review を行う。
 - 親は YAML と Markdown の両方を残す。
 - accepted YAML は `report/company_analysis/data/`、accepted Markdown は `report/company_analysis/companies/`、accepted review artifact は `report/company_analysis/reviews/` を default とする。
+- ユーザーが「テスト」「test」「試行」「検証」と明示した run では、成果物を accepted artifact として `report/company_analysis/` に保存しない。YAML、Markdown、review artifact は `tmp/company_analysis/test_outputs/<run_slug>/` 配下に保存し、明示的な昇格承認がある場合だけ `report/company_analysis/` へ移す。
 - scope manifest、比較メモ、test/run note、workflow consideration は `document/` に保存する。
 - 中間 handoff、working YAML、review input bundle、review output draft は `tmp/company_analysis/` に保存する。
 - 複数の `scope.target_application_unit` を固定した場合、`scope.target_application_unit` ごとに独立した YAML / Markdown pair を残す。

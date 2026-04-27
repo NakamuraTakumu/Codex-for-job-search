@@ -125,6 +125,7 @@ def build_bundle(
         "",
         "- `.agents/skills/company-analysis-review/SKILL.md` の `company-analysis-review` skill を使う。",
         "- この review input bundle と `analysis_yaml_path` の YAML を現在の唯一の review 対象として扱う。",
+        "- `analysis_yaml_path` は親 runner が handoff 受理後に `run_metadata` を追加した validator-ready working YAML である。`run_metadata` の存在だけを company-analysis 子の返却 YAML 違反として扱わない。",
         "- `Reference Paths` は指示準拠確認のためだけに読む。既存分析結果や比較レビューを追加で読まない。",
         "- `rendered_markdown_path` が `null` の場合、render consistency は確認対象外にする。",
         "- 以前の review payload、以前の slug、以前の finding、以前の rendered output は無視する。",

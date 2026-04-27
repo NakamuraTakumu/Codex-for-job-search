@@ -66,8 +66,9 @@
   - review が `revise` なら分析子へ修正依頼する。
 - **並列時**:
   - 固定済み対象が複数ある run では、完了順に review できるよう共有 review 子を原則 1 つだけ起動して再利用する。
-  - review 子が未起動で空き枠もない場合、新しい分析子を起動せず、先に完了済み YAML の検証と review を処理する。
-  - 多数対象 run では、最初の review input bundle がなくても共有 review 子を prewarm してよい。
+  - 固定済み対象が複数あり、分析子を並列起動した場合、最初の review input bundle がなくても共有 review 子を必ず prewarm する。
+  - review 子が未起動のまま分析子出力を待っていることに気づいた場合、新しい分析子を起動せず、共有 review 子の起動と完了済み YAML の検証・review を先に処理する。
+  - `wait_agent` は最初に完了した分析子を受け取るために使い、全分析子の完了を待つ batch wait にしない。
   - 単一対象でも validator 通過後は必ず review 子を起動する。
 
 ### Review Handoff
@@ -76,7 +77,7 @@
 - **処理**:
   - review 子は `company-analysis-review` skill を使う。
   - `python3 .agents/skills/company-analysis-runner/tool/prepare_review_input.py --run-slug <run_slug> <working-yaml>` で `tmp/company_analysis/review_inputs/<run_slug>/<uuid>.md` を作る。
-  - review 子には `review_prompt_template.txt` で review input bundle path だけを渡す。
+  - prewarm 済み review 子には、bundle ができるたびに `review_prompt_template.txt` で review input bundle path だけを渡す。analysis YAML や rendered Markdown の本文は通常 inline で渡さない。
   - review 子は bundle に明示された `analysis_yaml_path` と、`rendered_markdown_path` が `null` でない場合だけその Markdown を読む。
   - 同じ親 run 内では、実用上可能なら 1 つの共有 review 子を会社・対象をまたいで再利用する。対象ごとに新しい review 子を作らない。
   - review 子を追加起動するのは、既存 review 子が壊れた、reset できない状態を保持している、重大な遅延で親 run が止まる、または render-focused review を分離する必要がある場合に限る。
@@ -87,6 +88,7 @@
 - **注意**:
   - デフォルトでは会社ごとに review 子を作り直さない。
   - 複数の分析子が動いている場合、完了したものをまとめず、最初に完了した子からすぐ review へ渡す。
+  - review 子の起動を、最初の analysis YAML の validation 完了後まで遅らせない。
   - rendered Markdown は rendering 後の render-focused review のときだけ追加する。通常の必須 review では analysis YAML を対象にする。
   - inline payload は、filesystem handoff が壊れている、または reviewer が file を読めない場合だけ fallback として使う。
   - review schema と詳細な review 観点は `company-analysis-review` skill を権威とする。
@@ -156,6 +158,8 @@
 - 日付は、曖昧性解消または複数 run の明示的保存に必要な場合だけ付ける。
 - cross-target comparison が必要な場合、親は別の comparison note または review artifact を作る。
 - accepted YAML は `report/company_analysis/data/`、accepted Markdown は `report/company_analysis/companies/`、accepted review artifact は `report/company_analysis/reviews/` を default とする。
+- ユーザーが「テスト」「test」「試行」「検証」と明示した run では、accepted output の保存先を `report/company_analysis/` にしない。YAML、Markdown、review artifact は `tmp/company_analysis/test_outputs/<run_slug>/data/`、`tmp/company_analysis/test_outputs/<run_slug>/companies/`、`tmp/company_analysis/test_outputs/<run_slug>/reviews/` に保存する。
+- test output を `report/company_analysis/` に昇格してよいのは、ユーザーが明示的に promotion / accepted artifact 化を承認した場合だけとする。
 - scope manifest、比較メモ、test/run note、workflow consideration は `document/` に保存する。
 - 中間 handoff、working YAML、review input bundle、review output draft は `tmp/company_analysis/` に保存する。
 - 必要に応じて、不確実性 review や比較 review も上記の保存先契約に従って保存する。
