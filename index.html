@@ -42,6 +42,67 @@
       text-decoration: underline;
     }
 
+    [hidden] {
+      display: none !important;
+    }
+
+    .auth-screen {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .auth-panel {
+      width: min(420px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+      padding: 20px;
+    }
+
+    .auth-panel h1 {
+      font-size: 21px;
+      margin-bottom: 6px;
+    }
+
+    .auth-copy {
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    .auth-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .auth-input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 10px;
+      font: inherit;
+    }
+
+    .auth-button {
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+      padding: 10px 12px;
+    }
+
+    .auth-error {
+      min-height: 20px;
+      color: var(--warn);
+    }
+
     .app {
       width: min(1840px, calc(100vw - 32px));
       margin: 24px auto 40px;
@@ -93,6 +154,32 @@
       color: #344054;
       font-weight: 650;
       white-space: nowrap;
+    }
+
+    .weight-presets {
+      display: inline-flex;
+      padding: 3px;
+      border: 1px solid var(--line);
+      background: #f8fbfd;
+      border-radius: 8px;
+    }
+
+    .weight-preset {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 6px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      font: inherit;
+      white-space: nowrap;
+    }
+
+    .weight-preset[aria-selected="true"] {
+      background: var(--panel);
+      color: var(--accent);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
     }
 
     .weight-controls {
@@ -485,6 +572,7 @@
       }
 
       .weight-title,
+      .weight-presets,
       .weight-controls,
       .weight-sum,
       .reset-button {
@@ -504,7 +592,19 @@
   </style>
 </head>
 <body>
-  <main class="app">
+  <section class="auth-screen" id="auth-screen" aria-label="アクセス確認">
+    <div class="auth-panel">
+      <h1>企業分析一覧</h1>
+      <p class="auth-copy">一般公開用ではありません。合言葉を入力してください。</p>
+      <form class="auth-form" id="auth-form">
+        <input class="auth-input" id="auth-password" type="password" autocomplete="current-password" aria-label="合言葉">
+        <button class="auth-button" type="submit">表示する</button>
+        <div class="auth-error" id="auth-error" aria-live="polite"></div>
+      </form>
+    </div>
+  </section>
+
+  <main class="app" id="app" hidden>
     <div class="topbar">
       <div>
         <h1>企業分析一覧</h1>
@@ -523,6 +623,7 @@
     <div class="notice" id="notice"></div>
     <section class="weight-panel" aria-label="総合評価の重み調整">
       <div class="weight-title">総合評価の重み</div>
+      <div class="weight-presets" id="weight-presets" role="tablist" aria-label="重みプリセット"></div>
       <div class="weight-controls" id="weight-controls"></div>
       <div class="weight-sum" id="weight-sum"></div>
       <button class="reset-button" type="button" id="reset-weights">初期値に戻す</button>
@@ -542,6 +643,8 @@
   </main>
 
   <script>
+    const ACCESS_HASH = "688972d87673150cd08dd830ddb27cd3c601a9ca0f81315c280deb2bb78c68d0";
+    const ACCESS_SESSION_KEY = "company-analysis-access-ok";
     const DATA_ROOT = "report/company_analysis";
     const DATA_FILES = [
       "ca_20260504143127_001.yaml",
@@ -624,14 +727,44 @@
       ["stability", "企業基盤・安定性", "安定"]
     ];
 
-    const DEFAULT_WEIGHTS = {
-      phd_value: 0.30,
-      role_fit: 0.10,
-      rd_env: 0.05,
-      compensation: 0.25,
-      hiring_process: 0.10,
-      stability: 0.20
+    const WEIGHT_PRESETS = {
+      normal: {
+        label: "通常",
+        weights: {
+          phd_value: 0.10,
+          role_fit: 0.10,
+          rd_env: 0.10,
+          compensation: 0.10,
+          hiring_process: 0.10,
+          stability: 0.10
+        }
+      },
+      phd: {
+        label: "博士卒",
+        weights: {
+          phd_value: 0.30,
+          role_fit: 0.10,
+          rd_env: 0.05,
+          compensation: 0.25,
+          hiring_process: 0.10,
+          stability: 0.20
+        }
+      },
+      engineer: {
+        label: "エンジニア就職",
+        weights: {
+          phd_value: 0,
+          role_fit: 0,
+          rd_env: 0,
+          compensation: 0.25,
+          hiring_process: 0.10,
+          stability: 0.20
+        }
+      }
     };
+
+    const DEFAULT_WEIGHT_PROFILE = "phd";
+    const DEFAULT_WEIGHTS = WEIGHT_PRESETS[DEFAULT_WEIGHT_PROFILE].weights;
 
     const FACT_KEYS = [
       "has_target_job_hiring_track",
@@ -729,17 +862,26 @@
       sortKey: "total",
       sortDir: "desc",
       selectedSlug: null,
+      weightProfile: DEFAULT_WEIGHT_PROFILE,
       weights: { ...DEFAULT_WEIGHTS },
       sectionStats: {},
       totalStats: { mean: 0, sd: 1 }
     };
 
+    let appStarted = false;
+
+    const appEl = document.querySelector("#app");
+    const authScreenEl = document.querySelector("#auth-screen");
+    const authFormEl = document.querySelector("#auth-form");
+    const authPasswordEl = document.querySelector("#auth-password");
+    const authErrorEl = document.querySelector("#auth-error");
     const statusEl = document.querySelector("#status");
     const noticeEl = document.querySelector("#notice");
     const headEl = document.querySelector("#table-head");
     const bodyEl = document.querySelector("#table-body");
     const detailEl = document.querySelector("#detail");
     const searchEl = document.querySelector(".search");
+    const weightPresetsEl = document.querySelector("#weight-presets");
     const weightControlsEl = document.querySelector("#weight-controls");
     const weightSumEl = document.querySelector("#weight-sum");
     const resetWeightsEl = document.querySelector("#reset-weights");
@@ -862,6 +1004,31 @@
       state.rowsByMode.fallback = state.items.map((item) => buildRow(item, "fallback"));
     }
 
+    function weightsMatchPreset(preset) {
+      return SECTIONS.every(([key]) => Number(state.weights[key]) === Number(preset.weights[key]));
+    }
+
+    function renderWeightPresets() {
+      weightPresetsEl.innerHTML = Object.entries(WEIGHT_PRESETS).map(([key, preset]) => {
+        const selected = weightsMatchPreset(preset);
+        return `<button class="weight-preset" type="button" data-weight-profile="${key}" aria-selected="${selected}">${escapeHtml(preset.label)}</button>`;
+      }).join("");
+      weightPresetsEl.querySelectorAll("button[data-weight-profile]").forEach((button) => {
+        button.addEventListener("click", () => {
+          applyWeightPreset(button.dataset.weightProfile);
+        });
+      });
+    }
+
+    function applyWeightPreset(profile) {
+      const preset = WEIGHT_PRESETS[profile] ?? WEIGHT_PRESETS[DEFAULT_WEIGHT_PROFILE];
+      state.weightProfile = profile in WEIGHT_PRESETS ? profile : DEFAULT_WEIGHT_PROFILE;
+      state.weights = { ...preset.weights };
+      rebuildRows();
+      renderWeightControls();
+      render();
+    }
+
     function renderWeightControls() {
       weightControlsEl.innerHTML = SECTIONS.map(([key, , shortLabel]) => {
         const value = Math.round(Number(state.weights[key]) * 1000) / 10;
@@ -875,10 +1042,12 @@
           const value = Math.max(0, Number(input.value) || 0);
           state.weights[input.dataset.weight] = value / 100;
           rebuildRows();
+          renderWeightPresets();
           renderWeightSummary();
           render();
         });
       });
+      renderWeightPresets();
       renderWeightSummary();
     }
 
@@ -1208,6 +1377,105 @@
       rebuildRows();
     }
 
+    async function sha256Hex(value) {
+      const data = new TextEncoder().encode(value);
+      if (!window.crypto?.subtle) return sha256HexFallback(data);
+      const digest = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(digest))
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function sha256HexFallback(data) {
+      const rightRotate = (value, amount) => (value >>> amount) | (value << (32 - amount));
+      const k = [
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+      ];
+      const h = [
+        0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+        0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+      ];
+      const bytes = Array.from(data);
+      const bitLength = bytes.length * 8;
+      bytes.push(0x80);
+      while ((bytes.length % 64) !== 56) bytes.push(0);
+      const high = Math.floor(bitLength / 0x100000000);
+      const low = bitLength >>> 0;
+      bytes.push(
+        (high >>> 24) & 0xff, (high >>> 16) & 0xff, (high >>> 8) & 0xff, high & 0xff,
+        (low >>> 24) & 0xff, (low >>> 16) & 0xff, (low >>> 8) & 0xff, low & 0xff
+      );
+
+      for (let offset = 0; offset < bytes.length; offset += 64) {
+        const w = new Array(64);
+        for (let i = 0; i < 16; i += 1) {
+          const index = offset + i * 4;
+          w[i] = ((bytes[index] << 24) | (bytes[index + 1] << 16) | (bytes[index + 2] << 8) | bytes[index + 3]) >>> 0;
+        }
+        for (let i = 16; i < 64; i += 1) {
+          const s0 = rightRotate(w[i - 15], 7) ^ rightRotate(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+          const s1 = rightRotate(w[i - 2], 17) ^ rightRotate(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+          w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+        }
+
+        let [a, b, c, d, e, f, g, hash] = h;
+        for (let i = 0; i < 64; i += 1) {
+          const s1 = rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25);
+          const ch = (e & f) ^ ((~e) & g);
+          const temp1 = (hash + s1 + ch + k[i] + w[i]) >>> 0;
+          const s0 = rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22);
+          const maj = (a & b) ^ (a & c) ^ (b & c);
+          const temp2 = (s0 + maj) >>> 0;
+          hash = g;
+          g = f;
+          f = e;
+          e = (d + temp1) >>> 0;
+          d = c;
+          c = b;
+          b = a;
+          a = (temp1 + temp2) >>> 0;
+        }
+        h[0] = (h[0] + a) >>> 0;
+        h[1] = (h[1] + b) >>> 0;
+        h[2] = (h[2] + c) >>> 0;
+        h[3] = (h[3] + d) >>> 0;
+        h[4] = (h[4] + e) >>> 0;
+        h[5] = (h[5] + f) >>> 0;
+        h[6] = (h[6] + g) >>> 0;
+        h[7] = (h[7] + hash) >>> 0;
+      }
+
+      return h.map((value) => value.toString(16).padStart(8, "0")).join("");
+    }
+
+    function showAuthenticatedView() {
+      authScreenEl.hidden = true;
+      appEl.hidden = false;
+      authScreenEl.setAttribute("aria-hidden", "true");
+      appEl.removeAttribute("aria-hidden");
+    }
+
+    function startApp() {
+      showAuthenticatedView();
+      if (appStarted) return;
+      appStarted = true;
+      renderWeightControls();
+      loadData()
+        .then(render)
+        .catch((error) => {
+          statusEl.textContent = "読み込みに失敗しました";
+          noticeEl.style.display = "block";
+          noticeEl.textContent = `GitLab Pages またはHTTPサーバー上で開いてください。詳細: ${error.message}`;
+        });
+    }
+
     document.querySelectorAll(".tab").forEach((button) => {
       button.addEventListener("click", () => {
         state.mode = button.dataset.mode;
@@ -1224,21 +1492,26 @@
     });
 
     resetWeightsEl.addEventListener("click", () => {
-      state.weights = { ...DEFAULT_WEIGHTS };
-      rebuildRows();
-      renderWeightControls();
-      render();
+      applyWeightPreset(DEFAULT_WEIGHT_PROFILE);
     });
 
-    renderWeightControls();
+    authFormEl.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      authErrorEl.textContent = "";
+      const hash = await sha256Hex(authPasswordEl.value.trim());
+      if (hash !== ACCESS_HASH) {
+        authErrorEl.textContent = "合言葉が違います。";
+        authPasswordEl.select();
+        return;
+      }
+      sessionStorage.setItem(ACCESS_SESSION_KEY, "1");
+      authPasswordEl.value = "";
+      startApp();
+    });
 
-    loadData()
-      .then(render)
-      .catch((error) => {
-        statusEl.textContent = "読み込みに失敗しました";
-        noticeEl.style.display = "block";
-        noticeEl.textContent = `GitLab Pages またはHTTPサーバー上で開いてください。詳細: ${error.message}`;
-      });
+    if (sessionStorage.getItem(ACCESS_SESSION_KEY) === "1") {
+      startApp();
+    }
   </script>
 </body>
 </html>
