@@ -595,7 +595,7 @@
   <section class="auth-screen" id="auth-screen" aria-label="アクセス確認">
     <div class="auth-panel">
       <h1>企業分析一覧</h1>
-      <p class="auth-copy">一般公開用ではありません。合言葉を入力してください。</p>
+      <p class="auth-copy">東北大学で機械学習やプログラミング言語理論系の研究をする博士学生向けの企業分析サイトです。一般公開用ではありません。</p>
       <form class="auth-form" id="auth-form">
         <input class="auth-input" id="auth-password" type="password" autocomplete="current-password" aria-label="合言葉">
         <button class="auth-button" type="submit">表示する</button>
@@ -608,7 +608,7 @@
     <div class="topbar">
       <div>
         <h1>企業分析一覧</h1>
-        <div class="meta">正本データは <code>report/company_analysis/data/*.yaml</code></div>
+        <div class="meta">東北大学で機械学習やプログラミング言語理論系の研究をする博士学生向けの企業分析サイト</div>
       </div>
       <div class="controls">
         <div class="tabs" role="tablist" aria-label="データ種別">
@@ -644,8 +644,8 @@
 
   <script>
     const ACCESS_HASH = "688972d87673150cd08dd830ddb27cd3c601a9ca0f81315c280deb2bb78c68d0";
-    const ACCESS_SESSION_KEY = "company-analysis-access-ok";
     const DATA_ROOT = "report/company_analysis";
+    const MANIFEST_PATH = `${DATA_ROOT}/manifest.json`;
     const DATA_FILES = [
       "ca_20260504143127_001.yaml",
       "ca_20260504143127_002.yaml",
@@ -729,7 +729,7 @@
 
     const WEIGHT_PRESETS = {
       normal: {
-        label: "通常",
+        label: "重み調整無し",
         weights: {
           phd_value: 0.10,
           role_fit: 0.10,
@@ -740,7 +740,7 @@
         }
       },
       phd: {
-        label: "博士卒",
+        label: "博士卒用",
         weights: {
           phd_value: 0.30,
           role_fit: 0.10,
@@ -751,10 +751,10 @@
         }
       },
       engineer: {
-        label: "エンジニア就職",
+        label: "純粋な企業評価用",
         weights: {
           phd_value: 0,
-          role_fit: 0,
+          role_fit: 0.10,
           rd_env: 0,
           compensation: 0.25,
           hiring_process: 0.10,
@@ -864,6 +864,9 @@
       selectedSlug: null,
       weightProfile: DEFAULT_WEIGHT_PROFILE,
       weights: { ...DEFAULT_WEIGHTS },
+      accessPassword: "",
+      accessKey: null,
+      encryptedManifest: null,
       sectionStats: {},
       totalStats: { mean: 0, sd: 1 }
     };
@@ -1146,12 +1149,13 @@
       return escapeHtml(value);
     }
 
-    function buildItem(data, fileName) {
+    function buildItem(data, fileName, manifestEntry = {}) {
       return {
         data,
         fileName,
         slug: data.slug ?? fileName.replace(/\.ya?ml$/, ""),
-        reportPath: `${DATA_ROOT}/companies/${fileName.replace(/\.ya?ml$/, ".md")}`
+        reportPath: manifestEntry.reportPath ?? `${DATA_ROOT}/companies/${fileName.replace(/\.ya?ml$/, ".md")}`,
+        encryptedReportPath: manifestEntry.encryptedReportPath ?? null
       };
     }
 
@@ -1317,8 +1321,14 @@
         <ul class="source-list">${sources}</ul>
 
         <h3>生成済み Markdown</h3>
-        <p><a href="${escapeHtml(item.reportPath)}">Markdown レポートを開く</a></p>
+        ${item.encryptedReportPath
+          ? `<p><button class="reset-button" type="button" data-report-path="${escapeHtml(item.encryptedReportPath)}">Markdown レポートを復号して開く</button></p>`
+          : `<p><a href="${escapeHtml(item.reportPath)}">Markdown レポートを開く</a></p>`}
       `;
+
+      detailEl.querySelector("button[data-report-path]")?.addEventListener("click", () => {
+        openEncryptedReport(item);
+      });
     }
 
     function currentRows() {
@@ -1367,6 +1377,19 @@
       if (!window.jsyaml) {
         throw new Error("YAML parser could not be loaded.");
       }
+      const manifest = await loadEncryptedManifest();
+      if (manifest) {
+        const key = await deriveAccessKey(state.accessPassword, manifest.kdf);
+        state.accessKey = key;
+        state.encryptedManifest = manifest;
+        const loaded = await Promise.all(manifest.data.map(async (entry) => {
+          const text = await fetchAndDecrypt(entry.encryptedPath, key);
+          return buildItem(jsyaml.load(text), entry.fileName, entry);
+        }));
+        state.items = loaded;
+        rebuildRows();
+        return;
+      }
       const loaded = await Promise.all(DATA_FILES.map(async (fileName) => {
         const response = await fetch(`${DATA_ROOT}/data/${fileName}`, { cache: "no-store" });
         if (!response.ok) throw new Error(`${fileName}: ${response.status}`);
@@ -1375,6 +1398,78 @@
 
       state.items = loaded;
       rebuildRows();
+    }
+
+    async function loadEncryptedManifest() {
+      const response = await fetch(MANIFEST_PATH, { cache: "no-store" });
+      if (response.status === 404) return null;
+      if (!response.ok) throw new Error(`manifest.json: ${response.status}`);
+      const manifest = await response.json();
+      if (!manifest.encrypted) return null;
+      return manifest;
+    }
+
+    function base64ToBytes(value) {
+      const binary = atob(value);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    }
+
+    async function deriveAccessKey(password, kdf) {
+      if (!window.crypto?.subtle) {
+        throw new Error("暗号化データの復号には HTTPS またはローカルHTTPサーバーが必要です。");
+      }
+      const keyMaterial = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(password),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
+      );
+      return crypto.subtle.deriveKey(
+        {
+          name: "PBKDF2",
+          salt: base64ToBytes(kdf.salt),
+          iterations: Number(kdf.iterations),
+          hash: kdf.hash ?? "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["decrypt"]
+      );
+    }
+
+    async function decryptPayload(payload, key) {
+      const decrypted = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: base64ToBytes(payload.iv) },
+        key,
+        base64ToBytes(payload.ciphertext)
+      );
+      return new TextDecoder().decode(decrypted);
+    }
+
+    async function fetchAndDecrypt(path, key) {
+      const response = await fetch(path, { cache: "no-store" });
+      if (!response.ok) throw new Error(`${path}: ${response.status}`);
+      return decryptPayload(await response.json(), key);
+    }
+
+    async function openEncryptedReport(item) {
+      if (!item.encryptedReportPath || !state.accessKey) return;
+      try {
+        const text = await fetchAndDecrypt(item.encryptedReportPath, state.accessKey);
+        const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank", "noopener");
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      } catch (error) {
+        noticeEl.style.display = "block";
+        noticeEl.textContent = `Markdown レポートの復号に失敗しました。詳細: ${error.message}`;
+      }
     }
 
     async function sha256Hex(value) {
@@ -1462,7 +1557,8 @@
       appEl.removeAttribute("aria-hidden");
     }
 
-    function startApp() {
+    function startApp(password) {
+      state.accessPassword = password;
       showAuthenticatedView();
       if (appStarted) return;
       appStarted = true;
@@ -1472,7 +1568,7 @@
         .catch((error) => {
           statusEl.textContent = "読み込みに失敗しました";
           noticeEl.style.display = "block";
-          noticeEl.textContent = `GitLab Pages またはHTTPサーバー上で開いてください。詳細: ${error.message}`;
+          noticeEl.textContent = `GitHub Pages またはHTTPサーバー上で開いてください。詳細: ${error.message}`;
         });
     }
 
@@ -1504,14 +1600,10 @@
         authPasswordEl.select();
         return;
       }
-      sessionStorage.setItem(ACCESS_SESSION_KEY, "1");
+      const password = authPasswordEl.value.trim();
       authPasswordEl.value = "";
-      startApp();
+      startApp(password);
     });
-
-    if (sessionStorage.getItem(ACCESS_SESSION_KEY) === "1") {
-      startApp();
-    }
   </script>
 </body>
 </html>
