@@ -2,8 +2,8 @@
 """
 Compatibility shim for company-analysis YAML helpers.
 
-The implementation lives under the company-analysis-runner skill:
-`.agents/skills/company-analysis-runner/tool/company_analysis_yaml.py`.
+The implementation lives under the company-analysis-child-orchestrator skill:
+`.agents/skills/company-analysis-child-orchestrator/tool/company_analysis_yaml.py`.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from pathlib import Path
 
 IMPL_PATH = (
     Path(__file__).resolve().parents[1]
-    / ".agents/skills/company-analysis-runner/tool/company_analysis_yaml.py"
+    / ".agents/skills/company-analysis-child-orchestrator/tool/company_analysis_yaml.py"
 )
 
 if not IMPL_PATH.exists():
@@ -36,4 +36,3 @@ for name in dir(MODULE):
     if name.startswith("_"):
         continue
     globals()[name] = getattr(MODULE, name)
-

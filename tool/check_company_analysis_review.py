@@ -8,6 +8,8 @@ Usage:
 What it does:
   - Checks that review YAML files follow the fixed review schema.
   - Validates verdict, finding enums, and required fields.
+  - Accepts legacy review YAML that predates pass_rationale and residual_risks,
+    while validating those fields and stricter pass checks when present.
 
 What it does not do:
   - It does not validate the underlying analysis YAML.
@@ -38,6 +40,7 @@ ALLOWED_CATEGORIES = {
     "residual_uncertainty",
 }
 ALLOWED_SECTIONS = {
+    "metadata",
     "scope",
     "fact_layer",
     "phd_value",
@@ -50,8 +53,15 @@ ALLOWED_SECTIONS = {
     "sources",
     "rendered_output",
 }
-ALLOWED_REVIEW_KEYS = {"verdict", "findings", "passed_checks"}
+ALLOWED_REVIEW_KEYS = {
+    "verdict",
+    "findings",
+    "passed_checks",
+    "pass_rationale",
+    "residual_risks",
+}
 ALLOWED_FINDING_KEYS = {"severity", "category", "section", "message", "suggested_fix"}
+REQUIRED_PASS_CHECKS = {"instruction_compliance", "scope_integrity"}
 
 
 def load_yaml(path: Path) -> Any:
@@ -120,10 +130,33 @@ def validate_review_data(data: Any) -> list[str]:
     if passed_checks and not all(isinstance(x, str) and x.strip() for x in passed_checks):
         issues.append("review.passed_checks entries must be non-empty strings")
 
+    if "pass_rationale" in review:
+        pass_rationale = review.get("pass_rationale")
+        if verdict == "pass":
+            if not isinstance(pass_rationale, str) or not pass_rationale.strip():
+                issues.append("review.verdict=pass requires non-empty review.pass_rationale")
+        elif pass_rationale is not None:
+            issues.append("review.pass_rationale must be null unless review.verdict=pass")
+
+    if "residual_risks" in review:
+        residual_risks = _ensure_list(
+            review.get("residual_risks", []),
+            "review.residual_risks",
+            issues,
+        )
+        if residual_risks and not all(isinstance(x, str) and x.strip() for x in residual_risks):
+            issues.append("review.residual_risks entries must be non-empty strings")
+
     if verdict == "pass" and findings:
         issues.append("review.verdict=pass requires review.findings to be empty")
     if verdict == "pass" and not passed_checks:
         issues.append("review.verdict=pass requires at least one review.passed_checks entry")
+    has_new_audit_fields = "pass_rationale" in review or "residual_risks" in review
+    if verdict == "pass" and has_new_audit_fields:
+        passed_check_names = {item for item in passed_checks if isinstance(item, str)}
+        missing_pass_checks = sorted(REQUIRED_PASS_CHECKS - passed_check_names)
+        for check in missing_pass_checks:
+            issues.append(f"review.verdict=pass requires passed_checks to include {check}")
     if verdict == "revise" and not findings:
         issues.append("review.verdict=revise requires at least one review.finding")
 

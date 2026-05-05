@@ -76,10 +76,42 @@ STRUCTURED_FACT_KEYS = {
     "has_target_job_hiring_track",
     "application_route",
     "average_annual_income_yen",
+    "new_graduate_turnover_rate_within_3_years_percent",
+    "average_tenure_years",
+    "average_age_years",
     "average_overtime_hours_per_month",
     "annual_holidays_days",
     "remote_work_policy",
 }
+
+TOP_LEVEL_KEYS = {
+    "version",
+    "company_name",
+    "survey_date",
+    "slug",
+    "applicant_graduation_cohort",
+    "run_metadata",
+    "scope",
+    "fact_layer",
+    "sections",
+    "summary",
+    "sources",
+}
+
+RUN_METADATA_KEYS = {"executor", "model", "reasoning_effort", "fixed_by_parent"}
+SCOPE_KEYS = {
+    "user_label",
+    "target_application_unit",
+    "hiring_entity_name",
+    "role_family",
+    "alternative_application_units",
+    "workplace_entity_name",
+    "ambiguity_note",
+}
+FACT_LAYER_KEYS = {"official", "unofficial"}
+SECTION_KEYS = {"score", "facts_official", "facts_unofficial", "evaluation"}
+SUMMARY_KEYS = {"conclusion", "final_comment", "suitable_for", "not_suitable_for", "concerns"}
+SOURCE_KEYS = {"label", "url", "tier", "kind"}
 
 
 @dataclass
@@ -128,6 +160,18 @@ def format_overtime_hours(value: float | int | None) -> str:
     if value is None:
         return "未公表"
     return f"{float(value):.1f}時間"
+
+
+def format_percent(value: float | int | None) -> str:
+    if value is None:
+        return "未公表"
+    return f"{float(value):.1f}%"
+
+
+def format_years(value: float | int | None) -> str:
+    if value is None:
+        return "未公表"
+    return f"{float(value):.1f}年"
 
 
 def format_days(value: int | None) -> str:
@@ -204,6 +248,16 @@ def _ensure_list(value: Any, label: str, issues: list[str]) -> list[Any]:
     return value
 
 
+def _has_official_source_shortage_reason(summary: dict[str, Any]) -> bool:
+    concerns = summary.get("concerns", [])
+    if not isinstance(concerns, list):
+        return False
+    return any(
+        isinstance(item, str) and item.strip().startswith("公式source不足:")
+        for item in concerns
+    )
+
+
 def _is_uuid_text(value: str) -> bool:
     try:
         uuid.UUID(value)
@@ -238,19 +292,40 @@ def _validate_comp_structured(
         if value < 0:
             issues.append(f"{label}.{subkey} must be non-negative")
 
-    optional_int_keys = [
+    degree_salary_keys = [
         "starting_salary_bachelor_yen",
         "starting_salary_master_yen",
         "starting_salary_doctor_yen",
     ]
-    for subkey in optional_int_keys:
+    for subkey in degree_salary_keys:
         if subkey not in structured:
+            if require_all_keys:
+                issues.append(f"{label} missing key: {subkey}")
             continue
         value = structured[subkey]
         if value is None:
             continue
         if not isinstance(value, int):
             issues.append(f"{label}.{subkey} must be an integer or null")
+            continue
+        if value < 0:
+            issues.append(f"{label}.{subkey} must be non-negative")
+
+    numeric_fact_keys = [
+        "new_graduate_turnover_rate_within_3_years_percent",
+        "average_tenure_years",
+        "average_age_years",
+    ]
+    for subkey in numeric_fact_keys:
+        if subkey not in structured:
+            if require_all_keys:
+                issues.append(f"{label} missing key: {subkey}")
+            continue
+        value = structured[subkey]
+        if value is None:
+            continue
+        if not isinstance(value, (int, float)):
+            issues.append(f"{label}.{subkey} must be numeric or null")
             continue
         if value < 0:
             issues.append(f"{label}.{subkey} must be non-negative")
@@ -313,21 +388,11 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
     if not isinstance(data, dict):
         return ValidationResult(["top-level YAML must be a mapping"], None)
 
-    req_top = [
-        "version",
-        "company_name",
-        "survey_date",
-        "slug",
-        "run_metadata",
-        "scope",
-        "fact_layer",
-        "sections",
-        "summary",
-        "sources",
-    ]
-    for key in req_top:
+    for key in sorted(TOP_LEVEL_KEYS):
         if key not in data:
             issues.append(f"missing top-level key: {key}")
+    for key in sorted(set(data) - TOP_LEVEL_KEYS):
+        issues.append(f"top-level has unknown key: {key}")
 
     if issues:
         return ValidationResult(issues, data)
@@ -343,6 +408,12 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
 
     if not re.fullmatch(r"[a-z0-9_]+", str(data["slug"])):
         issues.append("slug must match [a-z0-9_]+")
+
+    if (
+        not isinstance(data["applicant_graduation_cohort"], str)
+        or not data["applicant_graduation_cohort"].strip()
+    ):
+        issues.append("applicant_graduation_cohort must be a non-empty string")
 
     source_path = Path(source_name)
     if (
@@ -360,9 +431,11 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
             )
 
     run_meta = _ensure_dict(data["run_metadata"], "run_metadata", issues)
-    for key in ["executor", "model", "reasoning_effort", "fixed_by_parent"]:
+    for key in sorted(RUN_METADATA_KEYS):
         if key not in run_meta:
             issues.append(f"run_metadata missing key: {key}")
+    for key in sorted(set(run_meta) - RUN_METADATA_KEYS):
+        issues.append(f"run_metadata has unknown key: {key}")
     for key in ["executor", "model", "reasoning_effort"]:
         if key in run_meta and (not isinstance(run_meta[key], str) or not run_meta[key].strip()):
             issues.append(f"run_metadata.{key} must be a non-empty string")
@@ -370,24 +443,18 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
         issues.append("run_metadata.fixed_by_parent must be a boolean")
 
     scope = _ensure_dict(data["scope"], "scope", issues)
-    for key in [
-        "user_label",
-        "target_application_unit",
-        "hiring_entity_name",
-        "role_family",
-        "alternative_application_units",
-        "stability_entity_name",
-        "ambiguity_note",
-    ]:
+    for key in sorted(SCOPE_KEYS):
         if key not in scope:
             issues.append(f"scope missing key: {key}")
+    for key in sorted(set(scope) - SCOPE_KEYS):
+        issues.append(f"scope has unknown key: {key}")
 
     if scope:
         for key in [
             "user_label",
             "target_application_unit",
             "hiring_entity_name",
-            "stability_entity_name",
+            "workplace_entity_name",
             "ambiguity_note",
         ]:
             if key in scope and (not isinstance(scope[key], str) or not scope[key].strip()):
@@ -404,6 +471,8 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
             issues.append("scope.alternative_application_units entries must be non-empty strings")
 
     fact_layer = _ensure_dict(data["fact_layer"], "fact_layer", issues)
+    for key in sorted(set(fact_layer) - FACT_LAYER_KEYS):
+        issues.append(f"fact_layer has unknown key: {key}")
     if "official" not in fact_layer:
         issues.append("fact_layer missing key: official")
     official_fact = _ensure_dict(
@@ -432,17 +501,17 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
     )
 
     sections = _ensure_dict(data["sections"], "sections", issues)
+    for key in sorted(set(sections) - {section_key for section_key, *_ in SECTION_ORDER}):
+        issues.append(f"sections has unknown key: {key}")
     for key, *_ in SECTION_ORDER:
         if key not in sections:
             issues.append(f"sections missing key: {key}")
     for key, *_ in SECTION_ORDER:
         section = _ensure_dict(sections.get(key, {}), f"sections.{key}", issues)
+        for subkey in sorted(set(section) - SECTION_KEYS):
+            issues.append(f"sections.{key} has unknown key: {subkey}")
         if "score" not in section:
             issues.append(f"sections.{key} missing key: score")
-        elif any(legacy in section for legacy in ["score_final", "score_official"]):
-            issues.append(
-                f"sections.{key} must not include legacy score_final/score_official"
-            )
         else:
             try:
                 score = float(section["score"])
@@ -473,9 +542,11 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
             )
 
     summary = _ensure_dict(data["summary"], "summary", issues)
-    for key in ["conclusion", "final_comment", "suitable_for", "not_suitable_for", "concerns"]:
+    for key in sorted(SUMMARY_KEYS):
         if key not in summary:
             issues.append(f"summary missing key: {key}")
+    for key in sorted(set(summary) - SUMMARY_KEYS):
+        issues.append(f"summary has unknown key: {key}")
     if summary:
         for key in ["conclusion", "final_comment"]:
             if key in summary and (not isinstance(summary[key], str) or not summary[key].strip()):
@@ -493,9 +564,11 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
     for i, src in enumerate(sources):
         label = f"sources[{i}]"
         src_map = _ensure_dict(src, label, issues)
-        for key in ["label", "url", "tier", "kind"]:
+        for key in sorted(SOURCE_KEYS):
             if key not in src_map:
                 issues.append(f"{label} missing key: {key}")
+        for key in sorted(set(src_map) - SOURCE_KEYS):
+            issues.append(f"{label} has unknown key: {key}")
         if "label" in src_map and (not isinstance(src_map["label"], str) or not src_map["label"].strip()):
             issues.append(f"{label}.label must be a non-empty string")
         if "url" in src_map:
@@ -514,14 +587,18 @@ def validate_data(data: Any, source_name: str = "<memory>") -> ValidationResult:
             official_count += 1
             official_kinds_seen.add(kind)
 
-    if official_count < 4:
+    official_source_shortage_explained = _has_official_source_shortage_reason(summary)
+    if official_count < 4 and not official_source_shortage_explained:
         issues.append("sources must contain at least four official entries")
     required_official_kind_groups = [
         {"recruit"},
         {"company", "ir"},
     ]
     for group in required_official_kind_groups:
-        if not official_kinds_seen.intersection(group):
+        if (
+            not official_kinds_seen.intersection(group)
+            and not official_source_shortage_explained
+        ):
             issues.append(
                 f"sources missing required official source kind from {sorted(group)}"
             )
@@ -545,6 +622,7 @@ def render_markdown(data: dict[str, Any]) -> str:
     lines: list[str] = [
         f"# {data['company_name']}",
         f"調査日: {data['survey_date']}",
+        f"卒業・修了見込み: {clean_text(data['applicant_graduation_cohort'])}",
         "",
     ]
 
@@ -556,7 +634,7 @@ def render_markdown(data: dict[str, Any]) -> str:
                 f"- 実行主体: {clean_text(run_meta['executor'])}",
                 f"- モデル: {clean_text(run_meta['model'])}",
                 f"- 推論労力: {clean_text(run_meta['reasoning_effort'])}",
-                f"- 親による固定: {format_bool_ja(bool(run_meta['fixed_by_parent']))}",
+                f"- オーケストラによる固定: {format_bool_ja(bool(run_meta['fixed_by_parent']))}",
                 "",
             ]
         )
@@ -572,7 +650,7 @@ def render_markdown(data: dict[str, Any]) -> str:
         f"- 採用 entity: {scope['hiring_entity_name']}",
         f"- 職種ファミリー: {scope['role_family']}",
         f"- 他の応募単位候補: {alternative_units}",
-        f"- 企業基盤に使う entity: {scope['stability_entity_name']}",
+        f"- 働く場として評価する entity: {scope['workplace_entity_name']}",
         f"- 曖昧性の処理: {clean_text(scope['ambiguity_note'])}",
         "",
         ]
@@ -597,6 +675,9 @@ def render_markdown(data: dict[str, Any]) -> str:
             f"対象応募単位の採用導線 {format_optional_bool_ja(fact_official.get('has_target_job_hiring_track'))}",
             f"応募経路 {format_application_route(fact_official.get('application_route'))}",
             f"平均年収 {format_yen(fact_official['average_annual_income_yen'])}",
+            f"新卒3年以内離職率 {format_percent(fact_official['new_graduate_turnover_rate_within_3_years_percent'])}",
+            f"平均勤続年数 {format_years(fact_official['average_tenure_years'])}",
+            f"平均年齢 {format_years(fact_official['average_age_years'])}",
             f"月平均残業 {format_overtime_hours(fact_official['average_overtime_hours_per_month'])}",
             f"年間休日 {format_days(fact_official['annual_holidays_days'])}",
             f"リモート方針 {format_remote_policy(fact_official['remote_work_policy'])}",
@@ -629,6 +710,21 @@ def render_markdown(data: dict[str, Any]) -> str:
         if "average_annual_income_yen" in fact_unofficial:
             unofficial_parts.append(
                 f"平均年収 {format_yen(fact_unofficial['average_annual_income_yen'])}"
+            )
+        if "new_graduate_turnover_rate_within_3_years_percent" in fact_unofficial:
+            unofficial_parts.append(
+                "新卒3年以内離職率 "
+                + format_percent(
+                    fact_unofficial["new_graduate_turnover_rate_within_3_years_percent"]
+                )
+            )
+        if "average_tenure_years" in fact_unofficial:
+            unofficial_parts.append(
+                f"平均勤続年数 {format_years(fact_unofficial['average_tenure_years'])}"
+            )
+        if "average_age_years" in fact_unofficial:
+            unofficial_parts.append(
+                f"平均年齢 {format_years(fact_unofficial['average_age_years'])}"
             )
         if "average_overtime_hours_per_month" in fact_unofficial:
             unofficial_parts.append(

@@ -2,41 +2,61 @@
 
 ## 用途
 
-- `company-analysis-runner` が分析子を起動する前に対象 scope を固定するための規則。
+- `company-analysis-child-orchestrator` が孫調査エージェントを起動する前に対象 scope を固定するための規則。
 - 会社名だけ、複数会社、近接法人、`scope.role_family`、応募 route、応募可否が曖昧な場合に読む。
 
 ## 固定する値
 
+孫調査エージェント起動前に、対象ごとに次の値を固定する。値が未確定の候補は `ready_for_analysis` にしない。
+
 - `company_name`
 - `survey_date`
-- `slug`
+- `applicant_graduation_cohort`
 - `scope.user_label`
 - `scope.target_application_unit`
 - `scope.hiring_entity_name`
 - `scope.role_family`
 - `scope.alternative_application_units`
-- `scope.stability_entity_name`
-- 必要時のみ `scope.ambiguity_note`
+- `scope.workplace_entity_name`
+- `scope.ambiguity_note`: 大きな曖昧性がない場合もその旨を書く。
+
+## 識別子
+
+- `run_id` は親または子が割り当てる `[a-z0-9_]+` の保存・照合用 ID であり、scope 固定や評価判断に使わない。
+- company-analysis YAML schema 互換で `slug` が必要な場合は、`run_id` を `[a-z0-9_]+` に正規化した機械的識別子を使う。
+- `slug` を表示用名、応募単位名、重複検出キー、保存先設計の根拠にしない。
 
 ## 複数対象の Scope Manifest
 
-- 複数の target を分析する場合、分析子起動前に全 target の固定 scope を Markdown に出力する。
-- default path は `document/<run_slug>_target_scope.md`。
+- scope manifest は、複数 target の scope 固定を監査・比較するための任意 artifact とする。
+- 単一 target を処理する通常の子オーケストラ workflow では作らない。
+- 複数 target の scope 監査をユーザーが明示した場合だけ、全 target の固定 scope を Markdown に出力する。
+- default path は `tmp/company_analysis/runs/<run_id>/target_scope.md`。
+- scope manifest を reusable note として残す場合だけ `document/` に保存し、`report/company_analysis/` に置かない。
 - manifest は、分析対象としない候補も含めて `status` で分ける。
   - `ready_for_analysis`
   - `needs_scope_check`
   - `not_application_unit`
 - 少なくとも次の列を持つ table にする。
   - `status`
-  - `slug`
+  - `run_id`
   - `company_name`
+  - `applicant_graduation_cohort`
   - `target_application_unit`
   - `hiring_entity_name`
   - `role_family`
-  - `stability_entity_name`
+  - `workplace_entity_name`
   - `ambiguity_note`
 - `target_application_unit` と `hiring_entity_name` が未固定の候補は `ready_for_analysis` にしない。
-- manifest を保存するまでは、分析子を起動しない。
+- scope manifest を作る task では、manifest を保存するまでは分析子を起動しない。
+
+## 応募者 Cohort
+
+- `applicant_graduation_cohort` は応募者の卒業・修了見込み cohort を表す。
+- 値は `2028卒` のような4桁年表記を使う。
+- `applicant_graduation_cohort` は親から受け継いだ target request の値を使う。
+- 子オーケストラは `applicant_graduation_cohort` を別 cohort へ置き換えない。
+- `applicant_graduation_cohort` を `scope.role_family`、採用年度、雇用区分に混ぜない。
 
 ## Role Family
 
@@ -55,13 +75,18 @@
 
 - ユーザーが会社名だけを与えた場合でも、全社評価に広げない。
 - 主要子会社や近接法人を先に確認し、それぞれが独立した新卒相当採用 route を持つかを見る。
-- 独立採用する実体が複数ある場合、親が自動で全件分析しない。
-- 候補と採用状況を要約し、主分析対象をユーザーに選ばせる。
+- 独立採用する実体が複数あり target request だけでは固定できない場合、子は `status: revise_scope` で候補と採用状況を返す。
+- ユーザーが明示的に複数対象の分析を求めた場合だけ、複数の `ready_for_analysis` target として固定する。
 - 公式の会社実体が曖昧で近接法人も確認すべき場合、候補をおおむね 3-5 社に絞り、それぞれを別の `target_application_unit` 候補として扱う。
 - 複数会社が同時に与えられた場合、各社を途中で止めず、全社について子会社、近接法人、独立採用 route を一通り確認してから対象確認へ進む。
 
 ## 応募単位
 
+- `scope.target_application_unit` は公式応募単位に準拠する。
+- `requested_role` が公式応募単位より細かい志向、希望配属、研究テーマ、通称、比較用 slug の場合、その文字列を `scope.target_application_unit` にしない。
+- 公式応募単位より細かい希望は `scope.ambiguity_note` と分析本文の留保に残す。
+- 公式応募単位に準拠すると `scope.role_family` が変わる場合は、公式応募単位から見た `scope.role_family` を採用する。
+- 公式応募単位が複数あり、`requested_role` だけでは 1 つに決められない場合は、子は `status: revise_scope` で候補を返す。
 - 想定候補者が博士課程在籍者、または明確な職歴のない博士新卒・既卒に近い場合は、新卒相当 route を優先する。
 - 経験者採用は、新卒 route が存在しない、明確に不適用、または明示的に不適切な場合だけ使う。
 - 各 `scope.role_family` の有無は、公式の新卒相当応募 route があるかで判断する。
@@ -74,6 +99,7 @@
   - 単一対象の default は、公式に存在する最も直接的な `researcher` route にする。
   - 当年採用が未定、停止中、終了済み、または情報不足でも、他の `scope.role_family` へ自動で置き換えない。
   - 応募可否が弱い場合は、`researcher` route を固定したまま `scope.ambiguity_note`、`summary.concerns`、`hiring_process` に不確実性として残す。
+  - 公式に独立した `researcher` 応募単位がない場合、広い公式応募単位内の研究志向だけを理由に `researcher` として固定しない。
 - `research_engineer`
   - 公式の R&D 職、AI/Data Research Scientist、研究と実装の中間 route がある場合に使う。
   - `researcher` route が公式に存在しない、またはユーザーが研究開発・R&D・実装寄り研究を明示した場合の default 候補にする。
@@ -93,22 +119,14 @@
 
 ## 複数 Role Family
 
-- 複数の `scope.role_family` を分析するのは、ユーザーが明示的に求めた場合、比較が目的の場合、または親が別 target として明示的に追加する場合だけにする。
-- 複数の `scope.role_family` を分析する場合、`scope.role_family` ごとではなく、実際の `scope.target_application_unit` ごとに別 slug、別分析子、別 YAML / Markdown pair として扱う。
+- 複数の `scope.role_family` を分析するのは、ユーザーが公式応募単位ごとの比較を明示した場合、比較が目的の場合、または runner が別 target request として明示的に追加した場合だけにする。
+- 複数の `scope.role_family` を分析する場合、`scope.role_family` ごとではなく、実際の `scope.target_application_unit` ごとに別 `run_id`、別分析子、別 YAML / Markdown pair として扱う。
 - 同じ分析子に複数の `scope.target_application_unit` を順番に渡さない。
 
-## 安定性 Entity
+## Workplace Entity
 
 - `scope.hiring_entity_name` は、応募、給与、採用制度、配属、応募経路を見る entity。
-- `scope.stability_entity_name` は、売上、上場有無、IR、親会社支援、グループ支援などの安定性を見る entity。
+- `scope.workplace_entity_name` は、実際に働く場として主に評価する entity。配属先会社、事業会社、研究所運営会社などを含む。
+- 安定性評価は、採用実体と働く場の違いを明示したうえで `scope.workplace_entity_name` を中心に見る。
 - 親会社やグループ会社の数値を使う場合、採用実体の数値として書かない。
-- `scope.hiring_entity_name` と `scope.stability_entity_name` が違う場合、summary と stability で採用実体と安定性根拠 entity の違いを明示する。
-
-## Slug
-
-- 各対象の `slug` は親が決める。
-- default は、曖昧でない範囲で最短の安定した対象ベース slug とする。
-- 例: `japan_ibm_researcher`, `ntt_data_engineer`
-- default では日付を付けない。
-- 日付 suffix は、同じ directory 内の複数有効 run を区別する、衝突を避ける、または並列 test 成果物を明示的に残す必要がある場合だけ付ける。
-- 複数対象がある場合、`<company_slug>_<target_suffix>` のように決定的に分け、同一 run 内で同じ slug を再利用しない。
+- `scope.hiring_entity_name` と `scope.workplace_entity_name` が違う場合、summary と stability で採用実体と働く場として評価する entity の違いを明示する。

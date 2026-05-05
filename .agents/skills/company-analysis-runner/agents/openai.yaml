@@ -1,4 +1,4 @@
 interface:
   display_name: "Company Analysis Runner"
-  short_description: "Orchestrate company analysis workflows"
-  default_prompt: "Use $company-analysis-runner to orchestrate a fixed-target company analysis workflow end to end."
+  short_description: "Launch company-analysis child orchestrators in parallel"
+  default_prompt: "Use $company-analysis-runner to pass company names and requested roles to child orchestrators, then summarize their result YAML."

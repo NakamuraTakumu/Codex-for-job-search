@@ -5,7 +5,8 @@ Usage:
 
 What it does:
   - Reads a company-analysis YAML object from stdin.
-  - Adds or replaces run_metadata with the runner defaults.
+  - Rejects raw child YAML that already contains run_metadata.
+  - Adds run_metadata with the runner defaults.
   - Writes tmp/company_analysis/working/<uuid>.yaml for validation and review.
   - Validates the working YAML.
 
@@ -41,6 +42,13 @@ def main(argv: list[str]) -> int:
         return 2
     if (data.get("scope_check") or {}).get("verdict") == "revise_scope":
         print("scope revision requested; not accepting as final artifact", file=sys.stderr)
+        return 1
+    if "run_metadata" in data:
+        print(
+            "child YAML already contains forbidden run_metadata; "
+            "request a clean company-analysis YAML before acceptance",
+            file=sys.stderr,
+        )
         return 1
 
     data["run_metadata"] = {

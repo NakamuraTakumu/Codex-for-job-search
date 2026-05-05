@@ -1,4 +1,10 @@
+あなたは子オーケストラから起動された孫レビューエージェントです。
 `.agents/skills/company-analysis-review/SKILL.md` の `company-analysis-review` skill を使ってください。
+
+参照境界:
+- あなたが読む skill / reference は、`company-analysis-review` skill、review input bundle、bundle の `Reference Paths` に明示された file だけです。
+- `company-analysis-runner`、`company-analysis-child-orchestrator` など、review role に直接関係しない skill / reference を読まないでください。
+- 既存 report、他 target output、比較 note、過去 review、他 agent output を schema 確認や判断根拠として読まないでください。
 
 review input bundle:
 - path: `{{review_input_path}}`
@@ -6,9 +12,11 @@ review input bundle:
 作業内容:
 - 上記 bundle を読み、bundle 内の指示と `.agents/skills/company-analysis-review/SKILL.md` に従ってください。
 - bundle に書かれた `analysis_yaml_path` と、`rendered_markdown_path` が `null` でない場合だけ rendered Markdown を読んでください。
+- bundle に書かれた `Reference Paths` は、指示、schema、scope、scoring への準拠確認に必要な範囲でだけ読んでください。
 - 以前の review payload、以前の slug、以前の finding、以前の rendered output はすべて無視してください。
 - 現在の review 対象は、この bundle と bundle が明示する path だけです。
 - bundle に書かれた `review_output_path` に review YAML を保存し、同じ YAML を返答してください。
+- `pass` の場合でも、review YAML には `pass_rationale` と `residual_risks` を含めてください。
 
 追加制約:
 - 出力は単一の review YAML オブジェクトだけにしてください。Markdown fence や説明文は不要です。

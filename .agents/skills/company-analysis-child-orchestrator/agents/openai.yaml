@@ -1,0 +1,4 @@
+interface:
+  display_name: "Company Analysis Child Orchestrator"
+  short_description: "Complete one company-analysis target end to end"
+  default_prompt: "Use $company-analysis-child-orchestrator to fix the target scope, run research and review subagents, render outputs, and return result YAML."

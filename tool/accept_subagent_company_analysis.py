@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
 Usage:
-  python3 tool/accept_subagent_company_analysis.py <handoff-yaml-or-dir-or-session-jsonl> [slug ...]
-  python3 tool/accept_subagent_company_analysis.py --model gpt-5.4 --reasoning-effort medium <handoff-yaml-or-dir> [slug ...]
+  python3 tool/accept_subagent_company_analysis.py --run-id RUN <handoff-yaml-or-dir-or-session-jsonl>
+  python3 tool/accept_subagent_company_analysis.py --run-id RUN --model gpt-5.4-mini --reasoning-effort medium <handoff-yaml-or-dir>
 
 What it does:
   - Accepts completed company-analysis YAML payloads from tmp handoff files.
   - Falls back to extracting completed payloads from Codex session logs for legacy runs.
-  - Adds runner run_metadata.
-  - Writes tmp/company_analysis/working/<uuid>.yaml for validation and review.
+  - Rejects raw grandchild research YAML that already contains run_metadata.
+  - Adds child-orchestrator run_metadata.
+  - Writes tmp/company_analysis/runs/<run_id>/working/<uuid>.yaml.
   - Validates the working YAML.
 
 What it does not do:
@@ -21,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import uuid
 from pathlib import Path
@@ -31,7 +33,7 @@ import yaml
 from company_analysis_yaml import load_yaml, validate_data
 
 
-WORKING_DIR = Path("tmp/company_analysis/working")
+RUN_ROOT = Path("tmp/company_analysis/runs")
 
 
 def iter_logs(path: Path) -> list[Path]:
@@ -115,9 +117,14 @@ def build_run_metadata(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def validate_run_id(value: str) -> str:
+    if not re.fullmatch(r"[a-z0-9_]+", value):
+        raise ValueError("--run-id must match [a-z0-9_]+")
+    return value
+
+
 def accept_yaml(
     raw: str,
-    wanted: set[str] | None,
     seen: set[str],
     output_dir: Path,
     run_metadata: dict[str, Any],
@@ -127,17 +134,20 @@ def accept_yaml(
         return False
     if (data.get("scope_check") or {}).get("verdict") == "revise_scope":
         scope_check = data["scope_check"]
-        slug = scope_check.get("slug", "<missing>")
-        print(f"{slug}: scope revision requested; not accepted as final artifact")
-        seen.add(str(slug))
+        schema_slug = scope_check.get("slug", "<missing>")
+        print(f"{schema_slug}: scope revision requested; not accepted as run-scoped artifact")
+        seen.add(str(schema_slug))
         return True
-    slug = data.get("slug")
-    if not isinstance(slug, str) or not slug:
+    schema_slug = data.get("slug")
+    if not isinstance(schema_slug, str) or not schema_slug:
         return False
-    if wanted is not None and slug not in wanted:
+    if schema_slug in seen:
         return False
-    if slug in seen:
-        return False
+    if "run_metadata" in data:
+        raise ValueError(
+            f"{schema_slug}: grandchild research YAML already contains forbidden run_metadata; "
+            "request a clean company-analysis YAML before acceptance",
+        )
 
     data["run_metadata"] = dict(run_metadata)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -155,8 +165,8 @@ def accept_yaml(
             print(f"  - {issue}", file=sys.stderr)
         return False
 
-    print(f"{slug}: prepared for review -> {yaml_path}")
-    seen.add(slug)
+    print(f"{schema_slug}: prepared for review -> {yaml_path}")
+    seen.add(schema_slug)
     return True
 
 
@@ -168,35 +178,40 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "input",
         help="Handoff YAML file, directory, or legacy Codex session JSONL",
     )
-    parser.add_argument("slugs", nargs="*", help="Optional slug filter")
+    parser.add_argument(
+        "--run-id",
+        required=True,
+        help="Run identifier for tmp paths. Must match [a-z0-9_]+.",
+    )
     parser.add_argument(
         "--output-dir",
-        default=str(WORKING_DIR),
-        help="Directory for review-ready working YAML files (default: %(default)s)",
+        default=None,
+        help="Directory for review-ready working YAML files (default: tmp/company_analysis/runs/<run_id>/working)",
     )
     parser.add_argument(
         "--executor",
-        default="company-analysis-runner",
+        default="company-analysis-child-orchestrator",
         help="run_metadata.executor value (default: %(default)s)",
     )
     parser.add_argument(
         "--model",
         default="gpt-5.4-mini",
-        help="Actual analysis child model for run_metadata.model (default: %(default)s)",
+        help="Actual grandchild research model for run_metadata.model (default: %(default)s)",
     )
     parser.add_argument(
         "--reasoning-effort",
         default="medium",
-        help="Actual analysis child reasoning effort for run_metadata.reasoning_effort (default: %(default)s)",
+        help="Actual grandchild research reasoning effort for run_metadata.reasoning_effort (default: %(default)s)",
     )
     return parser.parse_args(argv[1:])
 
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
+    if args.run_id:
+        args.run_id = validate_run_id(args.run_id)
     root = Path(args.input)
-    wanted = set(args.slugs) if args.slugs else None
-    output_dir = Path(args.output_dir)
+    output_dir = Path(args.output_dir) if args.output_dir else RUN_ROOT / args.run_id / "working"
     run_metadata = build_run_metadata(args)
     seen: set[str] = set()
     failures = 0
@@ -204,19 +219,18 @@ def main(argv: list[str]) -> int:
     if not payloads:
         for log_path in iter_logs(root):
             payloads.extend(completed_payloads(log_path))
+    if not payloads:
+        print(f"{root}: no completed company-analysis YAML payload found", file=sys.stderr)
+        return 1
     for raw in payloads:
         try:
-            accepted = accept_yaml(raw, wanted, seen, output_dir, run_metadata)
+            accepted = accept_yaml(raw, seen, output_dir, run_metadata)
         except Exception as exc:
             print(f"{root}: failed to accept payload: {exc}", file=sys.stderr)
             failures += 1
             continue
-        if accepted:
-            continue
-    if wanted is not None:
-        missing = sorted(wanted - seen)
-        if missing:
-            print("missing slugs: " + ", ".join(missing), file=sys.stderr)
+        if not accepted:
+            print(f"{root}: payload was not accepted", file=sys.stderr)
             failures += 1
     return 1 if failures else 0
 

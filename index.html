@@ -216,7 +216,7 @@
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      min-width: 1320px;
+      min-width: 1520px;
     }
 
     th,
@@ -275,9 +275,9 @@
       line-height: 1.35;
     }
 
-    .job {
-      min-width: 160px;
-      max-width: 220px;
+    .role {
+      min-width: 120px;
+      max-width: 180px;
       white-space: normal;
       line-height: 1.35;
     }
@@ -544,73 +544,75 @@
   <script>
     const DATA_ROOT = "report/company_analysis";
     const DATA_FILES = [
-      "brainpad_data_scientist.yaml",
-      "brainpad_ml_engineer.yaml",
-      "brainpad_swe.yaml",
-      "ctp_consulting.yaml",
-      "cyberagent_ai_lab_research_scientist.yaml",
-      "deloitte_cyber_rd_specialist.yaml",
-      "deloitte_cyber_threat_security_engineer.yaml",
-      "dena_ai_specialist_ai_engineer.yaml",
-      "dena_ai_specialist_data_scientist.yaml",
-      "fixstars_swe.yaml",
-      "fujitsu_physical_ai_research.yaml",
-      "fujitsu_research_labs.yaml",
-      "furukawa_research.yaml",
-      "geniee_engineer.yaml",
-      "hitachi_research.yaml",
-      "japan_ibm_cloud_security_ai_tech.yaml",
-      "japan_ibm_datascientist.yaml",
-      "japan_ibm_research.yaml",
-      "kanden_systems_se.yaml",
-      "kddi_agile.yaml",
-      "konica_minolta_data_scientist.yaml",
-      "konica_minolta_image_ai_development.yaml",
-      "konica_minolta_technical_roles.yaml",
-      "lycorp_data_scientist.yaml",
-      "lycorp_ml_search_recommendation.yaml",
-      "lycorp_swe.yaml",
-      "mitsubishi_electric_dx_it.yaml",
-      "mitsubishi_electric_rd.yaml",
-      "mizuho_advanced_technology.yaml",
-      "mizuho_markets_digital_technology.yaml",
-      "nec_research_ds_lab.yaml",
-      "nec_research_secure_network.yaml",
-      "nissan_research.yaml",
-      "note_engineer.yaml",
-      "nri_ae.yaml",
-      "nri_data_scientist_it_architect.yaml",
-      "ntt_data_ai_data_science.yaml",
-      "ntt_data_research.yaml",
-      "ntt_data_security_digital_technology.yaml",
-      "ntt_rd.yaml",
-      "omron_research_technology_ip_hq.yaml",
-      "omron_technology_ip_hq.yaml",
-      "optage_engineer_category.yaml",
-      "panasonic_advanced_technology_talent.yaml",
-      "panasonic_connect_rd.yaml",
-      "pfn_ai_chip_compiler_infra.yaml",
-      "pfn_pure_researcher.yaml",
-      "pfn_researcher.yaml",
-      "postas_engineer.yaml",
-      "preferred_networks_engineer_researcher.yaml",
-      "rakuten_research.yaml",
-      "sakura_engineer.yaml",
-      "sakura_research_ai_hpc_infra.yaml",
-      "shinmaywa.yaml",
-      "simplex_biztech_professional.yaml",
-      "simplex_math_engineer.yaml",
-      "sony_ai_ml_research.yaml",
-      "sony_rd.yaml",
-      "sony_robotics_sensing_imaging_rd.yaml",
-      "toshiba_ai_digital_rd.yaml",
-      "toshiba_quantum_security_rd.yaml",
-      "toshiba_research.yaml",
-      "toyota_newgrad_phd.yaml",
-      "tungaloy.yaml",
-      "whi_swe.yaml",
-      "woven_ml_perception.yaml",
-      "woven_senior_ml_vehicle_perception.yaml"
+      "ca_20260504143127_001.yaml",
+      "ca_20260504143127_002.yaml",
+      "ca_20260504143127_003.yaml",
+      "ca_20260504143127_004.yaml",
+      "ca_20260504143127_005.yaml",
+      "ca_20260504143127_006.yaml",
+      "ca_20260504143127_007.yaml",
+      "ca_20260504143127_008.yaml",
+      "ca_20260504143127_009.yaml",
+      "ca_20260504143127_010.yaml",
+      "ca_20260504143127_012.yaml",
+      "ca_20260504143127_013.yaml",
+      "ca_20260504143127_014.yaml",
+      "ca_20260504143127_015.yaml",
+      "ca_20260504143127_016.yaml",
+      "ca_20260504143127_017.yaml",
+      "ca_20260504143127_018.yaml",
+      "ca_20260504143127_019.yaml",
+      "ca_20260504143127_020.yaml",
+      "ca_20260504143127_021.yaml",
+      "ca_20260504143127_022.yaml",
+      "ca_20260504143127_023.yaml",
+      "ca_20260504143127_024.yaml",
+      "ca_20260504143127_025.yaml",
+      "ca_20260504143127_026.yaml",
+      "ca_20260504143127_027.yaml",
+      "ca_20260504143127_028.yaml",
+      "ca_20260504143127_029.yaml",
+      "ca_20260504143127_030.yaml",
+      "ca_20260504143127_031.yaml",
+      "ca_20260504143127_032.yaml",
+      "ca_20260504143127_033.yaml",
+      "ca_20260504143127_034.yaml",
+      "ca_20260504143127_035.yaml",
+      "ca_20260504143127_036.yaml",
+      "ca_20260504143127_038.yaml",
+      "ca_20260504143127_039.yaml",
+      "ca_20260504143127_040.yaml",
+      "ca_20260504143127_041.yaml",
+      "ca_20260504143127_042.yaml",
+      "ca_20260504143127_043.yaml",
+      "ca_20260504143127_044.yaml",
+      "ca_20260504143127_045.yaml",
+      "ca_20260504143127_047.yaml",
+      "ca_20260504143127_048.yaml",
+      "ca_20260504143127_049.yaml",
+      "ca_20260504143127_051.yaml",
+      "ca_20260504143127_052.yaml",
+      "ca_20260504143127_054.yaml",
+      "ca_20260504143127_055.yaml",
+      "ca_20260504143127_057.yaml",
+      "ca_20260504143127_058.yaml",
+      "ca_20260504143127_059.yaml",
+      "ca_20260504143127_060.yaml",
+      "ca_20260504143127_062.yaml",
+      "ca_20260504143127_063.yaml",
+      "ca_20260504143127_064.yaml",
+      "ca_20260504143127_065.yaml",
+      "ca_20260504143127_066.yaml",
+      "ca_extra_20260505032218_sakana_ai.yaml",
+      "ca_extra_20260505032218_herp_ai.yaml",
+      "ca_extra_20260505032218_layerx_ai.yaml",
+      "ca_extra_20260505032218_stockmark_ai.yaml",
+      "ca_extra_20260505032218_elyza_ai.yaml",
+      "ca_extra_20260505032218_pksha_ai.yaml",
+      "ca_extra_20260505032218_mntsq_ai.yaml",
+      "ca_extra_20260505032218_autify_ai.yaml",
+      "ca_extra_20260505032218_metagen.yaml",
+      "ca_metagentx_20260505_01.yaml"
     ];
 
     const SECTIONS = [
@@ -632,11 +634,16 @@
     };
 
     const FACT_KEYS = [
+      "has_target_job_hiring_track",
+      "application_route",
       "starting_salary_yen",
       "starting_salary_bachelor_yen",
       "starting_salary_master_yen",
       "starting_salary_doctor_yen",
       "average_annual_income_yen",
+      "average_age_years",
+      "average_tenure_years",
+      "new_graduate_turnover_rate_within_3_years_percent",
       "average_overtime_hours_per_month",
       "annual_holidays_days",
       "remote_work_policy"
@@ -653,6 +660,9 @@
       has_target_job_hiring_track: "対象応募単位の採用導線",
       application_route: "応募経路",
       average_annual_income_yen: "平均年収",
+      average_age_years: "平均年齢",
+      average_tenure_years: "平均勤続年数",
+      new_graduate_turnover_rate_within_3_years_percent: "新卒3年以内離職率",
       average_overtime_hours_per_month: "月平均残業",
       annual_holidays_days: "年間休日",
       remote_work_policy: "リモート方針"
@@ -669,6 +679,9 @@
       "has_target_job_hiring_track",
       "application_route",
       "average_annual_income_yen",
+      "average_age_years",
+      "average_tenure_years",
+      "new_graduate_turnover_rate_within_3_years_percent",
       "average_overtime_hours_per_month",
       "annual_holidays_days",
       "remote_work_policy"
@@ -685,7 +698,7 @@
 
     const COLUMNS = [
       { key: "company", label: "会社", className: "left company", type: "string" },
-      { key: "job", label: "応募対象", className: "left job", type: "string" },
+      { key: "role_family", label: "職種", className: "left role", type: "string" },
       { key: "total", label: "総合", type: "number" },
       { key: "phd_value", label: "PhD", type: "number" },
       { key: "role_fit", label: "職務", type: "number" },
@@ -693,11 +706,16 @@
       { key: "compensation", label: "処遇", type: "number" },
       { key: "hiring_process", label: "選考", type: "number" },
       { key: "stability", label: "安定", type: "number" },
+      { key: "has_target_job_hiring_track", label: "導線", type: "boolean" },
+      { key: "application_route", label: "経路", type: "string" },
       { key: "starting_salary_yen", label: "初任", type: "number" },
       { key: "starting_salary_bachelor_yen", label: "学士初", type: "number" },
       { key: "starting_salary_master_yen", label: "修士初", type: "number" },
       { key: "starting_salary_doctor_yen", label: "博士初", type: "number" },
       { key: "average_annual_income_yen", label: "年収", type: "number" },
+      { key: "average_age_years", label: "年齢", type: "number" },
+      { key: "average_tenure_years", label: "勤続", type: "number" },
+      { key: "new_graduate_turnover_rate_within_3_years_percent", label: "3年離職", type: "percent" },
       { key: "average_overtime_hours_per_month", label: "残業", type: "number" },
       { key: "annual_holidays_days", label: "休日", type: "number" },
       { key: "remote_work_policy", label: "リモート", className: "remote", type: "string" }
@@ -711,7 +729,9 @@
       sortKey: "total",
       sortDir: "desc",
       selectedSlug: null,
-      weights: { ...DEFAULT_WEIGHTS }
+      weights: { ...DEFAULT_WEIGHTS },
+      sectionStats: {},
+      totalStats: { mean: 0, sd: 1 }
     };
 
     const statusEl = document.querySelector("#status");
@@ -765,6 +785,34 @@
       return Number(data.sections?.[key]?.score);
     }
 
+    function mean(values) {
+      return values.reduce((sum, value) => sum + value, 0) / values.length;
+    }
+
+    function standardDeviation(values, average = mean(values)) {
+      const variance = values.reduce((sum, value) => sum + ((value - average) ** 2), 0) / values.length;
+      return Math.sqrt(variance);
+    }
+
+    function computeSectionStats() {
+      state.sectionStats = Object.fromEntries(SECTIONS.map(([key]) => {
+        const values = state.items
+          .map((item) => sectionScore(item.data, key))
+          .filter((value) => Number.isFinite(value));
+        if (values.length === 0) return [key, { mean: 0, sd: 1 }];
+        const average = mean(values);
+        const sd = standardDeviation(values, average);
+        return [key, { mean: average, sd: sd > 0 ? sd : 1 }];
+      }));
+    }
+
+    function sectionZScore(data, key) {
+      const score = sectionScore(data, key);
+      const stats = state.sectionStats[key];
+      if (!Number.isFinite(score) || !stats) return NaN;
+      return (score - stats.mean) / stats.sd;
+    }
+
     function weightSum() {
       return SECTIONS.reduce((sum, [key]) => {
         const weight = Number(state.weights[key]);
@@ -772,18 +820,44 @@
       }, 0);
     }
 
-    function computeTotal(data) {
+    function computeWeightedZ(data) {
       const totalWeight = weightSum();
       if (totalWeight <= 0) return NaN;
-      const weightedScore = SECTIONS.reduce((sum, [key]) => {
-        const score = sectionScore(data, key);
+      return SECTIONS.reduce((sum, [key]) => {
+        const zScore = sectionZScore(data, key);
         const weight = Number(state.weights[key]);
-        return Number.isFinite(score) && Number.isFinite(weight) && weight > 0 ? sum + weight * score : sum;
+        return Number.isFinite(zScore) && Number.isFinite(weight) && weight > 0 ? sum + weight * zScore : sum;
       }, 0);
-      return Math.round((weightedScore / totalWeight) * 200) / 10;
+    }
+
+    function computeTotalStats() {
+      const values = state.items
+        .map((item) => computeWeightedZ(item.data))
+        .filter((value) => Number.isFinite(value));
+      if (values.length === 0) {
+        state.totalStats = { mean: 0, sd: 1 };
+        return;
+      }
+      const average = mean(values);
+      const sd = standardDeviation(values, average);
+      state.totalStats = { mean: average, sd: sd > 0 ? sd : 1 };
+    }
+
+    function recomputeScoreModel() {
+      computeSectionStats();
+      computeTotalStats();
+    }
+
+    function computeTotal(data) {
+      const weightedZ = computeWeightedZ(data);
+      if (!Number.isFinite(weightedZ)) return NaN;
+      const normalized = 50 + 10 * ((weightedZ - state.totalStats.mean) / state.totalStats.sd);
+      const bounded = Math.max(0, Math.min(100, normalized));
+      return Math.round(bounded * 10) / 10;
     }
 
     function rebuildRows() {
+      recomputeScoreModel();
       state.rowsByMode.official = state.items.map((item) => buildRow(item, "official"));
       state.rowsByMode.fallback = state.items.map((item) => buildRow(item, "fallback"));
     }
@@ -840,6 +914,14 @@
       }[value] ?? value ?? "未公表";
     }
 
+    function shortRouteLabel(value) {
+      return {
+        direct: "直接",
+        broad: "広域",
+        unknown: "未公表"
+      }[value] ?? value ?? "未公表";
+    }
+
     function roleFamilyLabel(value) {
       return {
         researcher: "研究職",
@@ -866,6 +948,14 @@
         if (value === null || value === undefined || Number.isNaN(Number(value))) return compact ? null : "未公表";
         return compact ? Number(value) : `${Number(value)}日`;
       }
+      if (key === "average_age_years" || key === "average_tenure_years") {
+        if (value === null || value === undefined || Number.isNaN(Number(value))) return compact ? null : "未公表";
+        return compact ? Number(value) : `${Number(value).toFixed(1)}年`;
+      }
+      if (key === "new_graduate_turnover_rate_within_3_years_percent") {
+        if (value === null || value === undefined || Number.isNaN(Number(value))) return compact ? null : "未公表";
+        return compact ? Number(value) : `${Number(value).toFixed(1)}%`;
+      }
       if (key === "remote_work_policy") return remoteLabel(value);
       if (key === "application_route") return routeLabel(value);
       if (typeof value === "boolean" || key.startsWith("has_")) return booleanLabel(value);
@@ -879,7 +969,10 @@
         return `<button class="company-button" type="button" data-slug="${escapeHtml(row.slug)}" aria-current="${current}">${escapeHtml(value)}</button>`;
       }
       if (column.key === "remote_work_policy") return escapeHtml(remoteLabel(value));
-      if (value === null || value === undefined || Number.isNaN(value)) return "NaN";
+      if (column.key === "application_route") return escapeHtml(shortRouteLabel(value));
+      if (column.type === "boolean") return escapeHtml(booleanLabel(value));
+      if (value === null || value === undefined || Number.isNaN(value)) return "未公表";
+      if (column.type === "percent") return `${Number(value).toFixed(1)}%`;
       if (column.type === "number") return Number(value).toFixed(1);
       return escapeHtml(value);
     }
@@ -906,7 +999,7 @@
       const row = {
         slug: item.slug,
         company: data.company_name ?? item.slug,
-        job: roleFamilyLabel(roleFamily),
+        role_family: roleFamilyLabel(roleFamily),
         total: computeTotal(data),
         searchText: [
           data.company_name,
@@ -1112,8 +1205,7 @@
       }));
 
       state.items = loaded;
-      state.rowsByMode.official = loaded.map((item) => buildRow(item, "official"));
-      state.rowsByMode.fallback = loaded.map((item) => buildRow(item, "fallback"));
+      rebuildRows();
     }
 
     document.querySelectorAll(".tab").forEach((button) => {

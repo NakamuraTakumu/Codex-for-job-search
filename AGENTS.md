@@ -1,51 +1,15 @@
-# Workspace Rules
+# ワークスペース規則
 
-## Document Organization
-- Organize reusable documents under `document/` with topic-specific subdirectories instead of placing many files directly in `document/`.
-- In this repository, company-analysis-related reusable documents may be placed directly under `document/` when the repository itself is already specialized enough that an extra `company_analysis/` label would be redundant.
-- For company analysis outputs, use `report/company_analysis/companies/` for accepted per-company analyses, `report/company_analysis/data/` for accepted YAML data, and `report/company_analysis/reviews/` for accepted review artifacts.
-- Keep `report/company_analysis/` for accepted company-analysis artifacts only. Do not put workflow notes, scope manifests, test-run considerations, or trial investigation commentary there.
-- Put test-run notes, trial investigation considerations, workflow retrospectives, scoring experiments, and process findings under `document/`, not under `report/company_analysis/`.
-- Prefer concise document filenames. Avoid redundant prefixes when the parent directory already provides the context.
-- Choose the shortest filename that still remains unambiguous within its directory.
-- For company-analysis outputs, default to concise target-based slugs and filenames without dates, such as `japan_ibm_research`.
-- Add a date to a company-analysis slug or filename only when it is needed to distinguish multiple valid runs, avoid collisions in the same directory, or preserve parallel test artifacts explicitly.
+## Delegation
+- この workspace では、グローバル `AGENTS.md` のサブエージェント関連指示を適用しない。
+- サブエージェントの起動、再利用、親子役割 marker、依頼契約、結果扱い、プロンプト検証に関する判断は、上位の system / developer 指示とユーザーの明示依頼だけに従う。
 
-## Test vs Production Data
-- Keep data, reports, and artifacts produced for testing clearly separate from production or accepted outputs.
-- For company-analysis test investigations, keep reusable notes and considerations under `document/`; keep raw temporary handoffs under `tmp/`.
-- Do not overwrite or mix production files with test-generated files unless the user explicitly approves promotion of the test result.
-- Make the distinction explicit in filenames, paths, or metadata so test outputs remain recognizable later.
+## Company Analysis
+- company-analysis task では、通常 `company-analysis-runner` を入口にする。
+- 既存 output、tool、documentation の確認または編集だけが目的の場合は、runner workflow を起動しない。
+- test 生成物と accepted / production 出力を混ぜない。
+- workflow note や scoring experiment を accepted artifact 領域へ置かない。
+- company-analysis 固有 tool は skill directory を優先し、repository 全体で共有する tool だけ `tool/` に置く。
 
-## Proactive Document Capture
-- Do not wait for an explicit user instruction before saving reusable findings.
-- At the end of any non-trivial investigation, comparison, evaluation, workflow change, debugging session, or artifact-generation task, decide whether the result should be preserved and then create or update the relevant Markdown note under `document/` or `knowledge/`.
-- Save a short note when the task produced reusable criteria, a non-obvious decision, a verified procedure, a resolved ambiguity, important caveats, or findings that would be costly to rediscover.
-- Prefer updating an existing related note over creating a new file when the new work continues or corrects the same thread.
-- Keep proactive notes concise: record the situation, decision or finding, evidence basis, and future use; do not copy the full chat log.
-- Skip a new saved note only for lightweight one-off answers, purely mechanical edits, or results already captured in an accepted report or review artifact.
-
-## Evaluation Tasks
-- In evaluation or scoring tasks, fix the exact evaluation target before scoring. Do not score a broad entity first and narrow the target afterward.
-- When multiple evaluation results are compared for uncertainty analysis, separate `evaluation-target mismatch` from `scoring variance`. If the fixed targets differ, treat that as a scope problem first rather than as pure scoring disagreement.
-- When naming structured-data keys for evaluation scope, make the key reveal both the value type and the semantic unit. Avoid vague names such as `evaluation_target` or `job_type` when the value could be confused between a company, application route, role family, or hiring category; prefer names like `target_application_unit`, `hiring_entity_name`, `role_family`, and `stability_entity_name` when those are the intended meanings.
-
-## Company Analysis Workflow
-- For company-analysis tasks, prefer using the `company-analysis-runner` skill as the default entry point.
-- When a company-analysis task is requested, do not perform parent-side pre-analysis first; invoke the `company-analysis-runner` workflow immediately.
-- Treat `company-analysis-runner` as the parent-agent orchestration layer and `company-analysis` as the evaluator used by subagents.
-- Only bypass `company-analysis-runner` when the task is narrowly limited to inspecting or editing existing outputs, tools, or documentation rather than running the analysis workflow itself.
-- For company-analysis-specific tooling, prefer placing scripts under the relevant skill directory rather than the repository-wide `tool/` directory, unless the script is genuinely shared across workflows in this repository.
-- For research-oriented doctoral-candidate company analysis, when an official research-track application route exists, prefer fixing the default evaluation target to that research track first.
-- Use a software-engineering or broader technical track as the default target only when no official research-track route exists, or when the user explicitly asks to analyze the engineering track instead.
-- If both research and software-engineering routes officially exist, the parent may still analyze both as separate targets when the user asks for both or when comparison is the point, but the default single-target choice should be the research track.
-- Require `run_metadata` in final company-analysis YAML outputs. Do not treat it as optional when the parent workflow is available; missing `run_metadata` should be considered an invalid final artifact.
-- For company-analysis naming, keep `slug` and saved filenames aligned, and default to the shortest stable target-based name that remains unambiguous without a date.
-- For company-analysis intermediate files under `tmp/company_analysis/`, use UUID filenames. Keep human-readable slugs inside YAML and final accepted artifacts, not as intermediate filenames.
-- For fairness across companies, when `company-analysis-runner` hands off work to analysis or review subagents, pass the corresponding prompt template exactly as written except for filling its placeholders. Do not paraphrase, reorder, trim, or append ad hoc instructions unless the template file itself is intentionally updated first.
-- When a review subagent is used in the company-analysis workflow, use filesystem handoff as the default: prepare a self-contained review input bundle under `tmp/company_analysis/review_inputs/`, point it to the analysis YAML and optional rendered Markdown, and have the review subagent write review YAML under `tmp/company_analysis/reviews/`. Use inline payloads only as a fallback when filesystem handoff is unavailable.
-
-## Drafting and Review Separation
-- When a task involves drafting an artifact and then checking, reviewing, or critiquing that artifact, prefer using a separate subagent for review rather than having the drafting subagent review its own output.
-- Do not treat self-review by the drafting subagent as sufficient when an independent check is practical and materially improves reliability.
-- If the same artifact needs both creation and verification, assign clear ownership: one agent drafts, another agent checks or reviews.
+## 評価
+- `evaluation-target mismatch` と `scoring variance` を分ける。

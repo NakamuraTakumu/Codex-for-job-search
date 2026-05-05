@@ -4,9 +4,13 @@ Usage:
   python3 tool/check_company_analysis_yaml.py path/to/file.yaml [path/to/file2.yaml ...]
 
 What it does:
-  - Checks company-analysis YAML files for required fields and basic schema validity.
+  - Checks child-orchestrator working or run-scoped company-analysis YAML files for required
+    fields and basic schema validity.
   - Verifies score ranges, 0.1 increments, slug/file consistency, source URLs,
     source tier/kind, and minimum official-source coverage.
+  - Requires child-orchestrator-added run_metadata. Raw company-analysis
+    research output must not include run_metadata and should pass
+    through child-orchestrator intake first.
 
 What it does not do:
   - It does not modify any file.

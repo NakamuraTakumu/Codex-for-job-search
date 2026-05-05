@@ -3,6 +3,7 @@
 Usage:
   python3 tool/render_company_analysis_md.py path/to/file.yaml [path/to/file2.yaml ...]
   python3 tool/render_company_analysis_md.py --stdout path/to/file.yaml
+  python3 tool/render_company_analysis_md.py --output path/to/file.md path/to/file.yaml
   python3 tool/render_company_analysis_md.py --output-dir report/company_analysis/companies path/to/file.yaml
 
 What it does:
@@ -11,7 +12,7 @@ What it does:
 
 What it does not do:
   - It does not guess missing schema fields.
-  - It does not overwrite files unless the target path is chosen by the caller.
+  - It does not protect against output path collisions. Use --output with a run-scoped path when running in parallel.
 """
 
 from __future__ import annotations
@@ -35,11 +36,20 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Directory for rendered Markdown files (default: %(default)s)",
     )
     parser.add_argument(
+        "--output",
+        help="Write rendered Markdown to this file. Use with one input file.",
+    )
+    parser.add_argument(
         "--stdout",
         action="store_true",
         help="Print rendered Markdown to stdout instead of writing files. Use with one input file.",
     )
-    return parser.parse_args(argv[1:])
+    args = parser.parse_args(argv[1:])
+    if args.stdout and args.output:
+        parser.error("--stdout and --output cannot be used together")
+    if args.output and len(args.paths) != 1:
+        parser.error("--output requires exactly one input file")
+    return args
 
 
 def infer_output_path(input_path: Path, output_dir: Path, data: dict) -> Path:
@@ -57,7 +67,10 @@ def main(argv: list[str]) -> int:
         return 2
 
     out_dir = Path(args.output_dir)
-    if not args.stdout:
+    explicit_output = Path(args.output) if args.output else None
+    if explicit_output:
+        explicit_output.parent.mkdir(parents=True, exist_ok=True)
+    elif not args.stdout:
         out_dir.mkdir(parents=True, exist_ok=True)
 
     bad = 0
@@ -86,7 +99,7 @@ def main(argv: list[str]) -> int:
             if not rendered.endswith("\n"):
                 sys.stdout.write("\n")
         else:
-            out_path = infer_output_path(path, out_dir, result.data or data)
+            out_path = explicit_output or infer_output_path(path, out_dir, result.data or data)
             out_path.parent.mkdir(parents=True, exist_ok=True)
             out_path.write_text(rendered, encoding="utf-8")
             print(out_path)
