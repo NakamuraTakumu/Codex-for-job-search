@@ -1596,32 +1596,53 @@
         .sort((a, b) => String(getValue(a)).localeCompare(String(getValue(b))))[0] || null;
     }
 
+    function statusPriority(status) {
+      return {
+        open: 0,
+        scheduled: 1,
+        open_likely: 2,
+        mypage_required: 3,
+        closed_public_but_form_visible: 4,
+        unknown: 5,
+        media_only: 6,
+        closed: 7
+      }[status] ?? 8;
+    }
+
+    function representativeRecruitmentBy(items, getValue) {
+      const earliest = earliestRecruitmentBy(items, getValue);
+      if (earliest) return earliest;
+      return items
+        .filter((item) => item?.name || item?.route_name)
+        .slice()
+        .sort((a, b) => statusPriority(a.status) - statusPriority(b.status))[0] || null;
+    }
+
     function deriveRecruitmentSummary(data) {
-      const earliestBriefing = earliestRecruitmentBy(data.briefings || [], (item) => item.reservation_deadline);
-      const earliestInternship = earliestRecruitmentBy(data.internships || [], (item) => item.dates?.application_deadline);
-      const earliestHiring = earliestRecruitmentBy(data.hiring || [], (item) => item.application_deadline);
-      const openHiring = (data.hiring || []).find((item) => item.status === "open" && !item.application_deadline);
+      const representativeBriefing = representativeRecruitmentBy(data.briefings || [], (item) => item.reservation_deadline);
+      const representativeInternship = representativeRecruitmentBy(data.internships || [], (item) => item.dates?.application_deadline);
+      const representativeHiring = representativeRecruitmentBy(data.hiring || [], (item) => item.application_deadline);
       return [
         {
           label: "説明会",
-          deadline: earliestBriefing?.reservation_deadline,
-          title: earliestBriefing?.name,
-          url: earliestBriefing?.event_url,
-          status: earliestBriefing?.status
+          deadline: representativeBriefing?.reservation_deadline,
+          title: representativeBriefing?.name,
+          url: representativeBriefing?.event_url,
+          status: representativeBriefing?.status
         },
         {
           label: "インターン",
-          deadline: earliestInternship?.dates?.application_deadline,
-          title: earliestInternship?.name,
-          url: earliestInternship?.apply_url,
-          status: earliestInternship?.status
+          deadline: representativeInternship?.dates?.application_deadline,
+          title: representativeInternship?.name,
+          url: representativeInternship?.apply_url,
+          status: representativeInternship?.status
         },
         {
           label: "本選考",
-          deadline: earliestHiring?.application_deadline,
-          title: earliestHiring?.route_name || openHiring?.route_name,
-          url: earliestHiring?.application_url || openHiring?.application_url,
-          status: earliestHiring?.status || openHiring?.status
+          deadline: representativeHiring?.application_deadline,
+          title: representativeHiring?.route_name,
+          url: representativeHiring?.application_url,
+          status: representativeHiring?.status
         }
       ];
     }
