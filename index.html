@@ -947,7 +947,7 @@
       ["phd_value", "博士人材の評価", "PhD"],
       ["role_fit", "仕事内容・配属確度", "職務"],
       ["rd_env", "研究開発・技術環境", "R&D"],
-      ["compensation", "処遇・働き方", "処遇"],
+      ["compensation", "待遇・働き方", "待遇"],
       ["hiring_process", "選考コストと評価の納得感", "選考"],
       ["stability", "企業基盤・安定性", "安定"]
     ];
@@ -979,16 +979,16 @@
         label: "純粋な企業評価用",
         weights: {
           phd_value: 0,
-          role_fit: 0.10,
+          role_fit: 0,
           rd_env: 0,
-          compensation: 0.25,
-          hiring_process: 0.10,
+          compensation: 0.30,
+          hiring_process: 0,
           stability: 0.20
         }
       }
     };
 
-    const DEFAULT_WEIGHT_PROFILE = "phd";
+    const DEFAULT_WEIGHT_PROFILE = "engineer";
     const DEFAULT_WEIGHTS = WEIGHT_PRESETS[DEFAULT_WEIGHT_PROFILE].weights;
 
     const FACT_KEYS = [
@@ -1079,7 +1079,7 @@
       { key: "phd_value", label: "PhD", type: "number" },
       { key: "role_fit", label: "職務", type: "number" },
       { key: "rd_env", label: "R&D", type: "number" },
-      { key: "compensation", label: "処遇", type: "number" },
+      { key: "compensation", label: "待遇", type: "number" },
       { key: "hiring_process", label: "選考", type: "number" },
       { key: "stability", label: "安定", type: "number" },
       { key: "has_target_job_hiring_track", label: "導線", type: "boolean" },
