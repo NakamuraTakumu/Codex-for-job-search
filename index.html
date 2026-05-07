@@ -296,6 +296,7 @@
     }
 
     .table-shell {
+      max-height: calc(100vh - 190px);
       overflow: auto;
     }
 
@@ -318,7 +319,7 @@
     th {
       position: sticky;
       top: 0;
-      z-index: 1;
+      z-index: 3;
       background: #eef2f6;
       color: #344054;
       border-bottom-color: var(--line-strong);
@@ -356,10 +357,24 @@
     }
 
     .company {
+      position: sticky;
+      left: 0;
+      z-index: 2;
       min-width: 220px;
       max-width: 300px;
+      background: var(--panel);
+      box-shadow: 1px 0 0 var(--line);
       white-space: normal;
       line-height: 1.35;
+    }
+
+    th.company {
+      z-index: 4;
+      background: #eef2f6;
+    }
+
+    tbody tr:hover td.company {
+      background: #f8fbfd;
     }
 
     .role {
@@ -2169,6 +2184,11 @@
         });
     }
 
+    function isLocalAccess() {
+      return window.location.protocol === "file:"
+        || ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+    }
+
     document.querySelectorAll(".tab").forEach((button) => {
       button.addEventListener("click", () => {
         state.mode = button.dataset.mode;
@@ -2201,6 +2221,10 @@
       authPasswordEl.value = "";
       startApp(password);
     });
+
+    if (isLocalAccess()) {
+      startApp("");
+    }
   </script>
 </body>
 </html>
