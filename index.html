@@ -379,6 +379,9 @@
     }
 
     .company-button {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
       border: 0;
       background: transparent;
       color: #155eef;
@@ -395,6 +398,21 @@
     .company-button[aria-current="true"] {
       color: var(--accent);
       font-weight: 650;
+    }
+
+    .recruitment-marker {
+      display: inline-flex;
+      align-items: center;
+      min-height: 20px;
+      border: 1px solid #b7ded4;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.2;
+      padding: 1px 6px;
+      white-space: nowrap;
     }
 
     .detail {
@@ -537,6 +555,174 @@
       color: var(--muted);
     }
 
+    .detail-tabbar {
+      display: flex;
+      gap: 4px;
+      margin: 14px 0 12px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fbfd;
+      width: fit-content;
+    }
+
+    .detail-tab {
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font: inherit;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .detail-tab[aria-selected="true"] {
+      background: var(--panel);
+      color: var(--accent);
+      font-weight: 650;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    }
+
+    .recruit-status {
+      margin-top: 10px;
+      color: var(--muted);
+    }
+
+    .recruit-deadlines,
+    .recruit-items {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .recruit-deadline,
+    .recruit-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      min-width: 0;
+    }
+
+    .recruit-deadline {
+      display: grid;
+      grid-template-columns: 88px minmax(110px, auto) minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+    }
+
+    .recruit-label,
+    .recruit-type,
+    .recruit-field-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .recruit-date {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 28px;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      line-height: 1.2;
+      padding: 4px 8px;
+      white-space: nowrap;
+    }
+
+    .recruit-date.empty {
+      background: var(--warn-bg);
+      color: var(--warn);
+    }
+
+    .recruit-title {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-weight: 650;
+    }
+
+    .recruit-head {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .recruit-head h4 {
+      margin: 2px 0 0;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .recruit-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: flex-end;
+      min-width: 86px;
+    }
+
+    .recruit-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      border: 1px solid #cdd6e1;
+      border-radius: 999px;
+      background: #f8fbfd;
+      color: #344054;
+      font-size: 12px;
+      line-height: 1.2;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+
+    .recruit-badge.open,
+    .recruit-badge.scheduled,
+    .recruit-badge.official {
+      border-color: #b7ded4;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .recruit-badge.closed,
+    .recruit-badge.unknown,
+    .recruit-badge.mypage_required,
+    .recruit-badge.media_only {
+      border-color: #fed7aa;
+      background: var(--warn-bg);
+      color: var(--warn);
+    }
+
+    .recruit-fields {
+      display: grid;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .recruit-field {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr);
+      gap: 8px;
+      padding-top: 6px;
+      border-top: 1px solid #eef2f6;
+    }
+
+    .recruit-field-value {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .recruit-note,
+    .recruit-source {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
     @media (max-width: 1180px) {
       .content-grid {
         grid-template-columns: 1fr;
@@ -646,6 +832,7 @@
     const ACCESS_HASH = "688972d87673150cd08dd830ddb27cd3c601a9ca0f81315c280deb2bb78c68d0";
     const DATA_ROOT = "report/company_analysis";
     const MANIFEST_PATH = `${DATA_ROOT}/manifest.json`;
+    const RECRUITMENT_DATA_ROOT = "report/recruitment-info";
     const DATA_FILES = [
       "ca_20260504143127_001.yaml",
       "ca_20260504143127_002.yaml",
@@ -731,6 +918,28 @@
       "railway_technical_research_institute_ai_rnd_2028.yaml",
       "towa_rnd_design_2028.yaml",
       "ca_metagentx_20260505_01.yaml"
+    ];
+    const RECRUITMENT_DATA_FILES = [
+      "top20_2028_01_ca_20260504143127_012.yaml",
+      "top20_2028_02_ca_20260504143127_041.yaml",
+      "top20_2028_03_ca_20260504143127_015.yaml",
+      "top20_2028_04_ca_20260504143127_032.yaml",
+      "top20_2028_05_ca_20260504143127_062.yaml",
+      "top20_2028_06_ca_20260504143127_040.yaml",
+      "top20_2028_07_ca_20260504143127_058.yaml",
+      "top20_2028_08_ca_20260504143127_038.yaml",
+      "top20_2028_09_ca_20260504143127_010.yaml",
+      "top20_2028_10_ca_20260504143127_028.yaml",
+      "top20_2028_11_ca_20260504143127_008.yaml",
+      "top20_2028_12_ca_20260504143127_020.yaml",
+      "top20_2028_13_ca_20260504143127_001.yaml",
+      "top20_2028_14_ca_20260504143127_044.yaml",
+      "top20_2028_15_ca_20260504143127_005.yaml",
+      "top20_2028_16_ca_20260504143127_013.yaml",
+      "top20_2028_17_ca_20260504143127_018.yaml",
+      "top20_2028_18_ca_20260504143127_006.yaml",
+      "top20_2028_19_nippon_steel_rnd_2028.yaml",
+      "top20_2028_20_murata_rnd_tech_2028.yaml"
     ];
 
     const SECTIONS = [
@@ -844,6 +1053,24 @@
       ["ambiguity_note", "曖昧性の処理"]
     ];
 
+    const RECRUITMENT_BADGE_LABELS = {
+      open: "受付中",
+      scheduled: "予定",
+      closed: "終了",
+      unknown: "未確認",
+      open_likely: "受付中の可能性",
+      mypage_required: "MyPage確認",
+      media_only: "媒体のみ",
+      closed_public_but_form_visible: "公開締切終了",
+      official: "公式",
+      unofficial: "補足",
+      yes: "あり",
+      no: "なし",
+      online: "オンライン",
+      offline: "対面",
+      hybrid: "ハイブリッド"
+    };
+
     const COLUMNS = [
       { key: "company", label: "会社", className: "left company", type: "string" },
       { key: "role_family", label: "職種", className: "left role", type: "string" },
@@ -873,6 +1100,7 @@
       items: [],
       rowsByMode: { official: [], fallback: [] },
       mode: "official",
+      detailTab: "analysis",
       query: "",
       sortKey: "total",
       sortDir: "desc",
@@ -882,6 +1110,9 @@
       accessPassword: "",
       accessKey: null,
       encryptedManifest: null,
+      recruitmentBySlug: {},
+      recruitmentLoading: {},
+      recruitmentErrors: {},
       sectionStats: {},
       totalStats: { mean: 0, sd: 1 }
     };
@@ -1153,7 +1384,10 @@
       const value = row[column.key];
       if (column.key === "company") {
         const current = row.slug === state.selectedSlug ? "true" : "false";
-        return `<button class="company-button" type="button" data-slug="${escapeHtml(row.slug)}" aria-current="${current}">${escapeHtml(value)}</button>`;
+        const marker = row.hasRecruitmentInfo
+          ? `<span class="recruitment-marker" title="採用情報あり">採用</span>`
+          : "";
+        return `<button class="company-button" type="button" data-slug="${escapeHtml(row.slug)}" aria-current="${current}"><span>${escapeHtml(value)}</span>${marker}</button>`;
       }
       if (column.key === "remote_work_policy") return escapeHtml(remoteLabel(value));
       if (column.key === "application_route") return escapeHtml(shortRouteLabel(value));
@@ -1187,6 +1421,7 @@
       const row = {
         slug: item.slug,
         company: data.company_name ?? item.slug,
+        hasRecruitmentInfo: Boolean(recruitmentEntryForSlug(item.slug)),
         role_family: roleFamilyLabel(roleFamily),
         total: computeTotal(data),
         searchText: [
@@ -1258,9 +1493,293 @@
       return `<h3>${escapeHtml(title)}</h3><ul class="facts">${rows}</ul>`;
     }
 
+    function detailTabs() {
+      return `<div class="detail-tabbar" role="tablist" aria-label="詳細種別">
+        <button class="detail-tab" type="button" data-detail-tab="analysis" aria-selected="${state.detailTab === "analysis"}">企業分析</button>
+        <button class="detail-tab" type="button" data-detail-tab="recruitment" aria-selected="${state.detailTab === "recruitment"}">採用情報</button>
+      </div>`;
+    }
+
+    function bindDetailTabHandlers() {
+      detailEl.querySelectorAll("button[data-detail-tab]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.detailTab = button.dataset.detailTab;
+          render();
+        });
+      });
+    }
+
+    function recruitmentEntryForSlug(slug) {
+      const encryptedEntries = state.encryptedManifest?.recruitmentInfo;
+      if (Array.isArray(encryptedEntries)) {
+        const entry = encryptedEntries.find((candidate) => candidate.fileName?.includes(slug));
+        return entry ? { ...entry } : null;
+      }
+
+      const fileName = RECRUITMENT_DATA_FILES.find((candidate) => candidate.includes(slug));
+      if (!fileName) return null;
+      return {
+        fileName,
+        path: `${RECRUITMENT_DATA_ROOT}/data/${fileName}`
+      };
+    }
+
+    function recruitmentEntryForItem(item) {
+      return recruitmentEntryForSlug(item.slug);
+    }
+
+    function recruitmentValueText(value, empty = "未確認") {
+      if (value === null || value === undefined || value === "") return empty;
+      if (Array.isArray(value)) return value.length ? value.map((item) => recruitmentFormatValue(item)).join(" / ") : empty;
+      return recruitmentFormatValue(value);
+    }
+
+    function recruitmentFormatValue(value) {
+      const text = String(value);
+      const dateTime = text.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2})?(\+09:00)?$/);
+      if (dateTime) return `${dateTime[1]} ${dateTime[2]}${dateTime[3] ? " JST" : ""}`;
+      if (text === "unknown") return "未確認";
+      if (text === "yes") return "あり";
+      if (text === "no") return "なし";
+      return text;
+    }
+
+    function recruitmentRangeText(start, end, empty = "未確認") {
+      if (start && end) return `${recruitmentFormatValue(start)} - ${recruitmentFormatValue(end)}`;
+      if (start) return `${recruitmentFormatValue(start)} - 未確認`;
+      if (end) return `未確認 - ${recruitmentFormatValue(end)}`;
+      return empty;
+    }
+
+    function recruitmentLink(url, text) {
+      if (!url) return escapeHtml(recruitmentValueText(text));
+      return `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(text || url)}</a>`;
+    }
+
+    function recruitmentBadge(value) {
+      if (!value) return "";
+      const className = String(value).replace(/[^a-zA-Z0-9_-]/g, "_");
+      const label = RECRUITMENT_BADGE_LABELS[value] ?? recruitmentValueText(value);
+      return `<span class="recruit-badge ${escapeHtml(className)}">${escapeHtml(label)}</span>`;
+    }
+
+    function recruitmentField(label, value, asHtml = false) {
+      const content = asHtml ? (value || "未確認") : escapeHtml(recruitmentValueText(value));
+      return `<div class="recruit-field"><div class="recruit-field-label">${escapeHtml(label)}</div><div class="recruit-field-value">${content}</div></div>`;
+    }
+
+    function recruitmentEvidenceLinks(items) {
+      if (!Array.isArray(items) || items.length === 0) return "";
+      return items.slice(0, 3).map((source) => {
+        return `<div class="recruit-source">${recruitmentBadge(source.source_tier)} ${recruitmentLink(source.url, source.title || source.url)}</div>`;
+      }).join("");
+    }
+
+    function earliestRecruitmentBy(items, getValue) {
+      return items
+        .filter((item) => getValue(item))
+        .slice()
+        .sort((a, b) => String(getValue(a)).localeCompare(String(getValue(b))))[0] || null;
+    }
+
+    function deriveRecruitmentSummary(data) {
+      const earliestBriefing = earliestRecruitmentBy(data.briefings || [], (item) => item.reservation_deadline);
+      const earliestInternship = earliestRecruitmentBy(data.internships || [], (item) => item.dates?.application_deadline);
+      const earliestHiring = earliestRecruitmentBy(data.hiring || [], (item) => item.application_deadline);
+      const openHiring = (data.hiring || []).find((item) => item.status === "open" && !item.application_deadline);
+      return [
+        {
+          label: "説明会",
+          deadline: earliestBriefing?.reservation_deadline,
+          title: earliestBriefing?.name,
+          url: earliestBriefing?.event_url,
+          status: earliestBriefing?.status
+        },
+        {
+          label: "インターン",
+          deadline: earliestInternship?.dates?.application_deadline,
+          title: earliestInternship?.name,
+          url: earliestInternship?.apply_url,
+          status: earliestInternship?.status
+        },
+        {
+          label: "本選考",
+          deadline: earliestHiring?.application_deadline,
+          title: earliestHiring?.route_name || openHiring?.route_name,
+          url: earliestHiring?.application_url || openHiring?.application_url,
+          status: earliestHiring?.status || openHiring?.status
+        }
+      ];
+    }
+
+    function renderRecruitmentDeadlines(data) {
+      return `<div class="recruit-deadlines">
+        ${deriveRecruitmentSummary(data).map((item) => `
+          <div class="recruit-deadline">
+            <div class="recruit-label">${escapeHtml(item.label)}</div>
+            <div class="recruit-date ${item.deadline ? "" : "empty"}">${escapeHtml(recruitmentValueText(item.deadline))}</div>
+            <div>
+              <div class="recruit-title">${recruitmentLink(item.url, item.title || "未確認")}</div>
+              <div class="recruit-badges">${recruitmentBadge(item.status)}</div>
+            </div>
+          </div>
+        `).join("")}
+      </div>`;
+    }
+
+    function renderRecruitmentBriefings(items) {
+      if (!Array.isArray(items) || items.length === 0) return `<p class="recruit-status">説明会情報はありません。</p>`;
+      return `<div class="recruit-items">${items.map((item) => `
+        <article class="recruit-item">
+          <div class="recruit-head">
+            <div>
+              <div class="recruit-type">${escapeHtml(item.event_type || "briefing")}</div>
+              <h4>${recruitmentLink(item.event_url, item.name)}</h4>
+            </div>
+            <div class="recruit-badges">${recruitmentBadge(item.status)}${recruitmentBadge(item.format)}</div>
+          </div>
+          <div class="recruit-fields">
+            ${recruitmentField("開催日時", item.datetime)}
+            ${recruitmentField("予約締切", item.reservation_deadline)}
+            ${recruitmentField("対象", item.target)}
+            ${recruitmentField("場所", item.location)}
+          </div>
+          ${recruitmentEvidenceLinks(item.evidence)}
+        </article>
+      `).join("")}</div>`;
+    }
+
+    function renderRecruitmentInternships(items) {
+      if (!Array.isArray(items) || items.length === 0) return `<p class="recruit-status">インターン情報はありません。</p>`;
+      return `<div class="recruit-items">${items.map((item) => `
+        <article class="recruit-item">
+          <div class="recruit-head">
+            <div>
+              <div class="recruit-type">internship</div>
+              <h4>${recruitmentLink(item.apply_url, item.name)}</h4>
+            </div>
+            <div class="recruit-badges">${recruitmentBadge(item.status)}${recruitmentBadge(item.format)}${recruitmentBadge(item.selection_required)}</div>
+          </div>
+          <div class="recruit-fields">
+            ${recruitmentField("応募期間", recruitmentRangeText(item.dates?.application_start, item.dates?.application_deadline))}
+            ${recruitmentField("実施期間", recruitmentRangeText(item.dates?.event_start, item.dates?.event_end, recruitmentValueText(item.duration)))}
+            ${recruitmentField("対象", item.target_cohorts)}
+            ${recruitmentField("職種", item.target_roles)}
+            ${recruitmentField("場所", item.location)}
+            ${recruitmentField("報酬", item.compensation)}
+            ${recruitmentField("内容", item.activity_summary)}
+          </div>
+          ${item.eligibility ? `<div class="recruit-note">${escapeHtml(item.eligibility)}</div>` : ""}
+          ${recruitmentEvidenceLinks(item.evidence)}
+        </article>
+      `).join("")}</div>`;
+    }
+
+    function renderRecruitmentHiring(items) {
+      if (!Array.isArray(items) || items.length === 0) return `<p class="recruit-status">本選考情報はありません。</p>`;
+      return `<div class="recruit-items">${items.map((item) => `
+        <article class="recruit-item">
+          <div class="recruit-head">
+            <div>
+              <div class="recruit-type">hiring route</div>
+              <h4>${recruitmentLink(item.application_url, item.route_name)}</h4>
+            </div>
+            <div class="recruit-badges">${recruitmentBadge(item.status)}</div>
+          </div>
+          <div class="recruit-fields">
+            ${recruitmentField("応募締切", item.application_deadline)}
+            ${recruitmentField("提出物", item.required_materials)}
+            ${recruitmentField("テスト", item.tests)}
+            ${recruitmentField("面接", item.interviews)}
+            ${recruitmentField("研究技術", item.research_or_coding_component)}
+          </div>
+          ${recruitmentEvidenceLinks(item.evidence)}
+        </article>
+      `).join("")}</div>`;
+    }
+
+    async function loadRecruitmentInfo(item, entry) {
+      if (state.recruitmentLoading[item.slug]) return;
+      state.recruitmentLoading[item.slug] = true;
+      delete state.recruitmentErrors[item.slug];
+
+      try {
+        let text = "";
+        if (entry.encryptedPath) {
+          if (!state.accessKey) throw new Error("暗号化された採用情報を復号する key がありません。");
+          text = await fetchAndDecrypt(entry.encryptedPath, state.accessKey);
+        } else {
+          const response = await fetch(entry.path, { cache: "no-store" });
+          if (!response.ok) throw new Error(`${entry.path}: ${response.status}`);
+          text = await response.text();
+        }
+        state.recruitmentBySlug[item.slug] = {
+          data: jsyaml.load(text),
+          raw: text,
+          fileName: entry.fileName
+        };
+      } catch (error) {
+        state.recruitmentErrors[item.slug] = error.message;
+      } finally {
+        state.recruitmentLoading[item.slug] = false;
+        if (state.selectedSlug === item.slug && state.detailTab === "recruitment") {
+          render();
+        }
+      }
+    }
+
+    function renderRecruitmentDetail(item) {
+      const entry = recruitmentEntryForItem(item);
+      if (!entry) {
+        return `
+          ${detailTabs()}
+          <h2>${escapeHtml(item.data.company_name ?? item.slug)}</h2>
+          <p class="recruit-status">この企業に対応する recruitment info はまだありません。</p>
+        `;
+      }
+
+      const record = state.recruitmentBySlug[item.slug];
+      const error = state.recruitmentErrors[item.slug];
+      if (!record && !error) {
+        loadRecruitmentInfo(item, entry);
+        return `
+          ${detailTabs()}
+          <h2>${escapeHtml(item.data.company_name ?? item.slug)}</h2>
+          <p class="recruit-status">${escapeHtml(entry.fileName)} を読み込み中...</p>
+        `;
+      }
+      if (error) {
+        return `
+          ${detailTabs()}
+          <h2>${escapeHtml(item.data.company_name ?? item.slug)}</h2>
+          <p class="recruit-status">採用情報を読み込めませんでした: ${escapeHtml(error)}</p>
+        `;
+      }
+
+      const data = record.data;
+      return `
+        ${detailTabs()}
+        <h2>${escapeHtml(data.company?.name || item.data.company_name || item.slug)}</h2>
+        <div class="detail-meta">採用情報 / 調査日: ${escapeHtml(data.company?.researched_at || "未記載")} / ${escapeHtml(record.fileName)}</div>
+        ${renderRecruitmentDeadlines(data)}
+        <h3>説明会</h3>
+        ${renderRecruitmentBriefings(data.briefings)}
+        <h3>インターン</h3>
+        ${renderRecruitmentInternships(data.internships)}
+        <h3>本選考</h3>
+        ${renderRecruitmentHiring(data.hiring)}
+      `;
+    }
+
     function renderDetail(item) {
       if (!item) {
         detailEl.innerHTML = `<div class="detail-empty">表示できる調査結果がありません。</div>`;
+        return;
+      }
+
+      if (state.detailTab === "recruitment") {
+        detailEl.innerHTML = renderRecruitmentDetail(item);
+        bindDetailTabHandlers();
         return;
       }
 
@@ -1307,6 +1826,7 @@
         : "";
 
       detailEl.innerHTML = `
+        ${detailTabs()}
         <h2>${escapeHtml(data.company_name ?? item.slug)}</h2>
         <div class="detail-meta">${escapeHtml(target ?? "応募対象未記載")} / 調査日: ${escapeHtml(data.survey_date ?? "未記載")}</div>
         <div class="total-score"><strong>${total.toFixed(1)}</strong><span>/ 100</span></div>
@@ -1344,6 +1864,7 @@
       detailEl.querySelector("button[data-report-path]")?.addEventListener("click", () => {
         openEncryptedReport(item);
       });
+      bindDetailTabHandlers();
     }
 
     function currentRows() {

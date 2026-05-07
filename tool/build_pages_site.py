@@ -71,6 +71,8 @@ def build_site(repo_root: Path, output: Path, password: str) -> None:
     data_root = source_root / "data"
     companies_root = source_root / "companies"
     output_root = output / "report" / "company_analysis"
+    recruitment_data_root = repo_root / "report" / "recruitment-info" / "data"
+    recruitment_output_root = output / "report" / "recruitment-info"
 
     salt = os.urandom(16)
     key = derive_key(password, salt)
@@ -84,6 +86,7 @@ def build_site(repo_root: Path, output: Path, password: str) -> None:
             "salt": b64(salt),
         },
         "data": [],
+        "recruitmentInfo": [],
     }
 
     for yaml_path in sorted(data_root.glob("*.yaml")):
@@ -106,6 +109,18 @@ def build_site(repo_root: Path, output: Path, password: str) -> None:
 
     if not manifest["data"]:
         raise SystemExit(f"No YAML files found in {data_root}")
+
+    if recruitment_data_root.exists():
+        for yaml_path in sorted(recruitment_data_root.glob("*.yaml")):
+            file_name = yaml_path.name
+            encrypted_data_path = recruitment_output_root / "data" / f"{file_name}.enc"
+            encrypt_file(yaml_path, encrypted_data_path, key)
+            manifest["recruitmentInfo"].append(
+                {
+                    "fileName": file_name,
+                    "encryptedPath": f"report/recruitment-info/data/{file_name}.enc",
+                }
+            )
 
     (output_root).mkdir(parents=True, exist_ok=True)
     (output_root / "manifest.json").write_text(
