@@ -18,7 +18,6 @@ import os
 import shutil
 from pathlib import Path
 
-import yaml
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -60,18 +59,26 @@ def copy_static_files(repo_root: Path, output: Path) -> None:
     (output / ".nojekyll").write_text("", encoding="utf-8")
 
 
-def recruitment_company_name(source: Path) -> str | None:
+def load_recruitment_metadata(source: Path) -> dict[str, dict[str, str]]:
     try:
-        data = yaml.safe_load(source.read_text(encoding="utf-8"))
-    except Exception:
-        return None
-    if not isinstance(data, dict):
-        return None
-    company = data.get("company")
-    if not isinstance(company, dict):
-        return None
-    name = company.get("name")
-    return name if isinstance(name, str) and name else None
+        data = json.loads(source.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    entries = data.get("recruitmentInfo") if isinstance(data, dict) else None
+    if not isinstance(entries, list):
+        return {}
+    metadata: dict[str, dict[str, str]] = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        file_name = entry.get("fileName")
+        if isinstance(file_name, str):
+            metadata[file_name] = {
+                key: value
+                for key, value in entry.items()
+                if isinstance(key, str) and isinstance(value, str) and key in {"companyName"}
+            }
+    return metadata
 
 
 def build_site(repo_root: Path, output: Path, password: str) -> None:
@@ -88,6 +95,7 @@ def build_site(repo_root: Path, output: Path, password: str) -> None:
     output_root = output / "report" / "company_analysis"
     recruitment_data_root = repo_root / "report" / "recruitment-info" / "data"
     recruitment_output_root = output / "report" / "recruitment-info"
+    recruitment_metadata = load_recruitment_metadata(recruitment_data_root.parent / "manifest.json")
 
     salt = os.urandom(16)
     key = derive_key(password, salt)
@@ -134,9 +142,7 @@ def build_site(repo_root: Path, output: Path, password: str) -> None:
                 "fileName": file_name,
                 "encryptedPath": f"report/recruitment-info/data/{file_name}.enc",
             }
-            company_name = recruitment_company_name(yaml_path)
-            if company_name:
-                entry["companyName"] = company_name
+            entry.update(recruitment_metadata.get(file_name, {}))
             manifest["recruitmentInfo"].append(entry)
 
     (output_root).mkdir(parents=True, exist_ok=True)
