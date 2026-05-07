@@ -18,6 +18,7 @@ import os
 import shutil
 from pathlib import Path
 
+import yaml
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -57,6 +58,20 @@ def copy_static_files(repo_root: Path, output: Path) -> None:
     output.mkdir(parents=True, exist_ok=True)
     shutil.copy2(repo_root / "index.html", output / "index.html")
     (output / ".nojekyll").write_text("", encoding="utf-8")
+
+
+def recruitment_company_name(source: Path) -> str | None:
+    try:
+        data = yaml.safe_load(source.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if not isinstance(data, dict):
+        return None
+    company = data.get("company")
+    if not isinstance(company, dict):
+        return None
+    name = company.get("name")
+    return name if isinstance(name, str) and name else None
 
 
 def build_site(repo_root: Path, output: Path, password: str) -> None:
@@ -115,12 +130,14 @@ def build_site(repo_root: Path, output: Path, password: str) -> None:
             file_name = yaml_path.name
             encrypted_data_path = recruitment_output_root / "data" / f"{file_name}.enc"
             encrypt_file(yaml_path, encrypted_data_path, key)
-            manifest["recruitmentInfo"].append(
-                {
-                    "fileName": file_name,
-                    "encryptedPath": f"report/recruitment-info/data/{file_name}.enc",
-                }
-            )
+            entry = {
+                "fileName": file_name,
+                "encryptedPath": f"report/recruitment-info/data/{file_name}.enc",
+            }
+            company_name = recruitment_company_name(yaml_path)
+            if company_name:
+                entry["companyName"] = company_name
+            manifest["recruitmentInfo"].append(entry)
 
     (output_root).mkdir(parents=True, exist_ok=True)
     (output_root / "manifest.json").write_text(

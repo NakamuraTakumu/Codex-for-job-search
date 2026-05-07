@@ -833,6 +833,7 @@
     const DATA_ROOT = "report/company_analysis";
     const MANIFEST_PATH = `${DATA_ROOT}/manifest.json`;
     const RECRUITMENT_DATA_ROOT = "report/recruitment-info";
+    const RECRUITMENT_MANIFEST_PATH = `${RECRUITMENT_DATA_ROOT}/manifest.json`;
     const DATA_FILES = [
       "ca_20260504143127_001.yaml",
       "ca_20260504143127_002.yaml",
@@ -904,9 +905,9 @@
       "ca_extra_20260505032218_metagen.yaml",
       "accenture_data_ai_2028.yaml",
       "benesse_engineer_2028.yaml",
-      "d4c_premium_data_2028.yaml",
+      "ca_rerun_d4c_nointern_20260507.yaml",
       "daifuku_design_2028.yaml",
-      "exawizards_ml_ai_engineer_2028.yaml",
+      "ca_rerun_exawizards_nointern_20260507.yaml",
       "kowa_it_system_security_2028.yaml",
       "mufg_engineering_2028.yaml",
       "murata_rnd_tech_2028.yaml",
@@ -1110,6 +1111,7 @@
       accessPassword: "",
       accessKey: null,
       encryptedManifest: null,
+      recruitmentEntries: [],
       recruitmentBySlug: {},
       recruitmentLoading: {},
       recruitmentErrors: {},
@@ -1145,6 +1147,10 @@
 
     function isMissing(value) {
       return value === null || value === undefined || value === "unknown" || value === "";
+    }
+
+    function companyMatchKey(value) {
+      return isMissing(value) ? "" : String(value).replace(/\s+/g, "").toLowerCase();
     }
 
     function scopeValue(scope, key) {
@@ -1421,7 +1427,7 @@
       const row = {
         slug: item.slug,
         company: data.company_name ?? item.slug,
-        hasRecruitmentInfo: Boolean(recruitmentEntryForSlug(item.slug)),
+        hasRecruitmentInfo: Boolean(recruitmentEntryForItem(item)),
         role_family: roleFamilyLabel(roleFamily),
         total: computeTotal(data),
         searchText: [
@@ -1510,22 +1516,30 @@
     }
 
     function recruitmentEntryForSlug(slug) {
-      const encryptedEntries = state.encryptedManifest?.recruitmentInfo;
-      if (Array.isArray(encryptedEntries)) {
-        const entry = encryptedEntries.find((candidate) => candidate.fileName?.includes(slug));
-        return entry ? { ...entry } : null;
-      }
+      const entry = recruitmentEntries().find((candidate) => candidate.fileName?.includes(slug));
+      if (entry) return { ...entry };
+      return null;
+    }
 
-      const fileName = RECRUITMENT_DATA_FILES.find((candidate) => candidate.includes(slug));
-      if (!fileName) return null;
-      return {
+    function recruitmentEntries() {
+      const encryptedEntries = state.encryptedManifest?.recruitmentInfo;
+      if (Array.isArray(encryptedEntries)) return encryptedEntries;
+      if (state.recruitmentEntries.length > 0) return state.recruitmentEntries;
+      return RECRUITMENT_DATA_FILES.map((fileName) => ({
         fileName,
         path: `${RECRUITMENT_DATA_ROOT}/data/${fileName}`
-      };
+      }));
+    }
+
+    function recruitmentEntryForCompany(companyName) {
+      const key = companyMatchKey(companyName);
+      if (!key) return null;
+      const entry = recruitmentEntries().find((candidate) => companyMatchKey(candidate.companyName) === key);
+      return entry ? { ...entry } : null;
     }
 
     function recruitmentEntryForItem(item) {
-      return recruitmentEntryForSlug(item.slug);
+      return recruitmentEntryForSlug(item.slug) ?? recruitmentEntryForCompany(item.data.company_name);
     }
 
     function recruitmentValueText(value, empty = "未確認") {
@@ -1934,6 +1948,23 @@
 
       state.items = loaded;
       rebuildRows();
+      loadPlainRecruitmentManifest().then(() => {
+        rebuildRows();
+        render();
+      });
+    }
+
+    async function loadPlainRecruitmentManifest() {
+      try {
+        const response = await fetch(RECRUITMENT_MANIFEST_PATH, { cache: "no-store" });
+        if (!response.ok) return;
+        const manifest = await response.json();
+        if (Array.isArray(manifest.recruitmentInfo)) {
+          state.recruitmentEntries = manifest.recruitmentInfo;
+        }
+      } catch {
+        state.recruitmentEntries = [];
+      }
     }
 
     async function loadEncryptedManifest() {
