@@ -833,7 +833,6 @@
     const DATA_ROOT = "report/company_analysis";
     const MANIFEST_PATH = `${DATA_ROOT}/manifest.json`;
     const RECRUITMENT_DATA_ROOT = "report/recruitment-info";
-    const RECRUITMENT_MANIFEST_PATH = `${RECRUITMENT_DATA_ROOT}/manifest.json`;
     const DATA_FILES = [
       "ca_20260504143127_001.yaml",
       "ca_20260504143127_002.yaml",
@@ -918,7 +917,14 @@
       "ogis_ri_se_2028.yaml",
       "railway_technical_research_institute_ai_rnd_2028.yaml",
       "towa_rnd_design_2028.yaml",
-      "ca_metagentx_20260505_01.yaml"
+      "ca_metagentx_20260505_01.yaml",
+      "ca_20260507_abeam_ai_consultant.yaml",
+      "ca_20260507_baycurrent_system_consultant_retry.yaml",
+      "ca_20260507_ridgelinez_digital_business_consultant.yaml",
+      "ca_20260507_nikon_technical.yaml",
+      "ca_20260507_hitachi_consulting_consultant.yaml",
+      "ca_20260507_pwc_it_solution_consultant.yaml",
+      "ca_20260507_uvance_fujitsu_ai_data_consultant.yaml"
     ];
     const RECRUITMENT_DATA_FILES = [
       "top20_2028_01_ca_20260504143127_012.yaml",
@@ -940,7 +946,14 @@
       "top20_2028_17_ca_20260504143127_018.yaml",
       "top20_2028_18_ca_20260504143127_006.yaml",
       "top20_2028_19_nippon_steel_rnd_2028.yaml",
-      "top20_2028_20_murata_rnd_tech_2028.yaml"
+      "top20_2028_20_murata_rnd_tech_2028.yaml",
+      "abeam_consulting_2028.yaml",
+      "baycurrent_consulting_2028.yaml",
+      "ridgelinez_2028.yaml",
+      "nikon_2028.yaml",
+      "hitachi_consulting_2028.yaml",
+      "pwc_consulting_2028.yaml",
+      "uvance_wayfinders_fujitsu_2028.yaml"
     ];
 
     const SECTIONS = [
@@ -1110,7 +1123,7 @@
       weights: { ...DEFAULT_WEIGHTS },
       accessPassword: "",
       accessKey: null,
-      encryptedManifest: null,
+      reportManifest: null,
       recruitmentEntries: [],
       recruitmentBySlug: {},
       recruitmentLoading: {},
@@ -1522,8 +1535,9 @@
     }
 
     function recruitmentEntries() {
-      const encryptedEntries = state.encryptedManifest?.recruitmentInfo;
-      if (Array.isArray(encryptedEntries)) return encryptedEntries;
+      if (Array.isArray(state.reportManifest?.recruitmentInfo)) {
+        return state.reportManifest.recruitmentInfo;
+      }
       if (state.recruitmentEntries.length > 0) return state.recruitmentEntries;
       return RECRUITMENT_DATA_FILES.map((fileName) => ({
         fileName,
@@ -1948,13 +1962,14 @@
       if (!window.jsyaml) {
         throw new Error("YAML parser could not be loaded.");
       }
-      const manifest = await loadEncryptedManifest();
+      const manifest = await loadReportManifest();
       if (manifest) {
-        const key = await deriveAccessKey(state.accessPassword, manifest.kdf);
-        state.accessKey = key;
-        state.encryptedManifest = manifest;
+        state.reportManifest = manifest;
+        if (manifest.encrypted) {
+          state.accessKey = await deriveAccessKey(state.accessPassword, manifest.kdf);
+        }
         const loaded = await Promise.all(manifest.data.map(async (entry) => {
-          const text = await fetchAndDecrypt(entry.encryptedPath, key);
+          const text = await fetchManifestEntry(entry, state.accessKey);
           return buildItem(jsyaml.load(text), entry.fileName, entry);
         }));
         state.items = loaded;
@@ -1969,32 +1984,26 @@
 
       state.items = loaded;
       rebuildRows();
-      loadPlainRecruitmentManifest().then(() => {
-        rebuildRows();
-        render();
-      });
     }
 
-    async function loadPlainRecruitmentManifest() {
-      try {
-        const response = await fetch(RECRUITMENT_MANIFEST_PATH, { cache: "no-store" });
-        if (!response.ok) return;
-        const manifest = await response.json();
-        if (Array.isArray(manifest.recruitmentInfo)) {
-          state.recruitmentEntries = manifest.recruitmentInfo;
-        }
-      } catch {
-        state.recruitmentEntries = [];
-      }
-    }
-
-    async function loadEncryptedManifest() {
+    async function loadReportManifest() {
       const response = await fetch(MANIFEST_PATH, { cache: "no-store" });
       if (response.status === 404) return null;
       if (!response.ok) throw new Error(`manifest.json: ${response.status}`);
       const manifest = await response.json();
-      if (!manifest.encrypted) return null;
+      if (!Array.isArray(manifest.data)) return null;
       return manifest;
+    }
+
+    async function fetchManifestEntry(entry, key) {
+      if (entry.encryptedPath) {
+        if (!key) throw new Error("暗号化された企業分析を復号する key がありません。");
+        return fetchAndDecrypt(entry.encryptedPath, key);
+      }
+      const path = entry.path ?? `${DATA_ROOT}/data/${entry.fileName}`;
+      const response = await fetch(path, { cache: "no-store" });
+      if (!response.ok) throw new Error(`${path}: ${response.status}`);
+      return response.text();
     }
 
     function base64ToBytes(value) {

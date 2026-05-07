@@ -59,26 +59,31 @@ def copy_static_files(repo_root: Path, output: Path) -> None:
     (output / ".nojekyll").write_text("", encoding="utf-8")
 
 
-def load_recruitment_metadata(source: Path) -> dict[str, dict[str, str]]:
+def load_json_manifest(source: Path) -> dict:
     try:
         data = json.loads(source.read_text(encoding="utf-8"))
     except (FileNotFoundError, json.JSONDecodeError):
         return {}
-    entries = data.get("recruitmentInfo") if isinstance(data, dict) else None
-    if not isinstance(entries, list):
-        return {}
-    metadata: dict[str, dict[str, str]] = {}
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        file_name = entry.get("fileName")
-        if isinstance(file_name, str):
-            metadata[file_name] = {
-                key: value
-                for key, value in entry.items()
-                if isinstance(key, str) and isinstance(value, str) and key in {"companyName"}
-            }
-    return metadata
+    return data if isinstance(data, dict) else {}
+
+
+def manifest_data_entries(source_root: Path) -> list[dict[str, str]]:
+    manifest = load_json_manifest(source_root / "manifest.json")
+    entries = manifest.get("data")
+    if isinstance(entries, list):
+        return [entry for entry in entries if isinstance(entry, dict)]
+    return [
+        {"fileName": path.name, "path": str(path)}
+        for path in sorted((source_root / "data").glob("*.yaml"))
+    ]
+
+
+def manifest_recruitment_entries(source: Path) -> list[dict[str, str]]:
+    manifest = load_json_manifest(source)
+    entries = manifest.get("recruitmentInfo")
+    if isinstance(entries, list):
+        return [entry for entry in entries if isinstance(entry, dict)]
+    return []
 
 
 def build_site(repo_root: Path, output: Path, password: str) -> None:
@@ -95,7 +100,6 @@ def build_site(repo_root: Path, output: Path, password: str) -> None:
     output_root = output / "report" / "company_analysis"
     recruitment_data_root = repo_root / "report" / "recruitment-info" / "data"
     recruitment_output_root = output / "report" / "recruitment-info"
-    recruitment_metadata = load_recruitment_metadata(recruitment_data_root.parent / "manifest.json")
 
     salt = os.urandom(16)
     key = derive_key(password, salt)
@@ -112,8 +116,17 @@ def build_site(repo_root: Path, output: Path, password: str) -> None:
         "recruitmentInfo": [],
     }
 
-    for yaml_path in sorted(data_root.glob("*.yaml")):
-        file_name = yaml_path.name
+    for source_entry in manifest_data_entries(source_root):
+        file_name_value = source_entry.get("fileName")
+        if not isinstance(file_name_value, str):
+            continue
+        file_name = file_name_value
+        yaml_path_value = source_entry.get("path")
+        yaml_path = Path(yaml_path_value) if isinstance(yaml_path_value, str) else data_root / file_name
+        if not yaml_path.is_absolute():
+            yaml_path = repo_root / yaml_path
+        if not yaml_path.is_file():
+            continue
         stem = yaml_path.stem
         encrypted_data_path = output_root / "data" / f"{file_name}.enc"
         encrypt_file(yaml_path, encrypted_data_path, key)
@@ -122,7 +135,10 @@ def build_site(repo_root: Path, output: Path, password: str) -> None:
             "fileName": file_name,
             "encryptedPath": f"report/company_analysis/data/{file_name}.enc",
         }
-        report_path = companies_root / f"{stem}.md"
+        report_path_value = source_entry.get("reportPath")
+        report_path = Path(report_path_value) if isinstance(report_path_value, str) else companies_root / f"{stem}.md"
+        if not report_path.is_absolute():
+            report_path = repo_root / report_path
         if report_path.exists():
             encrypted_report_path = output_root / "companies" / f"{stem}.md.enc"
             encrypt_file(report_path, encrypted_report_path, key)
@@ -133,17 +149,36 @@ def build_site(repo_root: Path, output: Path, password: str) -> None:
     if not manifest["data"]:
         raise SystemExit(f"No YAML files found in {data_root}")
 
-    if recruitment_data_root.exists():
-        for yaml_path in sorted(recruitment_data_root.glob("*.yaml")):
-            file_name = yaml_path.name
-            encrypted_data_path = recruitment_output_root / "data" / f"{file_name}.enc"
-            encrypt_file(yaml_path, encrypted_data_path, key)
-            entry = {
-                "fileName": file_name,
-                "encryptedPath": f"report/recruitment-info/data/{file_name}.enc",
-            }
-            entry.update(recruitment_metadata.get(file_name, {}))
-            manifest["recruitmentInfo"].append(entry)
+    recruitment_entries = manifest_recruitment_entries(source_root / "manifest.json")
+    if not recruitment_entries and recruitment_data_root.exists():
+        recruitment_entries = [
+            {"fileName": path.name, "path": str(path)}
+            for path in sorted(recruitment_data_root.glob("*.yaml"))
+        ]
+
+    for source_entry in recruitment_entries:
+        file_name_value = source_entry.get("fileName")
+        if not isinstance(file_name_value, str):
+            continue
+        file_name = file_name_value
+        yaml_path_value = source_entry.get("path")
+        yaml_path = Path(yaml_path_value) if isinstance(yaml_path_value, str) else recruitment_data_root / file_name
+        if not yaml_path.is_absolute():
+            yaml_path = repo_root / yaml_path
+        if not yaml_path.is_file():
+            continue
+        encrypted_data_path = recruitment_output_root / "data" / f"{file_name}.enc"
+        encrypt_file(yaml_path, encrypted_data_path, key)
+        entry = {
+            "fileName": file_name,
+            "encryptedPath": f"report/recruitment-info/data/{file_name}.enc",
+        }
+        entry.update({
+            key: value
+            for key, value in source_entry.items()
+            if key not in {"path"} and key not in entry
+        })
+        manifest["recruitmentInfo"].append(entry)
 
     (output_root).mkdir(parents=True, exist_ok=True)
     (output_root / "manifest.json").write_text(

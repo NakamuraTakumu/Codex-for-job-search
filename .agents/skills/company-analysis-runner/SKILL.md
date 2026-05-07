@@ -54,6 +54,7 @@ description: 企業名と職種リクエストだけを対象ごとに子オー�
 - ユーザーが別 model を明示した場合だけ、標準 model から変更する。
 - 同時起動は最大 4 体にする。5 件以上は補充キューで処理する。
 - 子 prompt は `child_orchestrator_prompt_template.txt` の placeholder だけを埋める。
+- 完了済みの子は、子 result の機械的確認が終わり、同じ子へ再出力や protocol violation 対応を求める必要がない terminal 状態になった時点で、次の子起動前に `close_agent` で終了する。
 
 ## Workflow
 
@@ -74,6 +75,8 @@ description: 企業名と職種リクエストだけを対象ごとに子オー�
    - 子 result が `status: accepted` の場合、`spawned_agents` に非 null `agent_id` を持つ採用済み `grandchild_review` があり、`review_yaml_path` が非 null であることを確認する。
    - `status: accepted` なのに採用済み `grandchild_review` がない、`grandchild_review.spawned: false`、または review spawn failure が記録されている場合は、子 result の protocol violation として扱い、同じ子に result YAML の修正ではなく `status: review_failed` への再出力を求める。
    - 子 result が invalid YAML の場合だけ、同じ子に result YAML の再出力を求める。
+   - 子 result が YAML として読め、親が見る field、model 設定、accepted 時の `grandchild_review` 記録、主要 path の存在に問題がなく、同じ子への追加依頼が不要になったら、その子を `close_agent` で直ちに終了する。
+   - invalid YAML、protocol violation、主要 path 欠落などで同じ子へ再出力を求める場合は、再出力結果の機械的確認が終わるまで閉じない。
 
 4. **結果報告**:
    - runner 実行では昇格せず、run-scoped artifact path だけを最終回答に並べる。
