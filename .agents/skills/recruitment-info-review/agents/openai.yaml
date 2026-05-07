@@ -1,0 +1,4 @@
+interface:
+  display_name: "Recruitment Info Review"
+  short_description: "採用アクション情報YAMLをレビュー"
+  default_prompt: "Use $recruitment-info-review to review a recruitment information YAML artifact against company scope, evidence, and deadline requirements."

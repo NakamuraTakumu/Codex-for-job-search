@@ -1,0 +1,37 @@
+Use `.agents/skills/recruitment-info-child-orchestrator/SKILL.md` to orchestrate one company's recruitment information research and review.
+
+target request:
+- company_name: {{company_name}}
+- applicant_graduation_cohort: {{applicant_graduation_cohort}}
+- target_year: {{target_year}}
+- checked_date: {{checked_date}}
+- output_root: {{output_root}}
+- output_yaml_path: {{output_yaml_path}}
+- review_yaml_path: {{review_yaml_path}}
+
+Execution:
+- Follow the child-orchestrator skill: launch research and review grandchildren using its bundled prompt templates.
+- Launch all grandchildren with model `gpt-5.4-mini` and reasoning effort `medium`.
+- Launch only one research grandchild and one review grandchild during normal execution. For revise and re-review, reuse those same grandchildren with `send_input`; do not spawn a new grandchild for each round.
+- Do not perform web research, write recruitment facts, edit research YAML content, or make review judgments yourself.
+- Decide status only from saved artifacts, mechanical validation, and the child-orchestrator improvement-stop rules.
+
+Output:
+- Research grandchild must save the full data YAML to `{{output_yaml_path}}`.
+- Review grandchild must save the full review YAML to `{{review_yaml_path}}`.
+- Return only compact child result YAML in chat:
+  target_request:
+    company_name: "{{company_name}}"
+    applicant_graduation_cohort: {{applicant_graduation_cohort}}
+    target_year: {{target_year}}
+  status: "accepted|validator_failed|review_revise|review_failed|child_failed"
+  research_yaml_path: "{{output_yaml_path}}"
+  review_yaml_path: "{{review_yaml_path}}"
+  failure_reason: null
+  residual_risks: []
+  review_rounds: null
+  revision_rounds: null
+  stop_reason: null
+  commands_run: []
+  spawned_agents: []
+- Do not wrap the status YAML in Markdown fences.

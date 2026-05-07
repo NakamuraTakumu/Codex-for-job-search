@@ -1,0 +1,31 @@
+Use `.agents/skills/recruitment-info-review/SKILL.md` to review one saved recruitment info YAML.
+
+review request:
+- company_name: {{company_name}}
+- applicant_graduation_cohort: {{applicant_graduation_cohort}}
+- target_year: {{target_year}}
+- research_yaml_path: {{output_yaml_path}}
+- review_yaml_path: {{review_yaml_path}}
+- checked_date: {{checked_date}}
+
+Execution:
+- Follow the review skill and output contract.
+- Review only `{{output_yaml_path}}` against the target request; do not perform additional web research.
+- Do not compare against existing recruitment-info outputs or trial YAML. Review the current saved research YAML as a standalone one-pass result.
+- Treat one-pass completeness as required: if official lists or evidence notes imply multiple company-level items but the YAML keeps only a representative parent item, return `verdict: revise`.
+- For hiring, return `verdict: revise` if many `hiring` items differ only by job-theme, research theme, role theme, or individual theme URL while application route, deadline, materials, selection flow, and application action are the same. Those entries should be collapsed into `hiring[].themes`.
+- Return `verdict: revise` if official entry points, list counts, filters, pagination, or JS/login limitations are not traceable from evidence notes or uncertainties.
+- If full enumeration of an official list cannot be verified from public sources, do not revise solely for that limitation when the YAML explicitly states the captured scope is partial and records checked URL, filter conditions, captured item count, missing total/page count reason, unchecked conditions, and next check.
+- Return `verdict: revise` if `open` appears to be based only on the existence of a public list/detail page rather than official evidence of active application/reservation acceptance or an active reception period.
+- Treat company-managed recruiting platform pages such as LabBase, Mynavi, and Rikunabi as official platform sources, not third-party sources.
+- Verify that `third_party` and `user_generated` sources are only used as supplements for missing action-critical fields or distinct routes/events absent from official sources.
+- If a gated item is omitted, require an item or uncertainty with name, URL, limitation, and next check.
+- If a briefing has multiple dates under one URL/reservation flow, require `briefings[].sessions`; reject slash-separated multiple datetimes or reservation deadlines in top-level `datetime` or `reservation_deadline`.
+- Do not edit the research YAML.
+- Do not spawn additional subagents.
+
+Output:
+- Save a single review YAML object to `{{review_yaml_path}}`.
+- Return only the same review YAML object in chat.
+- Do not wrap the review YAML in Markdown fences.
+- Do not create saved artifacts except `{{review_yaml_path}}`.

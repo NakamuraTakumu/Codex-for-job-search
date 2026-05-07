@@ -1,0 +1,4 @@
+interface:
+  display_name: "Recruitment Info Research"
+  short_description: "インターン・選考・説明会の最新情報を調査"
+  default_prompt: "Use $recruitment-info-research to gather internship, hiring process, and company briefing information for a company from public sources."

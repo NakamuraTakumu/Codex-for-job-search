@@ -1,13 +1,8 @@
 あなたは子オーケストラから起動された孫調査エージェントです。
 `.agents/skills/company-analysis/SKILL.md` の `company-analysis` skill を使ってください。
 
-この prompt は、現在 target の実値と副作用ガードだけを指定します。
+この prompt は fixed input と handoff path だけを指定します。
 調査方法、評価基準、scope check、YAML schema は `company-analysis` skill とその workflow が参照する file を正本にしてください。
-
-参照境界:
-- 読んでよい skill / reference は、`company-analysis` skill と、その workflow が直接参照する file だけです。
-- 他 role の skill / reference、既存 report、他 target output、比較 note、過去 review、他 agent output を読まないでください。
-- 以前の payload、slug、finding、turn の会社情報は無視し、現在の固定入力と公開 source だけで判断してください。
 
 出力と副作用:
 - メッセージには単一の YAML オブジェクトだけを返してください。
@@ -18,7 +13,7 @@
 - 致命的な scope 問題がある場合は、通常の分析 YAML ではなく `scope_check.verdict: revise_scope` YAML を返し、同じ YAML を handoff path に保存してください。
 - `slug` は schema 用識別子です。scope、応募単位、評価判断の根拠にしないでください。
 
-固定入力:
+fixed input:
 - company_name: {{company_name}}
 - survey_date: {{survey_date}}
 - slug: {{slug}}

@@ -1,77 +1,15 @@
 `.agents/skills/company-analysis-child-orchestrator/SKILL.md` の `company-analysis-child-orchestrator` skill を使ってください。
 
-このメッセージは、単一 target request を end-to-end で処理するための自己完結した指示です。
-あなたは子オーケストラです。親は scope 固定、調査、review、rendering、子 result 生成を行いません。親は file 生成先として `artifact_paths` だけを割り当てます。
-
 target request:
 - company_name: {{company_name}}
 - requested_role: {{requested_role}}
 - applicant_graduation_cohort: {{applicant_graduation_cohort}}
-- raw_user_context: {{raw_user_context}}
 - run_id: {{run_id}}
-- artifact_paths:
-  - run_root: {{artifact_run_root}}
-  - child_inputs_dir: {{artifact_child_inputs_dir}}
-  - subagent_outputs_dir: {{artifact_subagent_outputs_dir}}
-  - working_dir: {{artifact_working_dir}}
-  - review_inputs_dir: {{artifact_review_inputs_dir}}
-  - reviews_dir: {{artifact_reviews_dir}}
-  - outputs_dir: {{artifact_outputs_dir}}
-  - child_results_dir: {{artifact_child_results_dir}}
+- run_root: {{artifact_run_root}}
 
 model settings:
-- child_orchestrator_model: gpt-5.4-mini
-- child_orchestrator_reasoning_effort: medium
-- grandchild_research_model: gpt-5.4-mini
-- grandchild_research_reasoning_effort: medium
-- grandchild_review_model: gpt-5.4-mini
-- grandchild_review_reasoning_effort: medium
+- child_orchestrator: gpt-5.4-mini, medium
+- grandchild_research: gpt-5.4-mini, medium
+- grandchild_review: gpt-5.4-mini, medium
 
-target request source:
-- 上記 target request は、ユーザーがチャットで渡した内容を親が転記したものです。
-- 親は applicant_graduation_cohort だけを固定して引き継ぎます。
-- 親が渡す `run_id` は `[a-z0-9_]+` の保存・照合用 ID であり、分析対象の意味判断に使わないでください。
-- 親は会社実体、応募 route、職種 scope を固定していません。
-
-role reference boundary:
-- あなたが読む skill / reference は、`company-analysis-child-orchestrator` の workflow で直接指定されたものだけです。
-- 孫調査用の `company-analysis` skill、孫 review 用の `company-analysis-review` skill、およびそれらの references を子側で読まないでください。
-- 他 role の skill、過去 artifact、他 target output、比較 note、既存 review は、子 result の schema 確認や判断根拠として読まないでください。
-- schema や field shape の確認は、child-orchestrator の結果契約、専用 helper、validator だけで行ってください。
-
-read scope:
-- 読んでよい local path は、`company-analysis-child-orchestrator` skill directory、現在の run directory、固定 input、生成した review input bundle、専用 tool、validator だけです。
-- `document/report/company_analysis/`、他 run directory、過去 test output、既存 review、比較 note を読まないでください。
-- `tmp/company_analysis/`、`document/report/company_analysis/`、`document/` 全体を `rg --files` や `ls` で広く列挙しないでください。
-- path は、現在の run directory、明示引数、helper の出力からだけ取得してください。
-
-grandchild agent policy:
-- 孫調査 agent と孫 review agent は、それぞれ 1 体だけ起動してください。
-- `wait_agent` timeout、handoff file 未出現、review output 未出現だけを理由に追加起動しないでください。
-- timeout または file 未出現時は、同じ agent に最小限の再通知を送り、同じ agent の完了を待ってください。
-- review `revise`、validator failure、または修正版 working YAML に対する rereview では、新しい孫 review agent を起動せず、同じ孫 review agent に新しい review input bundle を渡してください。
-- 追加起動は、agent failure、回収不能、同一 agent への再出力依頼後も invalid output が続く場合だけです。
-- 追加起動した場合は、旧 agent id、破棄理由、採用 agent id、採用 output path を result YAML の `spawned_agents` に残してください。
-- 孫 review agent を起動できない、または採用済み孫 review agent の valid `pass` review を得られない場合は、review fallback artifact を作って `accepted` にせず、`status: review_failed` の result YAML を返してください。
-
-必ず行うこと:
-- target request から会社実体、応募単位、`role_family` を自分で固定してください。
-- company-analysis YAML schema 互換で `slug` が必要な場合は、`run_id` を `[a-z0-9_]+` に正規化した機械的識別子を使い、表示用・意味的 slug として扱わないでください。
-- `scope.target_application_unit` は公式応募単位に準拠してください。`requested_role` が公式単位より細かい志向や希望配属の場合、その文字列を応募単位として固定せず、`scope.ambiguity_note` に残してください。
-- 公式応募単位に準拠すると `scope.role_family` が変わる場合は、公式応募単位から見た `scope.role_family` を使ってください。
-- `applicant_graduation_cohort` は親から受け継いだ値を使い、子側で別 cohort へ置き換えないでください。
-- 孫調査と孫 review の `spawn_agent` では、上記 model settings の model と reasoning effort を必ず明示してください。省略による継承を使わないでください。
-- `run_metadata` と result YAML の `run_models` には、上記 model settings のうち実際に spawn で明示した値だけを記録してください。推定値を書かないでください。
-- result YAML には `spawned_agents` を入れ、孫調査と孫 review の agent id、role、status、採用 / 破棄、出力 path、再起動理由を記録してください。
-- `status: accepted` は、採用済み孫 review agent による valid `pass` review、review validation、main validation、rendering、保存後 validation がすべて完了した場合だけ使ってください。
-- 孫調査、YAML validation、review input bundle 作成、孫 review、rendering、run-scoped output 保存、保存後 validation を実行してください。
-- 孫調査または孫 review の出力待ち中は、待機、当該 handoff path の最小確認、必要な再通知だけを行い、別 artifact や別 skill を読まないでください。
-- review `revise`、validator failure、scope 固定不能の場合は、result YAML で停止理由を返してください。
-- 最後は単一 result YAML オブジェクトだけを返してください。
-
-禁止事項:
-- 分析本文や評価判断を自分で書き換えないでください。
-- 親が固定 scope を渡したものとして扱わないでください。
-- 自分の role に直接関係しない skill / reference を読まないでください。
-- 他 target の既存レポート、比較レビュー、他 agent output を根拠として読まないでください。
-- `document/report/company_analysis/` へ直接保存しないでください。
+この target request、run_root、model settings だけを親入力として扱い、単一 result YAML オブジェクトだけを返してください。

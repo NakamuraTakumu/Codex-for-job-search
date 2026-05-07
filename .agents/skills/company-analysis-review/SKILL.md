@@ -32,6 +32,7 @@ description: 固定スコープに対して company-analysis YAML を確認し�
 - `review.verdict: pass` の場合、`review.passed_checks` には少なくとも `instruction_compliance` と `scope_integrity` を含める。
 - `review.verdict: pass` の場合、`review.pass_rationale` は修正不要と判断した短い根拠を書く。
 - `review.residual_risks` は、修正要求ではないが後で監査・production 昇格判断に使う留保を list で残す。なければ `[]` とする。
+- `review_finding.message` と `review_finding.suggested_fix` は日本語で書く。
 - schema は必ず次に合わせる。
 
 ```text
@@ -148,7 +149,7 @@ review_finding.suggested_fix: str
 # ワークフロー
 - review prompt が指定した review input bundle を読む。
 - bundle の `Fixed Input`、`Target Context`、`Handoff Observations`、`Review Target Paths`、`Reference Paths` を確認する。
-- bundle の `Instructions` は現在対象の追加制約として扱う。
+- bundle に `Instructions` がある場合は、現在対象の追加制約として扱う。
 - bundle に書かれた `analysis_yaml_path` の YAML を読む。
 - bundle に書かれた `Reference Paths` は、指示、schema、scope、scoring への準拠確認のためだけに読む。特に `company-analysis` の `SKILL.md`、`references/output-contract.md`、`references/scope-check.md`、必要時の `references/scoring.md` を正本として扱う。
 - `rendered_markdown_path` が `null` でない場合だけ rendered Markdown を読む。

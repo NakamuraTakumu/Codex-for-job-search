@@ -1,0 +1,4 @@
+interface:
+  display_name: "Recruitment Info Child Orchestrator"
+  short_description: "単一企業の採用情報調査とレビューを孫に委譲"
+  default_prompt: "Use $recruitment-info-child-orchestrator to launch research and review grandchildren, validate their saved YAML artifacts, and return compact status."

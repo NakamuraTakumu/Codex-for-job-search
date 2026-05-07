@@ -1,0 +1,38 @@
+Use `.agents/skills/recruitment-info-research/SKILL.md` to gather current internship, hiring process, and company briefing / recruitment event information.
+
+target request:
+- company_name: {{company_name}}
+- applicant_graduation_cohort: {{applicant_graduation_cohort}}
+- target_year: {{target_year}}
+- checked_date: {{checked_date}}
+- output_yaml_path: {{output_yaml_path}}
+
+Execution:
+- Follow the research skill and its output contract.
+- Do not read existing recruitment-info outputs as input: `report/recruitment-info/`, `document/recruitment_info_trial/`, and `tmp/recruitment_info/` are not seeds or baselines.
+- Complete public-source collection in this single pass: expand company-level official lists into applicant-actionable items instead of collapsing distinct applicant actions to a representative parent route.
+- For hiring, do not create separate `hiring` items when only job-theme, research theme, role theme, or individual theme URL differs. Keep one route item and put those entries under `hiring[].themes` when application route, deadline, materials, selection flow, and application action are the same.
+- Follow the official discovery checklist in the research skill. Record searched official entry points, list counts, filters, pagination, and any JS/login limitations in evidence notes or uncertainties.
+- For official lists, record the checked URL, filter conditions, visible count, total count or why it is unavailable, page count or pagination state, and captured item count. If full enumeration cannot be verified from public sources, explicitly mark the captured scope as partial in `uncertainties` instead of implying completeness.
+- Do not mark an item `open` merely because a public list/detail page exists. Use `open` only when official information confirms current application/reservation acceptance or an active reception period.
+- Treat company-managed recruiting platform pages such as LabBase, Mynavi, and Rikunabi as `source_tier: official` and `source_kind: official_platform`.
+- Use `third_party` and `user_generated` sources only to supplement official information when action-critical fields are missing or when they indicate a distinct route/event not found in official sources.
+- For gated or JS-only list items, preserve item existence, name, URL, limitation, and next check.
+- For internships, capture activity summary, themes, theme structure, work model, and duration.
+- For briefings with multiple dates under the same URL and reservation flow, use `briefings[].sessions`; keep top-level `datetime` and `reservation_deadline` to the earliest deadline pair only. Do not put multiple dates or deadlines into one field with `/`.
+- Do not spawn additional subagents.
+
+Output:
+- Save a single full YAML object that follows the output contract to `{{output_yaml_path}}`.
+- Do not print the full YAML artifact in chat.
+- Return only this compact status YAML in chat:
+  status: "saved|failed"
+  output_yaml_path: "{{output_yaml_path}}"
+  company_name: "{{company_name}}"
+  counts:
+    briefings: null
+    internships: null
+    hiring: null
+  failure_reason: null
+- Do not wrap the status YAML in Markdown fences.
+- Do not edit repository files except `{{output_yaml_path}}`.

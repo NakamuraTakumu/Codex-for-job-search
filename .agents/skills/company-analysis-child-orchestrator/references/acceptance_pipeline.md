@@ -44,6 +44,14 @@
 
 ## 受理条件
 
+- `run_root` から標準 artifact paths を導出する:
+  - `child_inputs_dir`: `<run_root>/child_inputs`
+  - `subagent_outputs_dir`: `<run_root>/subagent_outputs`
+  - `working_dir`: `<run_root>/working`
+  - `review_inputs_dir`: `<run_root>/review_inputs`
+  - `reviews_dir`: `<run_root>/reviews`
+  - `outputs_dir`: `<run_root>/outputs`
+  - `child_results_dir`: `<run_root>/child_results`
 - fixed input YAML は子オーケストラが target request から固定した scope 正本であり、analysis YAML から作らない。
 - fixed input YAML には top-level の `company_name`、`survey_date`、`slug`、`applicant_graduation_cohort`、`scope` が必要である。
 - `slug` は company-analysis YAML schema 互換の機械的識別子であり、原則として `run_id` を `[a-z0-9_]+` に正規化した値を使う。scope 固定や評価判断には使わない。

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Recruitment Info Runner"
+  short_description: "複数社の採用アクション情報を子オーケストラ経由で収集"
+  default_prompt: "Use $recruitment-info-runner to orchestrate child agents that delegate recruitment information research and review to grandchildren."

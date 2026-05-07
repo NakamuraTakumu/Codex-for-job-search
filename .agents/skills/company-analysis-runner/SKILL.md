@@ -20,23 +20,15 @@ description: 企業名と職種リクエストだけを対象ごとに子オー�
 - 1 つの `requested_role` が複数会社に共通する場合、各会社へ同じ `requested_role` を渡す。
 - 1 つの `applicant_graduation_cohort` が複数会社に共通する場合、各会社へ同じ `applicant_graduation_cohort` を渡す。
 - `applicant_graduation_cohort` は応募者の卒業・修了見込み cohort を表し、`2028卒` のような4桁年表記に正規化する。
-- ユーザーが比較目的、制約を明示した場合だけ、raw context として子へ渡す。
 - 会社名、職種リクエスト、または応募者 cohort が不足している場合だけ、親がユーザーに確認する。
 - 親はチャット外の manifest、既存 report、公式情報調査から target request を補完しない。
 - 応募 route、正式職種名、採用実体、研究職か研究開発職かの固定は子に任せる。
 - 親は target request ごとに `run_id` を付ける。`run_id` は同一親 run 内で一意な `[a-z0-9_]+` の保存・照合用 ID であり、公式応募単位、scope、score、根拠判断に使わない。
-- 親は target request ごとに `artifact_paths` を割り当てる。`artifact_paths` は file 生成先だけを表し、分析対象の意味判断には使わない。
+- 親は target request ごとに `run_root` を割り当てる。`run_root` は file 生成先だけを表し、分析対象の意味判断には使わない。
 
-`artifact_paths` field:
+`run_root`:
 
-- `run_root`: `tmp/company_analysis/runs/<run_id>`
-- `child_inputs_dir`: `<run_root>/child_inputs`
-- `subagent_outputs_dir`: `<run_root>/subagent_outputs`
-- `working_dir`: `<run_root>/working`
-- `review_inputs_dir`: `<run_root>/review_inputs`
-- `reviews_dir`: `<run_root>/reviews`
-- `outputs_dir`: `<run_root>/outputs`
-- `child_results_dir`: `<run_root>/child_results`
+- `tmp/company_analysis/runs/<run_id>`
 
 ## 副作用契約
 
@@ -68,12 +60,12 @@ description: 企業名と職種リクエストだけを対象ごとに子オー�
 1. **target request 作成**:
    - チャット本文から `company_name`、`requested_role`、`applicant_graduation_cohort` の組を作る。
    - 各 target request に同一親 run 内で一意な `run_id` を割り当てる。
-   - 各 target request に `artifact_paths` を割り当てる。
+   - 各 target request に `run_root` を割り当てる。
    - 親は公式情報調査や scope 固定を行わない。
 
 2. **子起動**:
    - 各 target request について `company-analysis-child-orchestrator` を使う子を起動する。
-   - 子には企業名、職種リクエスト、応募者 cohort、`run_id`、`artifact_paths`、ユーザーが明示した raw context だけを渡す。
+   - 子には企業名、職種リクエスト、応募者 cohort、`run_id`、`run_root`、model settings だけを渡す。
 
 3. **結果集約**:
    - 子が返した単一 result YAML を集める。
