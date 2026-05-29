@@ -13,3 +13,7 @@
 
 ## 評価
 - `evaluation-target mismatch` と `scoring variance` を分ける。
+
+## ローカル確認
+- ユーザーにローカル HTML / site の確認 URL を渡す場合は、可能な限り Tailscale IP で到達できる URL を使う。
+- HTTP server を起動する場合は、外部到達が不要な明示理由がない限り `127.0.0.1` 専用ではなく Tailscale IP から到達できる bind にする。
