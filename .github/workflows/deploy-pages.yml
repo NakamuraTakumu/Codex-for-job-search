@@ -25,18 +25,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install encryption dependency
-        run: python -m pip install cryptography
-
-      - name: Build encrypted Pages artifact
-        env:
-          REPORT_ACCESS_PASSWORD: ${{ secrets.REPORT_ACCESS_PASSWORD }}
-        run: python tool/build_pages_site.py --output public
+      - name: Assemble Pages artifact
+        run: |
+          mkdir -p public
+          cp index.html public/
+          cp -r github-pages/report public/report
+          touch public/.nojekyll
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

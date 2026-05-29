@@ -1,0 +1,688 @@
+{
+  "version": 1,
+  "encrypted": true,
+  "kdf": {
+    "name": "PBKDF2",
+    "hash": "SHA-256",
+    "iterations": 200000,
+    "salt": "9/2iSQa2SWQ/8f7qDJAYEg=="
+  },
+  "data": [
+    {
+      "fileName": "ca_20260504143127_001.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_001.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_001.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_002.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_002.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_002.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_003.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_003.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_003.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_004.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_004.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_004.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_005.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_005.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_005.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_006.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_006.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_006.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_007.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_007.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_007.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_008.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_008.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_008.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_009.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_009.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_009.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_010.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_010.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_010.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_012.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_012.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_012.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_013.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_013.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_013.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_014.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_014.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_014.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_015.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_015.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_015.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_016.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_016.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_016.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_017.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_017.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_017.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_018.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_018.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_018.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_019.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_019.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_019.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_020.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_020.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_020.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_021.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_021.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_021.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_022.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_022.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_022.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_023.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_023.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_023.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_024.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_024.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_024.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_025.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_025.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_025.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_026.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_026.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_026.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_027.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_027.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_027.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_028.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_028.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_029.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_029.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_029.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_030.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_030.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_030.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_031.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_031.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_031.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_032.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_032.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_032.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_033.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_033.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_033.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_034.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_034.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_034.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_035.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_035.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_035.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_036.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_036.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_036.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_038.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_038.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_038.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_039.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_039.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_039.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_040.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_040.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_040.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_041.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_041.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_041.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_042.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_042.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_042.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_043.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_043.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_043.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_044.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_044.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_044.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_045.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_045.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_045.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_047.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_047.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_047.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_048.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_048.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_048.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_049.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_049.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_049.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_051.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_051.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_051.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_052.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_052.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_052.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_054.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_054.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_054.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_055.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_055.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_055.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_057.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_057.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_057.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_058.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_058.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_058.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_059.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_059.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_059.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_060.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_060.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_060.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_062.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_062.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_062.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_063.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_063.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_063.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_064.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_064.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_064.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_065.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_065.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_065.md.enc"
+    },
+    {
+      "fileName": "ca_20260504143127_066.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260504143127_066.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260504143127_066.md.enc"
+    },
+    {
+      "fileName": "ca_extra_20260505032218_sakana_ai.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_extra_20260505032218_sakana_ai.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_extra_20260505032218_sakana_ai.md.enc"
+    },
+    {
+      "fileName": "ca_extra_20260505032218_herp_ai.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_extra_20260505032218_herp_ai.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_extra_20260505032218_herp_ai.md.enc"
+    },
+    {
+      "fileName": "ca_extra_20260505032218_layerx_ai.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_extra_20260505032218_layerx_ai.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_extra_20260505032218_layerx_ai.md.enc"
+    },
+    {
+      "fileName": "ca_extra_20260505032218_stockmark_ai.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_extra_20260505032218_stockmark_ai.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_extra_20260505032218_stockmark_ai.md.enc"
+    },
+    {
+      "fileName": "ca_extra_20260505032218_elyza_ai.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_extra_20260505032218_elyza_ai.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_extra_20260505032218_elyza_ai.md.enc"
+    },
+    {
+      "fileName": "ca_extra_20260505032218_pksha_ai.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_extra_20260505032218_pksha_ai.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_extra_20260505032218_pksha_ai.md.enc"
+    },
+    {
+      "fileName": "ca_extra_20260505032218_mntsq_ai.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_extra_20260505032218_mntsq_ai.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_extra_20260505032218_mntsq_ai.md.enc"
+    },
+    {
+      "fileName": "ca_extra_20260505032218_autify_ai.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_extra_20260505032218_autify_ai.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_extra_20260505032218_autify_ai.md.enc"
+    },
+    {
+      "fileName": "ca_extra_20260505032218_metagen.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_extra_20260505032218_metagen.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_extra_20260505032218_metagen.md.enc"
+    },
+    {
+      "fileName": "accenture_data_ai_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/accenture_data_ai_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/accenture_data_ai_2028.md.enc"
+    },
+    {
+      "fileName": "benesse_engineer_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/benesse_engineer_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/benesse_engineer_2028.md.enc"
+    },
+    {
+      "fileName": "ca_rerun_d4c_nointern_20260507.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_rerun_d4c_nointern_20260507.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_rerun_d4c_nointern_20260507.md.enc"
+    },
+    {
+      "fileName": "daifuku_design_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/daifuku_design_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/daifuku_design_2028.md.enc"
+    },
+    {
+      "fileName": "ca_rerun_exawizards_nointern_20260507.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_rerun_exawizards_nointern_20260507.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_rerun_exawizards_nointern_20260507.md.enc"
+    },
+    {
+      "fileName": "kowa_it_system_security_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/kowa_it_system_security_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/kowa_it_system_security_2028.md.enc"
+    },
+    {
+      "fileName": "mufg_engineering_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/mufg_engineering_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/mufg_engineering_2028.md.enc"
+    },
+    {
+      "fileName": "murata_rnd_tech_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/murata_rnd_tech_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/murata_rnd_tech_2028.md.enc"
+    },
+    {
+      "fileName": "nippon_signal_rnd_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/nippon_signal_rnd_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/nippon_signal_rnd_2028.md.enc"
+    },
+    {
+      "fileName": "nippon_steel_ai_rnd_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/nippon_steel_ai_rnd_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/nippon_steel_ai_rnd_2028.md.enc"
+    },
+    {
+      "fileName": "nippon_steel_rnd_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/nippon_steel_rnd_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/nippon_steel_rnd_2028.md.enc"
+    },
+    {
+      "fileName": "ns_solutions_engineer_retry_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/ns_solutions_engineer_retry_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ns_solutions_engineer_retry_2028.md.enc"
+    },
+    {
+      "fileName": "ogis_ri_se_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/ogis_ri_se_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ogis_ri_se_2028.md.enc"
+    },
+    {
+      "fileName": "railway_technical_research_institute_ai_rnd_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/railway_technical_research_institute_ai_rnd_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/railway_technical_research_institute_ai_rnd_2028.md.enc"
+    },
+    {
+      "fileName": "towa_rnd_design_2028.yaml",
+      "encryptedPath": "report/company_analysis/data/towa_rnd_design_2028.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/towa_rnd_design_2028.md.enc"
+    },
+    {
+      "fileName": "ca_metagentx_20260505_01.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_metagentx_20260505_01.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_metagentx_20260505_01.md.enc"
+    },
+    {
+      "fileName": "ca_20260507_abeam_ai_consultant.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260507_abeam_ai_consultant.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260507_abeam_ai_consultant.md.enc"
+    },
+    {
+      "fileName": "ca_20260507_baycurrent_system_consultant_retry.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260507_baycurrent_system_consultant_retry.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260507_baycurrent_system_consultant_retry.md.enc"
+    },
+    {
+      "fileName": "ca_20260507_ridgelinez_digital_business_consultant.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260507_ridgelinez_digital_business_consultant.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260507_ridgelinez_digital_business_consultant.md.enc"
+    },
+    {
+      "fileName": "ca_20260507_nikon_technical.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260507_nikon_technical.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260507_nikon_technical.md.enc"
+    },
+    {
+      "fileName": "ca_20260507_hitachi_consulting_consultant.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260507_hitachi_consulting_consultant.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260507_hitachi_consulting_consultant.md.enc"
+    },
+    {
+      "fileName": "ca_20260507_pwc_it_solution_consultant.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260507_pwc_it_solution_consultant.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260507_pwc_it_solution_consultant.md.enc"
+    },
+    {
+      "fileName": "ca_20260507_uvance_fujitsu_ai_data_consultant.yaml",
+      "encryptedPath": "report/company_analysis/data/ca_20260507_uvance_fujitsu_ai_data_consultant.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/ca_20260507_uvance_fujitsu_ai_data_consultant.md.enc"
+    },
+    {
+      "fileName": "mitsui_sumitomo_card.yaml",
+      "encryptedPath": "report/company_analysis/data/mitsui_sumitomo_card.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/mitsui_sumitomo_card.md.enc"
+    },
+    {
+      "fileName": "tata_consultancy_services_japan.yaml",
+      "encryptedPath": "report/company_analysis/data/tata_consultancy_services_japan.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/tata_consultancy_services_japan.md.enc"
+    },
+    {
+      "fileName": "shimadzu.yaml",
+      "encryptedPath": "report/company_analysis/data/shimadzu.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/shimadzu.md.enc"
+    },
+    {
+      "fileName": "western_digital_technologies.yaml",
+      "encryptedPath": "report/company_analysis/data/western_digital_technologies.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/western_digital_technologies.md.enc"
+    },
+    {
+      "fileName": "toyota_central_rd_labs.yaml",
+      "encryptedPath": "report/company_analysis/data/toyota_central_rd_labs.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/toyota_central_rd_labs.md.enc"
+    },
+    {
+      "fileName": "fujifilm_rd.yaml",
+      "encryptedPath": "report/company_analysis/data/fujifilm_rd.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/fujifilm_rd.md.enc"
+    },
+    {
+      "fileName": "gmo_internet_group_710_rd.yaml",
+      "encryptedPath": "report/company_analysis/data/gmo_internet_group_710_rd.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/gmo_internet_group_710_rd.md.enc"
+    }
+  ],
+  "recruitmentInfo": [
+    {
+      "fileName": "top20_2028_01_ca_20260504143127_012.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_01_ca_20260504143127_012.yaml.enc",
+      "companyName": "富士通株式会社"
+    },
+    {
+      "fileName": "top20_2028_02_ca_20260504143127_041.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_02_ca_20260504143127_041.yaml.enc",
+      "companyName": "オムロン株式会社"
+    },
+    {
+      "fileName": "top20_2028_03_ca_20260504143127_015.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_03_ca_20260504143127_015.yaml.enc",
+      "companyName": "株式会社日立製作所"
+    },
+    {
+      "fileName": "top20_2028_04_ca_20260504143127_032.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_04_ca_20260504143127_032.yaml.enc",
+      "companyName": "日本電気株式会社"
+    },
+    {
+      "fileName": "top20_2028_05_ca_20260504143127_062.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_05_ca_20260504143127_062.yaml.enc",
+      "companyName": "株式会社東芝"
+    },
+    {
+      "fileName": "top20_2028_06_ca_20260504143127_040.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_06_ca_20260504143127_040.yaml.enc",
+      "companyName": "日本電信電話株式会社"
+    },
+    {
+      "fileName": "top20_2028_07_ca_20260504143127_058.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_07_ca_20260504143127_058.yaml.enc",
+      "companyName": "ソニーグループ株式会社"
+    },
+    {
+      "fileName": "top20_2028_08_ca_20260504143127_038.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_08_ca_20260504143127_038.yaml.enc",
+      "companyName": "株式会社NTTデータグループ"
+    },
+    {
+      "fileName": "top20_2028_09_ca_20260504143127_010.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_09_ca_20260504143127_010.yaml.enc",
+      "companyName": "株式会社フィックスターズ"
+    },
+    {
+      "fileName": "top20_2028_10_ca_20260504143127_028.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_10_ca_20260504143127_028.yaml.enc",
+      "companyName": "三菱電機株式会社"
+    },
+    {
+      "fileName": "top20_2028_11_ca_20260504143127_008.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_11_ca_20260504143127_008.yaml.enc",
+      "companyName": "株式会社ディー・エヌ・エー"
+    },
+    {
+      "fileName": "top20_2028_12_ca_20260504143127_020.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_12_ca_20260504143127_020.yaml.enc",
+      "companyName": "KDDI株式会社"
+    },
+    {
+      "fileName": "top20_2028_13_ca_20260504143127_001.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_13_ca_20260504143127_001.yaml.enc",
+      "companyName": "株式会社ブレインパッド"
+    },
+    {
+      "fileName": "top20_2028_14_ca_20260504143127_044.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_14_ca_20260504143127_044.yaml.enc",
+      "companyName": "パナソニックホールディングス株式会社"
+    },
+    {
+      "fileName": "top20_2028_15_ca_20260504143127_005.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_15_ca_20260504143127_005.yaml.enc",
+      "companyName": "株式会社サイバーエージェント"
+    },
+    {
+      "fileName": "top20_2028_16_ca_20260504143127_013.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_16_ca_20260504143127_013.yaml.enc",
+      "companyName": "古河電気工業株式会社"
+    },
+    {
+      "fileName": "top20_2028_17_ca_20260504143127_018.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_17_ca_20260504143127_018.yaml.enc",
+      "companyName": "日本アイ・ビー・エム株式会社"
+    },
+    {
+      "fileName": "top20_2028_18_ca_20260504143127_006.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_18_ca_20260504143127_006.yaml.enc",
+      "companyName": "デロイト トーマツ サイバー合同会社"
+    },
+    {
+      "fileName": "top20_2028_19_nippon_steel_rnd_2028.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_19_nippon_steel_rnd_2028.yaml.enc",
+      "companyName": "日本製鉄株式会社"
+    },
+    {
+      "fileName": "top20_2028_20_murata_rnd_tech_2028.yaml",
+      "encryptedPath": "report/recruitment-info/data/top20_2028_20_murata_rnd_tech_2028.yaml.enc",
+      "companyName": "株式会社村田製作所"
+    },
+    {
+      "fileName": "abeam_consulting_2028.yaml",
+      "encryptedPath": "report/recruitment-info/data/abeam_consulting_2028.yaml.enc",
+      "companyName": "アビームコンサルティング",
+      "requestedRole": "デジタル/テクノロジー/AI系コンサルタント",
+      "companyAnalysis": {
+        "runId": "ca_20260507_abeam_ai_consultant",
+        "dataPath": "report/company_analysis/data/ca_20260507_abeam_ai_consultant.yaml",
+        "markdownPath": "report/company_analysis/companies/ca_20260507_abeam_ai_consultant.md",
+        "reviewPath": "report/company_analysis/reviews/ca_20260507_abeam_ai_consultant.yaml"
+      }
+    },
+    {
+      "fileName": "baycurrent_consulting_2028.yaml",
+      "encryptedPath": "report/recruitment-info/data/baycurrent_consulting_2028.yaml.enc",
+      "companyName": "ベイカレント・コンサルティング",
+      "requestedRole": "システムコンサルタント",
+      "companyAnalysis": {
+        "runId": "ca_20260507_baycurrent_system_consultant_retry",
+        "dataPath": "report/company_analysis/data/ca_20260507_baycurrent_system_consultant_retry.yaml",
+        "markdownPath": "report/company_analysis/companies/ca_20260507_baycurrent_system_consultant_retry.md",
+        "reviewPath": "report/company_analysis/reviews/ca_20260507_baycurrent_system_consultant_retry.yaml"
+      }
+    },
+    {
+      "fileName": "ridgelinez_2028.yaml",
+      "encryptedPath": "report/recruitment-info/data/ridgelinez_2028.yaml.enc",
+      "companyName": "Ridgelinez",
+      "requestedRole": "デジタルビジネスコンサルタント職",
+      "companyAnalysis": {
+        "runId": "ca_20260507_ridgelinez_digital_business_consultant",
+        "dataPath": "report/company_analysis/data/ca_20260507_ridgelinez_digital_business_consultant.yaml",
+        "markdownPath": "report/company_analysis/companies/ca_20260507_ridgelinez_digital_business_consultant.md",
+        "reviewPath": "report/company_analysis/reviews/ca_20260507_ridgelinez_digital_business_consultant.yaml"
+      }
+    },
+    {
+      "fileName": "nikon_2028.yaml",
+      "encryptedPath": "report/recruitment-info/data/nikon_2028.yaml.enc",
+      "companyName": "ニコン株式会社",
+      "requestedRole": "技術系",
+      "companyAnalysis": {
+        "runId": "ca_20260507_nikon_technical",
+        "dataPath": "report/company_analysis/data/ca_20260507_nikon_technical.yaml",
+        "markdownPath": "report/company_analysis/companies/ca_20260507_nikon_technical.md",
+        "reviewPath": "report/company_analysis/reviews/ca_20260507_nikon_technical.yaml"
+      }
+    },
+    {
+      "fileName": "hitachi_consulting_2028.yaml",
+      "encryptedPath": "report/recruitment-info/data/hitachi_consulting_2028.yaml.enc",
+      "companyName": "日立コンサルティング",
+      "requestedRole": "コンサルタント",
+      "companyAnalysis": {
+        "runId": "ca_20260507_hitachi_consulting_consultant",
+        "dataPath": "report/company_analysis/data/ca_20260507_hitachi_consulting_consultant.yaml",
+        "markdownPath": "report/company_analysis/companies/ca_20260507_hitachi_consulting_consultant.md",
+        "reviewPath": "report/company_analysis/reviews/ca_20260507_hitachi_consulting_consultant.yaml"
+      }
+    },
+    {
+      "fileName": "pwc_consulting_2028.yaml",
+      "encryptedPath": "report/recruitment-info/data/pwc_consulting_2028.yaml.enc",
+      "companyName": "PwCコンサルティング",
+      "requestedRole": "ITソリューションコンサルタント",
+      "companyAnalysis": {
+        "runId": "ca_20260507_pwc_it_solution_consultant",
+        "dataPath": "report/company_analysis/data/ca_20260507_pwc_it_solution_consultant.yaml",
+        "markdownPath": "report/company_analysis/companies/ca_20260507_pwc_it_solution_consultant.md",
+        "reviewPath": "report/company_analysis/reviews/ca_20260507_pwc_it_solution_consultant.yaml"
+      }
+    },
+    {
+      "fileName": "uvance_wayfinders_fujitsu_2028.yaml",
+      "encryptedPath": "report/recruitment-info/data/uvance_wayfinders_fujitsu_2028.yaml.enc",
+      "companyName": "Uvance Wayfinders / 富士通",
+      "requestedRole": "AI・Data系コンサルタント系職種",
+      "companyAnalysis": {
+        "runId": "ca_20260507_uvance_fujitsu_ai_data_consultant",
+        "dataPath": "report/company_analysis/data/ca_20260507_uvance_fujitsu_ai_data_consultant.yaml",
+        "markdownPath": "report/company_analysis/companies/ca_20260507_uvance_fujitsu_ai_data_consultant.md",
+        "reviewPath": "report/company_analysis/reviews/ca_20260507_uvance_fujitsu_ai_data_consultant.yaml"
+      }
+    }
+  ]
+}

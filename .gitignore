@@ -7,3 +7,15 @@ tmp_pdf/
 tmp/
 .vscode/
 private_knowledge/
+access/
+public/
+github-pages/.nojekyll
+github-pages/index.html
+
+# Plain report outputs stay local. GitHub Pages deploys the encrypted
+# github-pages/ artifact instead.
+report/company_analysis/companies/
+report/company_analysis/data/
+report/company_analysis/reviews/
+report/recruitment-info/data/
+report/recruitment-info/reviews/

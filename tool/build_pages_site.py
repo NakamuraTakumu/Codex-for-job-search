@@ -2,7 +2,7 @@
 """Build the GitHub Pages artifact with encrypted report data.
 
 Usage:
-  REPORT_ACCESS_PASSWORD='...' python3 tool/build_pages_site.py --output public
+  REPORT_ACCESS_PASSWORD='...' python3 tool/build_pages_site.py --output github-pages
 
 The script writes a static site directory containing index.html plus encrypted
 company-analysis YAML and Markdown files. Plain report data is intentionally not
