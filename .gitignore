@@ -18,5 +18,8 @@ github-pages/index.html
 report/company_analysis/companies/
 report/company_analysis/data/
 report/company_analysis/reviews/
+report/company_analysis/manifest.json
+report/company_analysis/recruitment_links.json
+report/recruitment-info/companies/
 report/recruitment-info/data/
 report/recruitment-info/reviews/
