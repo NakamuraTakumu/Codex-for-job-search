@@ -507,6 +507,16 @@
       "fileName": "run_20260602_0002.yaml",
       "encryptedPath": "report/company_analysis/data/run_20260602_0002.yaml.enc",
       "encryptedReportPath": "report/company_analysis/companies/run_20260602_0002.md.enc"
+    },
+    {
+      "fileName": "run_20260603_0001.yaml",
+      "encryptedPath": "report/company_analysis/data/run_20260603_0001.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/run_20260603_0001.md.enc"
+    },
+    {
+      "fileName": "run_20260603_0002.yaml",
+      "encryptedPath": "report/company_analysis/data/run_20260603_0002.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/run_20260603_0002.md.enc"
     }
   ],
   "recruitmentInfo": [
