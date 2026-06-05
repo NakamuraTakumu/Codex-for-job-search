@@ -522,6 +522,11 @@
       "fileName": "run_20260605_0002.yaml",
       "encryptedPath": "report/company_analysis/data/run_20260605_0002.yaml.enc",
       "encryptedReportPath": "report/company_analysis/companies/run_20260605_0002.md.enc"
+    },
+    {
+      "fileName": "nttdocomo_ai_ds_2028_01.yaml",
+      "encryptedPath": "report/company_analysis/data/nttdocomo_ai_ds_2028_01.yaml.enc",
+      "encryptedReportPath": "report/company_analysis/companies/nttdocomo_ai_ds_2028_01.md.enc"
     }
   ],
   "recruitmentInfo": [
